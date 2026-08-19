@@ -1,0 +1,176 @@
+@use "../base/colors";
+@use "../base/typography";
+@use "../utils/mixins";
+@use "../utils/variables";
+
+.profile-header {
+    background-color: colors.$white;
+    border: 1px solid colors.$light-silver;
+    @include mixins.margin-padding(null, 1.5rem);
+    img {
+	    height: variables.$auto;
+	    max-width: 120px;
+	    width: 120px;
+	}
+}
+.profile-menu {
+	background-color: colors.$white;
+    border: 1px solid colors.$light-silver;
+    @include mixins.margin-padding(null, 0.9375rem 1.5rem);
+    .nav-tabs {
+    	&.nav-tabs-solid {
+    		background-color: variables.$transparent;
+    	}
+    }
+}
+.profile-tab-cont {
+	padding-top: 1.875rem;
+	@include mixins.respond-below(custom575) {
+		padding-top: 1.25rem;
+	}
+}
+.about-text {
+    max-width: 500px;
+}
+.skill-tags {
+	span {
+	    background-color: colors.$blue__gray;
+	    color: colors.$midnight__gray;
+	    display: variables.$inline__block;
+	    font-size: typography.$font__size__15;
+	    line-height: 22px;
+        border-radius: 4px;
+	    @include mixins.margin-padding(2px 0, 5px 15px);
+	}
+}
+.edit-link {
+    color: colors.$midnight__gray;
+    font-size: typography.$font__size__16;
+    margin-top: 4px;
+    @include mixins.respond-below(custom767) {
+    	font-size: 0.875rem;
+		margin-top: 0;
+    }
+}
+.cal-icon {
+	position: variables.$relative;
+	width: variables.$full__width;
+	&:after {
+		color: colors.$ligt__carbon;
+		content: "\f073";
+		display: variables.$block;
+		font-family: "FontAwesome";
+	    font-size: typography.$font__size__15;
+	    margin: variables.$auto;
+	    @include mixins.position(variables.$absolute, 10px, 15px, null, null);
+	}
+}
+.form-title {
+    width: variables.$full__width;
+    max-width: variables.$full__width;
+    font-size: typography.$font__size__20;
+	font-weight: typography.$medium;
+    line-height: variables.$inherit;
+    color: colors.$gray;
+    white-space: variables.$normal;
+    position: variables.$relative;
+    display: variables.$block;
+    @include mixins.margin-padding(variables.$auto variables.$auto 20px, 0);
+    &:before {
+	    content: "";
+	    height: 1px;
+	    background-color: rgba(0, 0, 0, 0.1);
+	    @include mixins.position(variables.$absolute, 50%, 0px, null, 0);
+	}
+	span {
+	    background-color: colors.$white;
+	    display: variables.$inline__block;
+	    z-index: 2;
+	    position: variables.$relative;
+	    @include mixins.margin-padding(null, 0px 0.5rem 0 0);
+	}
+}
+.account-wrapper {
+	@include mixins.respond-below(custom575) {
+		@include mixins.margin-padding(null, 0.9375rem);
+	}
+}
+.profile-image {
+	@include mixins.respond-below(custom575) {
+	    flex: 0 0 100%;
+	    margin-bottom: 20px;
+	    text-align: variables.$center;
+    }
+}
+.profile-user-info {
+    @include mixins.respond-below(custom575) {
+	    text-align: variables.$center;
+    }
+}
+.profile-btn {
+	@include mixins.respond-below(custom767) {
+		flex: 0 0 100%;
+    	margin-top: 20px;
+    }
+    @include mixins.respond-below(custom575) {
+	    text-align: variables.$center;
+    }
+}
+.custom-edit-service {
+    textarea {
+        &.form-control {
+            min-height: 200px;
+        }
+    }
+    .service-upload {
+        border: 1px solid colors.$light-gray;
+        border-radius: .25rem;
+        text-align: variables.$center;
+        background-color: colors.$white;
+        position: variables.$relative;
+        @include mixins.margin-padding(0 0 30px, 70px 0);
+        i {
+            font-size: typography.$font__size__50;
+            color: colors.$granite;
+        }
+        span {
+            font-size: typography.$font__size__15;
+            color: colors.$granite;
+            margin-top: 14px;
+            display: variables.$block;
+        }
+        input[type="file"] {
+            width: variables.$full__width;
+            height: variables.$full__height;
+            opacity: 0;
+            cursor: variables.$pointer;
+            @include mixins.position(variables.$absolute, 0, null, null, 0);
+        }
+    }
+    .upload-wrap {
+        flex-wrap: variables.$wrap;
+        list-style: variables.$none;
+        margin: 0;
+        padding: 0;
+        display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+        li {
+            margin: 10px;
+            &:first-child {
+                margin-left: 0;
+            }
+            .upload-images {
+                width: 80px;
+                position: variables.$relative;
+            }
+            img {
+                max-width: variables.$full__width;
+            }
+        }
+    }
+}
+.submit-section {
+    text-align: variables.$center;
+    margin-top: 40px;
+}

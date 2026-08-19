@@ -1,0 +1,37 @@
+/****** UTILS ******/
+@use "utils/variables";
+@use "utils/mixins";
+
+/******* BASE *******/
+@use "base/reset";
+@use "base/typography";
+@use "base/colors"; 
+@use "base/base";
+@use "base/grid";
+
+/******* COMPONENTS ******/
+@use "components/button";
+@use "components/nav-tabs";
+@use "components/avatar";
+@use "components/bootstrap-classes";
+@use "components/helper-classes";
+
+@use "components/select2";
+@use "components/table";
+
+/****** LAYOUT ******/
+@use "layout/content";
+@use "layout/footer";
+@use "layout/header";
+@use "layout/sidebar";
+
+/****** PAGES ******/
+@use "pages/dashboard";
+@use "pages/calendar";
+@use "pages/components";
+@use "pages/error";
+@use "pages/inbox";
+@use "pages/invoice";
+@use "pages/login";
+@use "pages/notifications";
+@use "pages/profile";

@@ -1,0 +1,21 @@
+@use "../base/colors";
+@use "../base/typography";
+@use "../utils/mixins";
+@use "../utils/variables";
+
+.block {
+	display: variables.$block !important;
+}
+.cal-icon {
+	position: variables.$relative;
+	width: variables.$full__width;
+	&:after {
+		color: colors.$ligt__carbon;
+		content: "\f073";
+		display: variables.$block;
+		font-family: "FontAwesome";
+	    font-size: typography.$font__size__15;
+	    margin: variables.$auto;
+	    @include mixins.position(variables.$absolute, 10px, 15px, null, null);
+	}
+}

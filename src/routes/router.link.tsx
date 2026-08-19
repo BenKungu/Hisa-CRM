@@ -1,0 +1,164 @@
+import { Navigate, Route } from "react-router";
+import { all_routes } from "./all_routes";
+import { lazy, Suspense } from "react";
+const AdminDashboard = lazy(() => import("../pages/dashboard"));
+const AdminLogin = lazy(() => import("../pages/login"));
+const AppointmentList = lazy(() => import("../pages/businesses"));
+const AdminSpecialities = lazy(() => import("../pages/policies"));
+const AdminDoctors = lazy(() => import("../pages/agents"));
+const AdminPatients = lazy(() => import("../pages/clients"));
+const AdminTransaction = lazy(() => import("../pages/transaction"));
+const AdminSettings = lazy(() => import("../pages/settings"));
+const AdminProfile = lazy(() => import("../pages/profile/Profile"));
+const AdminRegister = lazy(() => import("../pages/register"));
+const AdminForgotPassword = lazy(() => import("../pages/forgotpassword"));
+const AdminLockscreen = lazy(() => import("../pages/lockscreen"));
+
+
+const route = all_routes;
+
+const suspenseFallback = <div></div>;
+
+export const publicRoutes = [
+  {
+    path: "/",
+    name: "Root",
+    element: <Navigate to={route.adminDashboard} />,
+    route: Route,
+  },
+  {
+    id: "1",
+    path: route.adminDashboard,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminDashboard />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "2",
+    path: route.adminAppointmentList,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AppointmentList />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "3",
+    path: route.adminspecialities,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminSpecialities />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "4",
+    path: route.adminDoctorList,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminDoctors />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "5",
+    path: route.adminPatientList,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminPatients />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "7",
+    path: route.adminTransactionsList,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminTransaction />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "8",
+    path: route.adminSettings,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminSettings />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "10",
+    path: route.adminProfile,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminProfile />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+];
+
+export const authRoutes = [
+  {
+    id: "1",
+    path: route.adminLogin,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminLogin />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "2",
+    path: route.adminRegister,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminRegister />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "3",
+    path: route.adminForgotPassword,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminForgotPassword />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+  {
+    id: "4",
+    path: route.adminLockscreen,
+    element: (
+      <Suspense fallback={suspenseFallback}>
+        <AdminLockscreen />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Doccure",
+  },
+];
