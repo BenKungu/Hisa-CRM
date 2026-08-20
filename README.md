@@ -4,7 +4,7 @@ This is Hisa-CRM which is a system that manages users data for hisa insurance an
 
 # React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
 
