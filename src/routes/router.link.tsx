@@ -7,13 +7,13 @@ const AppointmentList = lazy(() => import("../pages/businesses"));
 const AdminSpecialities = lazy(() => import("../pages/policies"));
 const AdminDoctors = lazy(() => import("../pages/agents"));
 const AdminPatients = lazy(() => import("../pages/clients"));
-const AdminTransaction = lazy(() => import("../pages/transaction"));
 const AdminSettings = lazy(() => import("../pages/settings"));
 const AdminProfile = lazy(() => import("../pages/profile/Profile"));
 const AdminRegister = lazy(() => import("../pages/register"));
 const AdminForgotPassword = lazy(() => import("../pages/forgotpassword"));
 const AdminLockscreen = lazy(() => import("../pages/lockscreen"));
 
+const AdminOTP = lazy(() => import("../pages/otp"));
 
 const route = all_routes;
 
@@ -35,7 +35,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "2",
@@ -46,7 +45,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "3",
@@ -57,7 +55,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "4",
@@ -68,7 +65,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "5",
@@ -79,18 +75,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
-  },
-  {
-    id: "7",
-    path: route.adminTransactionsList,
-    element: (
-      <Suspense fallback={suspenseFallback}>
-        <AdminTransaction />
-      </Suspense>
-    ),
-    route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "8",
@@ -101,7 +85,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "10",
@@ -112,7 +95,6 @@ export const publicRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
 ];
 
@@ -126,8 +108,8 @@ export const authRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
+  
   {
     id: "2",
     path: route.adminRegister,
@@ -137,7 +119,6 @@ export const authRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
     id: "3",
@@ -148,10 +129,9 @@ export const authRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
   },
   {
-    id: "4",
+    id: "5",
     path: route.adminLockscreen,
     element: (
       <Suspense fallback={suspenseFallback}>
@@ -159,6 +139,15 @@ export const authRoutes = [
       </Suspense>
     ),
     route: Route,
-    meta_title: "Doccure",
+  },
+  {
+    id: "otp",
+    path: "/otp",
+    element: (
+      <Suspense fallback={<div>Loading...</div>}>
+        <AdminOTP />
+      </Suspense>
+    ),
+    route: Route,
   },
 ];

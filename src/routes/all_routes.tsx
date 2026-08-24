@@ -13,6 +13,7 @@ adminInvoice: "/invoice",
 adminProfile: "/profile",
 
 adminLogin: "/login",
+adminOtp: "/otp",
 adminRegister: "/register",
 adminForgotPassword: "/forgotpassword",
 adminLockscreen: "/lockscreen",
