@@ -3875,4 +3875,34 @@ table.table-inbox tbody tr.checked {
   }
 }
 
+.otp-input {
+  &:focus {
+    border-color: #2c3e8f !important;
+    box-shadow: 0 0 0 3px rgba(44, 62, 143, 0.1) !important;
+    outline: none;
+  }
+  
+  &:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
+}
+
+.otp-input.error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+@media (max-width: 576px) {
+  .otp-input {
+    width: 40px !important;
+    height: 50px !important;
+    font-size: 20px !important;
+  }
+  
+  .otp-input-container {
+    gap: 8px !important;
+  }
+}
+
 /*# sourceMappingURL=custom.css.map */
