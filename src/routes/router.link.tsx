@@ -14,6 +14,7 @@ const AdminForgotPassword = lazy(() => import("../pages/forgotpassword"));
 const AdminLockscreen = lazy(() => import("../pages/lockscreen"));
 
 const AdminOTP = lazy(() => import("../pages/otp"));
+const AdminWhitelist = lazy(() => import("../pages/whitelist"));
 
 const route = all_routes;
 
@@ -96,6 +97,17 @@ export const publicRoutes = [
     ),
     route: Route,
   },
+  {
+  id: "whitelist",
+  path: "/whitelist",
+  element: (
+    <Suspense fallback={suspenseFallback}>
+      <AdminWhitelist />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Whitelist Management",
+},
 ];
 
 export const authRoutes = [

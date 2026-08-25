@@ -14,6 +14,7 @@ adminProfile: "/profile",
 
 adminLogin: "/login",
 adminOtp: "/otp",
+whitelist: "/whitelist",
 adminRegister: "/register",
 adminForgotPassword: "/forgotpassword",
 adminLockscreen: "/lockscreen",

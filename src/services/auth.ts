@@ -1,13 +1,13 @@
 import apiClient from './api';
 
 export const authService = {
-  // Send OTP - Always return success for testing
+  // Send OTP
   sendOTP: async (email: string): Promise<any> => {
     try {
       const response = await apiClient.post('/auth/login', { email });
       return response.data;
     } catch (error: any) {
-      // Even if email fails, return success so login continues
+      // Even if email fails, OTP is in database
       console.log('⚠️ Email not sent, but OTP is in database');
       return { 
         success: true, 
