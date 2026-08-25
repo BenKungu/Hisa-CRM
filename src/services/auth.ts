@@ -106,4 +106,14 @@ resetPassword: async (email: string, token: string, newPassword: string): Promis
   }
 },
 
+// Unlock screen (password only, no OTP)
+unlockScreen: async (password: string): Promise<any> => {
+  try {
+    const response = await apiClient.post('/auth/unlock', { password });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Invalid password' };
+  }
+},
+
 };
