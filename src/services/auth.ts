@@ -65,4 +65,25 @@ export const authService = {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
+
+// Update user profile
+updateProfile: async (data: any): Promise<any> => {
+  try {
+    const response = await apiClient.put('/auth/profile', data);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to update profile' };
+  }
+},
+
+// Change password
+changePassword: async (oldPassword: string, newPassword: string): Promise<any> => {
+  try {
+    const response = await apiClient.post('/auth/change-password', { oldPassword, newPassword });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to change password' };
+  }
+},
+
 };
