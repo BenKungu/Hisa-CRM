@@ -15,6 +15,7 @@ const AdminLockscreen = lazy(() => import("../pages/lockscreen"));
 
 const AdminOTP = lazy(() => import("../pages/otp"));
 const AdminWhitelist = lazy(() => import("../pages/whitelist"));
+const AdminResetPassword = lazy(() => import("../pages/reset-password"));
 
 const route = all_routes;
 
@@ -162,4 +163,15 @@ export const authRoutes = [
     ),
     route: Route,
   },
+
+  {
+  id: "reset-password",
+  path: "/reset-password",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminResetPassword />
+    </Suspense>
+  ),
+  route: Route,
+},
 ];

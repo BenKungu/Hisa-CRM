@@ -86,4 +86,24 @@ changePassword: async (oldPassword: string, newPassword: string): Promise<any> =
   }
 },
 
+// Forgot Password
+forgotPassword: async (email: string): Promise<any> => {
+  try {
+    const response = await apiClient.post('/auth/forgotpassword', { email });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to send reset link' };
+  }
+},
+
+// Reset Password
+resetPassword: async (email: string, token: string, newPassword: string): Promise<any> => {
+  try {
+    const response = await apiClient.post('/auth/reset-password', { email, token, newPassword });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to reset password' };
+  }
+},
+
 };

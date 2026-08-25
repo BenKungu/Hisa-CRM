@@ -17,6 +17,7 @@ adminOtp: "/otp",
 whitelist: "/whitelist",
 adminRegister: "/register",
 adminForgotPassword: "/forgotpassword",
+adminResetPassword: "/reset-password",
 adminLockscreen: "/lockscreen",
 
 };
