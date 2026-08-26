@@ -111,7 +111,7 @@ const AdminLockscreen = () => {
                     style={{
                       width: '80px',
                       height: '80px',
-                      backgroundColor: '#c70e2a', // Hisa red
+                      backgroundColor: getAvatarColor(),
                       color: '#fff',
                       display: 'flex',
                       alignItems: 'center',

@@ -1,242 +1,243 @@
+import { useState, useEffect } from 'react';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
 import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
-import {
-  doctor_thumb_01,
-  doctor_thumb_02,
-  doctor_thumb_03,
-  doctor_thumb_04,
-  doctor_thumb_05,
-  doctor_thumb_06,
-  doctor_thumb_07,
-  doctor_thumb_08,
-  doctor_thumb_09,
-  doctor_thumb_10,
-  patient1,
-  patient10,
-  patient2,
-  patient3,
-  patient4,
-  patient5,
-  patient6,
-  patient7,
-  patient8,
-  patient9,
-} from "../../core/data/json/imagepath";
 import { Link } from "react-router-dom";
 import Header from "../header";
+import { Eye, Edit, Trash2, FileText, Search } from 'react-feather';
+import { policyService } from '../../services/policy';
 
-const AdminAppointments = () => {
-  const data = [
-    {
-      id: 1,
-      DoctorName: "Dr. Darren Elder",
-      Speciality: "Dental ",
-      PatientName: "Travis Trimble",
-      Earned: "$5000.00 ",
-      Date: "	5 Nov 2019",
-      time: "11.00 AM - 11.35 AM",
-      Amount: "$300.00",
-      image: doctor_thumb_02,
-      images1: patient2,
-      Status: "checkbox",
-    },
-    {
-      id: 2,
-      DoctorName: "Dr. Deborah Angel",
-      Speciality: "Cardiology ",
-      PatientName: "Carl Kelly",
-      Earned: "$3300.00 ",
-      Date: "11 Nov 2019",
-      time: "12.00 PM - 12.15 PM",
-      Amount: "$150.00",
-      image: doctor_thumb_03,
-      images1: patient3,
-      Status: "checkbox",
-    },
-    {
-      id: 3,
-      DoctorName: "Dr. John Gibbs",
-      Speciality: "Dental ",
-      PatientName: "Walter Roberson",
-      Earned: "$4100.00",
-      Date: "21 Nov 2019",
-      time: "12.10 PM - 12.25 PM",
-      Amount: "$300.00",
-      image: doctor_thumb_09,
-      images1: patient9,
-      Status: "checkbox",
-    },
-    {
-      id: 4,
-      DoctorName: "Dr. Katharine Berthold",
-      Speciality: "Orthopaedics ",
-      PatientName: "Elsie Gilley",
-      Earned: "$4000.00 ",
-      Date: "16 Nov 2019",
-      time: "1.00 PM - 1.15 PM",
-      Amount: "$250.00",
-      image: doctor_thumb_06,
-      images1: patient6,
-      Status: "checkbox",
-    },
-    {
-      id: 5,
-      DoctorName: "Dr. Linda Tobin",
-      Speciality: "Neurology ",
-      PatientName: "Joan Gardner",
-      Earned: "$2000.00 ",
-      Date: "18 Nov 2019",
-      time: "1.10 PM - 1.25 PM",
-      Amount: "$260.00",
-      image: doctor_thumb_07,
-      images1: patient7,
-      Status: "checkbox",
-    },
-    {
-      id: 6,
-      DoctorName: "Dr. Marvin Campbell",
-      Speciality: "Orthopaedics ",
-      PatientName: "Gina Moore",
-      Earned: "$3700.00 ",
-      Date: "15 Nov 2019",
-      time: "1.00 PM - 1.15 PM",
-      Amount: "$200.00",
-      image: doctor_thumb_05,
-      images1: patient5,
-      Status: "checkbox",
-    },
-    {
-      id: 7,
-      DoctorName: "Dr. Olga Barlow",
-      Speciality: "Dental ",
-      PatientName: "Robert Rhodes",
-      Earned: "$3500.00 ",
-      Date: "23 Nov 2019",
-      time: "12.10 PM - 12.25 PM",
-      Amount: "$300.00",
-      image: doctor_thumb_10,
-      images1: patient10,
-      Status: "checkbox",
-    },
-    {
-      id: 8,
-      DoctorName: "Dr. Paul Richard",
-      Speciality: "Dermatology ",
-      PatientName: "Daniel Griffing",
-      Earned: "$3000.00 ",
-      Date: "18 Nov 2019",
-      time: "11.10 AM - 11.25 AM",
-      Amount: "$260.00",
-      image: doctor_thumb_08,
-      images1: patient8,
-      Status: "checkbox",
-    },
-    {
-      id: 9,
-      DoctorName: "Dr. Ruby Perrin",
-      Speciality: "Dental ",
-      PatientName: "Charlene Reed",
-      Earned: "$3100.00 ",
-      Date: "9 Nov 2019",
-      time: "11.00 AM - 11.15 AM",
-      Amount: "$200.00",
-      image: doctor_thumb_01,
-      images1: patient1,
-      Status: "checkbox",
-    },
-    {
-      id: 10,
-      DoctorName: "Dr. Sofia Brient",
-      Speciality: "Urology ",
-      PatientName: "Michelle Fairfax",
-      Earned: "$3500.00 ",
-      Date: "7 Nov 2019",
-      time: "1.00 PM - 1.20 PM ",
-      Amount: "$150.00",
-      image: doctor_thumb_04,
-      images1: patient4,
-      Status: "checkbox",
-    },
-  ];
+interface Policy {
+  id: string;
+  policy_number: string;
+  client_name: string;
+  client_id: string;
+  product_type: string;
+  policy_status: string;
+  premium_frequency: string;
+  annualised_premium: number;
+  inception_date: string;
+  agent_name: string;
+  agent_code: string;
+  sales_branch: string;
+}
+
+const AdminBusinesses = () => {
+  const [data, setData] = useState<Policy[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Load policies
+  const loadPolicies = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await policyService.getPolicies();
+      if (response.success) {
+        setData(response.data);
+      } else {
+        setError('Failed to load policies');
+      }
+    } catch (err: any) {
+      setError(err.error || 'Failed to load policies');
+      console.error('Error loading policies:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPolicies();
+  }, []);
+
+  // Handle delete
+  const handleDelete = async (id: string, policyNumber: string) => {
+    if (!window.confirm(`Are you sure you want to delete policy ${policyNumber}?`)) return;
+    
+    try {
+      const response = await policyService.deletePolicy(id);
+      if (response.success) {
+        loadPolicies();
+      } else {
+        alert('Failed to delete policy');
+      }
+    } catch (err: any) {
+      alert(err.error || 'Failed to delete policy');
+      console.error('Delete error:', err);
+    }
+  };
+
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  // Get avatar color
+  const getAvatarColor = (name: string) => {
+    const colors = ['#c70e2a', '#2a9d36', '#F15A29', '#2c3e8f', '#17a2b8', '#6f42c1'];
+    const index = (name?.length || 0) % colors.length;
+    return colors[index];
+  };
+
+  // Format currency
+  const formatCurrency = (value: number) => {
+    if (!value) return '0';
+    return value.toLocaleString();
+  };
+
+  // Filter data based on search
+  const filteredData = data.filter(item => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      item.policy_number?.toLowerCase().includes(search) ||
+      item.client_name?.toLowerCase().includes(search) ||
+      item.product_type?.toLowerCase().includes(search) ||
+      item.policy_status?.toLowerCase().includes(search) ||
+      item.agent_name?.toLowerCase().includes(search) ||
+      item.policy_number?.toLowerCase().includes(search)
+    );
+  });
+
   const columns = [
     {
-      title: "Doctor Name",
-      dataIndex: "DoctorName",
-      render: (text: any, record: any) => (
+      title: "Policy Number",
+      dataIndex: "policy_number",
+      render: (text: string) => (
+        <Link to={`/businesses/${text}`} className="text-decoration-none" style={{ color: '#c70e2a' }}>
+          <FileText size={16} className="me-1" />
+          <span className="fw-bold">{text || 'N/A'}</span>
+        </Link>
+      ),
+      sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
+    },
+    {
+      title: "Client Name",
+      dataIndex: "client_name",
+      render: (text: string, record: any) => (
         <>
-          <Link className="avatar mx-2" to="/admin/profile">
-            <img className="rounded-circle" src={record.image} />
-          </Link>
-          <Link to="/admin/profile" className="text-decoration-none">
-            {text}
+          <span 
+            className="avatar mx-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+            style={{
+              width: '35px',
+              height: '35px',
+              backgroundColor: getAvatarColor(text || record.client_id),
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase'
+            }}
+          >
+            {getInitials(text || record.client_id)}
+          </span>
+          <Link to={`/clients/${record.client_id}`} className="text-decoration-none text-dark">
+            {text || 'N/A'}
           </Link>
         </>
       ),
-      sorter: (a: any, b: any) => a.DoctorName.length - b.DoctorName.length,
+      sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
     {
-      title: "Speciality",
-      dataIndex: "Speciality",
-      sorter: (a: any, b: any) => a.Speciality.length - b.Speciality.length,
-    },
-
-    {
-      title: "Patient Name",
-      dataIndex: "PatientName",
-      render: (text: any, record: any) => (
-        <>
-          <Link className="avatar mx-2" to="/admin/profile">
-            <img className="rounded-circle" src={record.images1} />
-          </Link>
-          <Link to="/admin/profile">{text}</Link>
-        </>
-      ),
-      sorter: (a: any, b: any) => a.PatientName.length - b.PatientName.length,
-    },
-
-    {
-      title: "Apointment Time",
-      render: (record: any) => (
-        <>
-          <span className="user-name">{record.Date}</span>
-          <br />
-          <span className="d-block">{record.time}</span>
-        </>
-      ),
-      sorter: (a: any, b: any) => a.Date.length - b.time.length,
+      title: "Product Type",
+      dataIndex: "product_type",
+      render: (text: string) => <span>{text || 'N/A'}</span>,
+      sorter: (a: any, b: any) => (a.product_type || '').localeCompare(b.product_type || ''),
     },
     {
       title: "Status",
-      dataIndex: "Status",
-      render: (record: any) => {
+      dataIndex: "policy_status",
+      render: (status: string) => {
+        let badgeClass = 'bg-secondary';
+        let displayText = status || 'N/A';
+        
+        if (status?.toLowerCase().includes('finalised')) {
+          badgeClass = 'bg-success';
+        } else if (status?.toLowerCase().includes('unfinalised')) {
+          badgeClass = 'bg-warning text-dark';
+        } else if (status?.toLowerCase().includes('cancelled')) {
+          badgeClass = 'bg-danger';
+        } else if (status?.toLowerCase().includes('active')) {
+          badgeClass = 'bg-success';
+        }
+        
         return (
-          <div className="status-toggle">
-            <input
-              id={`rating${record?.id}`}
-              className="check"
-              type="checkbox"
-              defaultChecked={false}
-            />
-            <label
-              htmlFor={`rating${record?.id}`}
-              className="checktoggle checkbox-bg"
-            >
-              checkbox
-            </label>
-          </div>
+          <span className={`badge ${badgeClass} p-2`} style={{ minWidth: '80px' }}>
+            {displayText}
+          </span>
         );
       },
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
     },
     {
-      title: "Amount",
-      dataIndex: "Amount",
-      sorter: (a: any, b: any) => a.Amount.length - b.Amount.length,
+      title: "Premium (KES)",
+      dataIndex: "annualised_premium",
+      render: (value: number) => (
+        <span className="fw-bold" style={{ color: '#2a9d36' }}>
+          KES {formatCurrency(value)}
+        </span>
+      ),
+      sorter: (a: any, b: any) => (a.annualised_premium || 0) - (b.annualised_premium || 0),
+    },
+    {
+      title: "Frequency",
+      dataIndex: "premium_frequency",
+      render: (text: string) => <span>{text || 'N/A'}</span>,
+    },
+    {
+      title: "Inception Date",
+      dataIndex: "inception_date",
+      render: (date: string) => date ? new Date(date).toLocaleDateString() : 'N/A',
+      sorter: (a: any, b: any) => 
+        new Date(a.inception_date).getTime() - new Date(b.inception_date).getTime(),
+    },
+    {
+      title: "Agent",
+      dataIndex: "agent_name",
+      render: (text: string) => (
+        <span className="text-muted">{text || 'N/A'}</span>
+      ),
+    },
+    {
+      title: "Action",
+      dataIndex: "",
+      className: "text-end",
+      render: (_: any, record: any) => (
+        <div className="text-end">
+          <Link
+            className="btn btn-sm me-2"
+            to={`/businesses/${record.id}`}
+            title="View"
+            style={{ backgroundColor: '#17a2b8', color: '#fff', border: 'none' }}
+          >
+            <Eye size={16} />
+          </Link>
+          <Link
+            className="btn btn-sm me-2"
+            to={`/businesses/edit/${record.id}`}
+            title="Edit"
+            style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none' }}
+          >
+            <Edit size={16} />
+          </Link>
+          <button
+            className="btn btn-sm"
+            onClick={() => handleDelete(record.id, record.policy_number)}
+            title="Delete"
+            style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none' }}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      ),
     },
   ];
+
   return (
     <>
       <Header />
@@ -246,7 +247,7 @@ const AdminAppointments = () => {
           {/* Page Header */}
           <div className="page-header">
             <div className="row">
-              <div className="col-sm-12">
+              <div className="col-sm-8">
                 <h3 className="page-title">Businesses</h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
@@ -255,37 +256,85 @@ const AdminAppointments = () => {
                   <li className="breadcrumb-item active">Businesses</li>
                 </ul>
               </div>
+              <div className="col-sm-4 text-end">
+                <Link 
+                  to="/businesses/add" 
+                  className="btn btn-primary"
+                  style={{ backgroundColor: '#c70e2a', borderColor: '#c70e2a' }}
+                >
+                  <i className="fas fa-plus me-1" /> Add Business
+                </Link>
+              </div>
             </div>
           </div>
           {/* /Page Header */}
-          {/* <div className="row">
+
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
+
+          <div className="row">
             <div className="col-sm-12">
               <div className="card">
+                <div className="card-header">
+                  <div className="row align-items-center">
+                    <div className="col">
+                      <h5 className="card-title mb-0">All Businesses</h5>
+                      <p className="text-muted mb-0">
+                        Total: <strong className="text-dark">{filteredData.length}</strong> policies
+                      </p>
+                    </div>
+                    <div className="col-auto">
+                      <div className="form-group mb-0">
+                        <div className="input-group">
+                          <span className="input-group-text bg-white">
+                            <Search size={16} className="text-muted" />
+                          </span>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Search policies..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ minWidth: '250px' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="card-body">
                   <div className="table-responsive">
                     <Table
+                      loading={loading}
                       pagination={{
-                        total: data.length,
+                        total: filteredData.length,
                         showTotal: (total, range) =>
                           `Showing ${range[0]} to ${range[1]} of ${total} entries`,
                         showSizeChanger: true,
                         onShowSizeChange: onShowSizeChange,
                         itemRender: itemRender,
+                        defaultPageSize: 25,
                       }}
                       style={{ overflowX: "auto" }}
                       columns={columns}
-                      dataSource={data}
+                      dataSource={filteredData}
                       rowKey={(record) => record.id}
+                      locale={{
+                        emptyText: 'No policies found'
+                      }}
                     />
                   </div>
                 </div>
               </div>
             </div>
-          </div> */}
+          </div>
         </div>
       </div>
     </>
   );
 };
 
-export default AdminAppointments;
+export default AdminBusinesses;
