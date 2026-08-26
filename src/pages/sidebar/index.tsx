@@ -5,12 +5,14 @@ import "overlayscrollbars/overlayscrollbars.css";
 import { Appcontext } from "../context/AppContext";
 import { useLocation } from "react-router-dom";
 import { 
-  Home, 
-  Layout, 
-  Users, 
-  UserPlus, 
-  User, 
-  FileText, 
+  Home,           
+  Briefcase,
+  FileText,         
+  UserPlus,       
+  Users,         
+  UserCheck,     
+  Lock, 
+  CheckCircle,        
 } from "react-feather";
 import { all_routes } from "../../routes/all_routes";
 
@@ -27,23 +29,18 @@ const SidebarNav = () => {
 
   // Auto-expand submenus based on current pathname
   useEffect(() => {
-    // Auto-expand Reports submenu if on invoice report page
     if (pathname?.includes("invoicerepot")) {
       setSideMenu("reports");
     }
-    // Auto-expand Error Pages submenu if on error pages
     if (pathname?.includes("404") || pathname?.includes("500")) {
       setSideMenu("errorpages");
     }
-    // Auto-expand Forms submenu if on form pages
     if (pathname?.includes("basic-input") || pathname?.includes("form-input-group") || pathname?.includes("form-horizontal") || pathname?.includes("form-vertical") || pathname?.includes("form-mask") || pathname?.includes("form-validation")) {
       setSideMenu("forms");
     }
-    // Auto-expand Tables submenu if on table pages
     if (pathname?.includes("tables-basic") || pathname?.includes("data-tables")) {
       setSideMenu("tables");
     }
-    // Auto-expand Multi Level submenu if on multilevel pages
     if (pathname?.includes("multilevel")) {
       setSideMenu("multilevel");
     }
@@ -70,7 +67,6 @@ const SidebarNav = () => {
 
   return (
     <>
-      {/* <!-- Sidebar --> */}
       <div
         className={`sidebar ${isSidebarExpanded ? "" : "hidden"}`}
         id="sidebar"
@@ -103,54 +99,40 @@ const SidebarNav = () => {
                     <span>Dashboard</span>
                   </Link>
                 </li>
-                <li
-                  className={
-                    pathname?.includes("/businesses")
-                      ? "active"
-                      : ""
-                  }
-                >
+                <li className={pathname?.includes("clients") ? "active" : ""}>
+                  <Link to="/clients">
+                    <Users size={16} /> <span>Clients</span>
+                  </Link>
+                </li>
+                <li className={pathname?.includes("/businesses") ? "active" : ""}>
                   <Link to="/businesses">
-                    <Layout size={16} /> <span>Businesses</span>
+                    <Briefcase size={16} /> <span>Businesses</span>
                   </Link>
                 </li>
-                <li
-                  className={pathname?.includes("policies") ? "active" : ""}
-                >
-                  <Link to="/policies">
-                    <Users size={16} /> <span>Policy Types</span>
-                  </Link>
-                </li>
-                <li
-                  className={pathname?.includes("agents") ? "active" : ""}
-                >
+                <li className={pathname?.includes("agents") ? "active" : ""}>
                   <Link to="/agents">
                     <UserPlus size={16} />
                     <span>Agents</span>
                   </Link>
                 </li>
-                <li
-                  className={pathname?.includes("clients") ? "active" : ""}
-                >
-                  <Link to="/clients">
-                    <User size={16} /> <span>Clients</span>
+                <li className={pathname?.includes("policies") ? "active" : ""}>
+                  <Link to="/policies">
+                    <FileText size={16} /> <span>Policy Types</span>
                   </Link>
                 </li>
-                
-                {/* Profile - moved here, independent */}
                 <li className={pathname?.includes("whitelist") ? "active" : ""}>
                   <Link to="/whitelist">
-                    <Users size={16} /> <span>Whitelist</span>
+                    <CheckCircle size={16} /> <span>Whitelist</span>
                   </Link>
                 </li>
                 <li className={pathname?.includes("profile") ? "active" : ""}>
                   <Link to="/profile">
-                    <UserPlus size={16} /> <span>Profile</span>
+                    <UserCheck size={16} /> <span>Profile</span>
                   </Link>
                 </li>
                 <li className={pathname?.includes("lockscreen") ? "active" : ""}>
                   <Link to="/lockscreen" onClick={() => setIsAuth("admin")}>
-                    <FileText size={16} /> <span>Lock Screen</span>
+                    <Lock size={16} /> <span>Lock Screen</span>
                   </Link>
                 </li>
               </ul>
@@ -158,9 +140,9 @@ const SidebarNav = () => {
           </div>
         </OverlayScrollbarsComponent>
       </div>
-      {/* <!-- /Sidebar --> */}
     </>
   );
 };
 
 export default SidebarNav;
+
