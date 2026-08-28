@@ -50,4 +50,18 @@ export const policyService = {
       throw error.response?.data || { error: 'Failed to delete policy' };
     }
   },
+
+importExcel: async (formData: FormData): Promise<any> => {
+  try {
+    const response = await apiClient.post('/policies/import-excel', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to import Excel' };
+  }
+},
+
 };

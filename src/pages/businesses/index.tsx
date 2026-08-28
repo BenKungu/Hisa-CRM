@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
@@ -6,7 +6,7 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link } from "react-router-dom";
 import Header from "../header";
-import { Eye, Edit, Trash2, FileText, Search, Plus } from 'react-feather';
+import { Eye, Edit, Trash2, FileText, Search, Upload, CheckCircle, XCircle, AlertCircle } from 'react-feather';
 import { policyService } from '../../services/policy';
 import { clientService } from '../../services/client';
 
@@ -19,52 +19,115 @@ interface Policy {
   product_type: string;
   policy_status: string;
   premium_frequency: string;
+  total_sum_insured: number;
   annualised_premium: number;
+  initial_gross_premium: number;
+  new_gross_premium: number;
   inception_date: string;
+  strike_date: number;
   agent_name: string;
   agent_code: string;
   sales_branch: string;
 }
 
+interface Client {
+  id: string;
+  client_name: string;
+  id_no: string;
+}
+
 const AdminBusinesses = () => {
   const [data, setData] = useState<Policy[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalAction, setModalAction] = useState<'view' | 'edit' | 'delete' | 'add' | null>(null);
+  const [modalAction, setModalAction] = useState<'view' | 'delete' | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
 
-  // Add/Edit form state
-  const [formData, setFormData] = useState({
-    // Client fields
-    client_title: '',
-    client_fullname: '',
-    client_surname: '',
-    client_id_no: '',
-    client_phone: '',
-    client_email: '',
-    client_dob: '',
-    // Policy fields
-    policy_number: '',
-    inception_date: '',
-    strike_date: '',
-    policy_status: 'Active',
-    product_type: '',
-    premium_frequency: '',
-    total_sum_insured: '',
-    annualised_premium: '',
-    initial_gross_premium: '',
-    new_gross_premium: '',
-    sales_branch: '',
-    agent_name: '',
-    agent_code: '',
-  });
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  // Upload modal state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadResult, setUploadResult] = useState<{
+    newClients: number;
+    updatedClients: number;
+    newPolicies: number;
+    skipped: number;
+    errors: string[];
+  } | null>(null);
+
+  // Handle file selection
+  const handleFileSelect = (file: File) => {
+    setUploadFile(file);
+    setUploadStatus('idle');
+    setUploadResult(null);
+  };
+
+  // Handle file upload
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+
+    setUploadStatus('uploading');
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+
+    try {
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+
+      const response = await policyService.importExcel(formData);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (response.success) {
+        setUploadStatus('success');
+        setUploadResult(response.data);
+        await loadPolicies();
+      } else {
+        setUploadStatus('error');
+        setUploadResult({
+          newClients: 0,
+          updatedClients: 0,
+          newPolicies: 0,
+          skipped: 0,
+          errors: [response.error || 'Import failed']
+        });
+      }
+    } catch (err: any) {
+      setUploadStatus('error');
+      setUploadResult({
+        newClients: 0,
+        updatedClients: 0,
+        newPolicies: 0,
+        skipped: 0,
+        errors: [err.error || 'Import failed']
+      });
+    }
+  };
+
+  // Reset upload modal
+  const resetUploadModal = () => {
+    setUploadModalOpen(false);
+    setUploadFile(null);
+    setUploadProgress(0);
+    setUploadStatus('idle');
+    setUploadResult(null);
+  };
 
   // Load policies
   const loadPolicies = async () => {
@@ -85,40 +148,27 @@ const AdminBusinesses = () => {
     }
   };
 
+  // Load clients for dropdown
+  const loadClients = async () => {
+    try {
+      const response = await clientService.getClients();
+      if (response.success) {
+        setClients(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error loading clients:', err);
+    }
+  };
+
   useEffect(() => {
     loadPolicies();
+    loadClients();
   }, []);
 
   // Open modal
-  const openModal = (action: 'view' | 'edit' | 'delete' | 'add', policy?: Policy) => {
+  const openModal = (action: 'view' | 'delete', policy: Policy) => {
     setModalAction(action);
-    if (policy) setSelectedPolicy(policy);
-    if (action === 'add') {
-      setFormData({
-        client_title: '',
-        client_fullname: '',
-        client_surname: '',
-        client_id_no: '',
-        client_phone: '',
-        client_email: '',
-        client_dob: '',
-        policy_number: '',
-        inception_date: '',
-        strike_date: '',
-        policy_status: 'Active',
-        product_type: '',
-        premium_frequency: '',
-        total_sum_insured: '',
-        annualised_premium: '',
-        initial_gross_premium: '',
-        new_gross_premium: '',
-        sales_branch: '',
-        agent_name: '',
-        agent_code: '',
-      });
-      setFormError('');
-      setFormSuccess('');
-    }
+    setSelectedPolicy(policy);
     setModalOpen(true);
   };
 
@@ -127,79 +177,6 @@ const AdminBusinesses = () => {
     setModalOpen(false);
     setModalAction(null);
     setSelectedPolicy(null);
-    setFormError('');
-    setFormSuccess('');
-    setSubmitting(false);
-  };
-
-  // Handle form input change
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Handle add policy submit (creates client + policy)
-  const handleAddPolicy = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setFormSuccess('');
-    setSubmitting(true);
-
-    try {
-      // First create the client
-      const clientResponse = await clientService.createClient({
-        title: formData.client_title,
-        client_name: `${formData.client_fullname} ${formData.client_surname}`.trim(),
-        full_name: `${formData.client_fullname} ${formData.client_surname}`.trim(),
-        first_name: formData.client_fullname,
-        last_name: formData.client_surname,
-        id_no: formData.client_id_no,
-        phone_no: formData.client_phone,
-        email: formData.client_email,
-        date_of_registration: formData.inception_date || null,
-      });
-
-      if (!clientResponse.success) {
-        setFormError(clientResponse.error || 'Failed to create client');
-        setSubmitting(false);
-        return;
-      }
-
-      // Then create the policy linked to the client
-      const policyResponse = await policyService.createPolicy({
-        client_id: clientResponse.data.id,
-        policy_number: formData.policy_number,
-        inception_date: formData.inception_date,
-        strike_date: formData.strike_date,
-        policy_status: formData.policy_status,
-        product_type: formData.product_type,
-        premium_frequency: formData.premium_frequency,
-        total_sum_insured: parseFloat(formData.total_sum_insured) || 0,
-        annualised_premium: parseFloat(formData.annualised_premium) || 0,
-        initial_gross_premium: parseFloat(formData.initial_gross_premium) || 0,
-        new_gross_premium: parseFloat(formData.new_gross_premium) || 0,
-        sales_branch: formData.sales_branch,
-        agent_name: formData.agent_name,
-        agent_code: formData.agent_code,
-      });
-
-      if (policyResponse.success) {
-        setFormSuccess('Client and Policy created successfully!');
-        await loadPolicies();
-        setTimeout(() => {
-          closeModal();
-        }, 1500);
-      } else {
-        setFormError(policyResponse.error || 'Failed to create policy');
-      }
-    } catch (err: any) {
-      setFormError(err.error || 'Failed to create client and policy');
-      console.error('Create error:', err);
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   // Confirm delete
@@ -216,7 +193,6 @@ const AdminBusinesses = () => {
       }
     } catch (err: any) {
       alert(err.error || 'Failed to delete policy');
-      console.error('Delete error:', err);
     }
   };
 
@@ -251,7 +227,8 @@ const AdminBusinesses = () => {
       item.client_name?.toLowerCase().includes(search) ||
       item.product_type?.toLowerCase().includes(search) ||
       item.policy_status?.toLowerCase().includes(search) ||
-      item.agent_name?.toLowerCase().includes(search)
+      item.agent_name?.toLowerCase().includes(search) ||
+      item.sales_branch?.toLowerCase().includes(search)
     );
   });
 
@@ -259,29 +236,31 @@ const AdminBusinesses = () => {
     {
       title: "Policy Number",
       dataIndex: "policy_number",
+      width: 150,
       render: (text: string) => (
         <span style={{ color: '#c70e2a', fontWeight: 'bold' }}>
-          <FileText size={16} className="me-1" />
+          <FileText size={14} className="me-1" />
           {text || 'N/A'}
         </span>
       ),
       sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
     },
     {
-      title: "Client Name",
+      title: "Client",
       dataIndex: "client_name",
-      render: (text: string) => {
+      width: 180,
+      render: (text: string, record: any) => {
         const displayName = text || 'N/A';
         return (
-          <>
+          <div className="d-flex align-items-center">
             <span 
-              className="avatar mx-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
               style={{
-                width: '35px',
-                height: '35px',
+                width: '32px',
+                height: '32px',
                 backgroundColor: getAvatarColor(displayName),
                 color: '#fff',
-                fontSize: '14px',
+                fontSize: '12px',
                 fontWeight: 'bold',
                 textTransform: 'uppercase'
               }}
@@ -289,24 +268,24 @@ const AdminBusinesses = () => {
               {getInitials(displayName)}
             </span>
             <span className="text-dark">{displayName}</span>
-          </>
+          </div>
         );
       },
       sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
     {
-      title: "Product Type",
+      title: "Product",
       dataIndex: "product_type",
+      width: 140,
       render: (text: string) => <span>{text || 'N/A'}</span>,
       sorter: (a: any, b: any) => (a.product_type || '').localeCompare(b.product_type || ''),
     },
     {
       title: "Status",
       dataIndex: "policy_status",
+      width: 130,
       render: (status: string) => {
         let badgeClass = 'bg-secondary';
-        let displayText = status || 'N/A';
-        
         if (status?.toLowerCase().includes('finalised')) {
           badgeClass = 'bg-success';
         } else if (status?.toLowerCase().includes('unfinalised')) {
@@ -316,73 +295,129 @@ const AdminBusinesses = () => {
         } else if (status?.toLowerCase().includes('active')) {
           badgeClass = 'bg-success';
         }
-        
         return (
-          <span className={`badge ${badgeClass} p-2`} style={{ minWidth: '80px' }}>
-            {displayText}
+          <span className={`badge ${badgeClass} px-2 py-1`} style={{ fontSize: '11px' }}>
+            {status || 'not given'}
           </span>
         );
       },
       sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
     },
     {
-      title: "Premium (KES)",
-      dataIndex: "annualised_premium",
+      title: "Sum Insured (KES)",
+      dataIndex: "total_sum_insured",
+      width: 140,
       render: (value: number) => (
-        <span className="fw-bold" style={{ color: '#2a9d36' }}>
-          KES {formatCurrency(value)}
-        </span>
+        <span style={{ fontWeight: '500' }}>KES {formatCurrency(value)}</span>
+      ),
+      sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
+    },
+    {
+      title: "Annual Premium (KES)",
+      dataIndex: "annualised_premium",
+      width: 150,
+      render: (value: number) => (
+        <span style={{ color: '#2a9d36', fontWeight: '600' }}>KES {formatCurrency(value)}</span>
       ),
       sorter: (a: any, b: any) => (a.annualised_premium || 0) - (b.annualised_premium || 0),
     },
     {
+      title: "Initial Premium",
+      dataIndex: "initial_gross_premium",
+      width: 130,
+      render: (value: number) => <span>KES {formatCurrency(value)}</span>,
+      sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
+    },
+    {
+      title: "New Premium",
+      dataIndex: "new_gross_premium",
+      width: 130,
+      render: (value: number) => <span>KES {formatCurrency(value)}</span>,
+      sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
+    },
+    {
       title: "Frequency",
       dataIndex: "premium_frequency",
+      width: 100,
       render: (text: string) => <span>{text || 'N/A'}</span>,
     },
     {
       title: "Inception Date",
       dataIndex: "inception_date",
+      width: 120,
       render: (date: string) => date ? new Date(date).toLocaleDateString() : 'N/A',
       sorter: (a: any, b: any) => 
         new Date(a.inception_date).getTime() - new Date(b.inception_date).getTime(),
     },
     {
+      title: "Strike Day",
+      dataIndex: "strike_date",
+      width: 100,
+      render: (value: number) => {
+        if (!value && value !== 0) return 'not given';
+        const num = Number(value);
+        if (isNaN(num)) return 'N/A';
+        const suffix = ['th', 'st', 'nd', 'rd'];
+        const mod100 = num % 100;
+        const mod10 = num % 10;
+        let ordinal = 'th';
+        if (mod100 >= 11 && mod100 <= 13) {
+          ordinal = 'th';
+        } else if (mod10 === 1) {
+          ordinal = 'st';
+        } else if (mod10 === 2) {
+          ordinal = 'nd';
+        } else if (mod10 === 3) {
+          ordinal = 'rd';
+        }
+        return <span>{num}{ordinal}</span>;
+      },
+      sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
+    },
+    {
       title: "Agent",
       dataIndex: "agent_name",
-      render: (text: string) => (
-        <span className="text-muted">{text || 'N/A'}</span>
-      ),
+      width: 140,
+      render: (text: string) => <span className="text-muted">{text || 'N/A'}</span>,
+      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
     {
       title: "Action",
       dataIndex: "",
+      width: 120,
       className: "text-end",
       render: (_: any, record: Policy) => (
         <div className="text-end">
           <button
-            className="btn btn-sm me-2"
+            className="btn btn-sm me-1"
             onClick={() => openModal('view', record)}
             title="View"
-            style={{ backgroundColor: '#17a2b8', color: '#fff', border: 'none' }}
+            style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '4px 8px' }}
           >
-            <Eye size={16} />
+            <Eye size={14} />
           </button>
           <button
-            className="btn btn-sm me-2"
-            onClick={() => openModal('edit', record)}
-            title="Edit"
-            style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none' }}
+            className="btn btn-sm me-1"
+            disabled
+            title="Edit (Coming soon)"
+            style={{ 
+              backgroundColor: '#6c757d', 
+              color: '#fff', 
+              border: 'none', 
+              padding: '4px 8px',
+              opacity: 0.5,
+              cursor: 'not-allowed'
+            }}
           >
-            <Edit size={16} />
+            <Edit size={14} />
           </button>
           <button
             className="btn btn-sm"
             onClick={() => openModal('delete', record)}
             title="Delete"
-            style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none' }}
+            style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '4px 8px' }}
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         </div>
       ),
@@ -391,392 +426,61 @@ const AdminBusinesses = () => {
 
   // Get modal content
   const getModalContent = () => {
-    if (modalAction === 'add') {
+    if (modalAction === 'delete' && selectedPolicy) {
       return {
-        title: 'Add New Business',
+        title: 'Delete Policy',
         body: (
-          <form onSubmit={handleAddPolicy}>
-            {formError && <div className="alert alert-danger">{formError}</div>}
-            {formSuccess && <div className="alert alert-success">{formSuccess}</div>}
-
-            <h6 className="mb-3" style={{ color: '#c70e2a' }}>Client Details</h6>
-            <div className="row">
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Title</label>
-                  <select
-                    className="form-control"
-                    name="client_title"
-                    value={formData.client_title}
-                    onChange={handleFormChange}
-                  >
-                    <option value="">Select</option>
-                    <option value="Mr">Mr</option>
-                    <option value="Mrs">Mrs</option>
-                    <option value="Ms">Ms</option>
-                    <option value="Dr">Dr</option>
-                    <option value="Prof">Prof</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="client_fullname"
-                    placeholder="e.g., Debrah Nyatichi"
-                    value={formData.client_fullname}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Surname</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="client_surname"
-                    placeholder="e.g., Kemunto"
-                    value={formData.client_surname}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>ID Number</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="client_id_no"
-                    placeholder="e.g., 11135490"
-                    value={formData.client_id_no}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Phone Number</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="client_phone"
-                    placeholder="e.g., 254722758906"
-                    value={formData.client_phone}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    name="client_email"
-                    placeholder="client@email.com"
-                    value={formData.client_email}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <h6 className="mb-3 mt-3" style={{ color: '#c70e2a' }}>Policy Details</h6>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>Policy Number</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="policy_number"
-                    placeholder="e.g., EDUKN632303"
-                    value={formData.policy_number}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>Product Type</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="product_type"
-                    placeholder="e.g., Education Policy"
-                    value={formData.product_type}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Inception Date</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    name="inception_date"
-                    value={formData.inception_date}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Strike Date</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    name="strike_date"
-                    value={formData.strike_date}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Policy Status</label>
-                  <select
-                    className="form-control"
-                    name="policy_status"
-                    value={formData.policy_status}
-                    onChange={handleFormChange}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Finalised Policy">Finalised</option>
-                    <option value="Unfinalised Policy">Unfinalised</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Premium Frequency</label>
-                  <select
-                    className="form-control"
-                    name="premium_frequency"
-                    value={formData.premium_frequency}
-                    onChange={handleFormChange}
-                  >
-                    <option value="">Select</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Semi-Annual">Semi-Annual</option>
-                    <option value="Annual">Annual</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Total Sum Insured (KES)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="total_sum_insured"
-                    placeholder="0.00"
-                    value={formData.total_sum_insured}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Annualised Premium (KES)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="annualised_premium"
-                    placeholder="0.00"
-                    value={formData.annualised_premium}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Initial Gross Premium (KES)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="initial_gross_premium"
-                    placeholder="0.00"
-                    value={formData.initial_gross_premium}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>New Gross Premium (KES)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="new_gross_premium"
-                    placeholder="0.00"
-                    value={formData.new_gross_premium}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="form-group">
-                  <label>Sales Branch</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="sales_branch"
-                    placeholder="Branch name"
-                    value={formData.sales_branch}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>Agent Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="agent_name"
-                    placeholder="Agent full name"
-                    value={formData.agent_name}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label>Agent Code</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="agent_code"
-                    placeholder="e.g., HISA0001"
-                    value={formData.agent_code}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ backgroundColor: '#c70e2a', borderColor: '#c70e2a' }}
-                disabled={submitting}
-              >
-                {submitting ? 'Creating...' : 'Create Client & Policy'}
-              </button>
-            </div>
-          </form>
+          <div>
+            <p>Are you sure you want to delete policy <strong>{selectedPolicy.policy_number}</strong>?</p>
+            <p className="text-muted">Client: {selectedPolicy.client_name}</p>
+            <p className="text-danger">This action cannot be undone.</p>
+          </div>
+        ),
+        footer: (
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={confirmDelete}
+              style={{ backgroundColor: '#c70e2a', color: '#fff', borderColor: '#c70e2a' }}
+            >
+              Yes, Delete
+            </button>
+          </div>
         ),
       };
     }
 
-    if (!selectedPolicy) return { title: '', body: null, confirmText: '', confirmClass: '' };
-
-    if (modalAction === 'view') {
+    if (modalAction === 'view' && selectedPolicy) {
       return {
         title: 'Policy Details',
         body: (
           <div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Policy Number:</div>
-              <div className="col-8">{selectedPolicy.policy_number}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Client:</div>
-              <div className="col-8">{selectedPolicy.client_name}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Product Type:</div>
-              <div className="col-8">{selectedPolicy.product_type}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Status:</div>
-              <div className="col-8">{selectedPolicy.policy_status}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Premium:</div>
-              <div className="col-8">KES {formatCurrency(selectedPolicy.annualised_premium)}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Frequency:</div>
-              <div className="col-8">{selectedPolicy.premium_frequency}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Inception Date:</div>
-              <div className="col-8">{selectedPolicy.inception_date ? new Date(selectedPolicy.inception_date).toLocaleDateString() : 'N/A'}</div>
-            </div>
-            <div className="row mb-2">
-              <div className="col-4 fw-bold">Agent:</div>
-              <div className="col-8">{selectedPolicy.agent_name || 'N/A'}</div>
-            </div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Policy Number:</div><div className="col-8">{selectedPolicy.policy_number}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Client:</div><div className="col-8">{selectedPolicy.client_name}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Product Type:</div><div className="col-8">{selectedPolicy.product_type}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Status:</div><div className="col-8">{selectedPolicy.policy_status}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Total Sum Insured:</div><div className="col-8">KES {formatCurrency(selectedPolicy.total_sum_insured)}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Annualised Premium:</div><div className="col-8">KES {formatCurrency(selectedPolicy.annualised_premium)}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Initial Gross Premium:</div><div className="col-8">KES {formatCurrency(selectedPolicy.initial_gross_premium)}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">New Gross Premium:</div><div className="col-8">KES {formatCurrency(selectedPolicy.new_gross_premium)}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Frequency:</div><div className="col-8">{selectedPolicy.premium_frequency}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Inception Date:</div><div className="col-8">{selectedPolicy.inception_date ? new Date(selectedPolicy.inception_date).toLocaleDateString() : 'N/A'}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Strike Day:</div><div className="col-8">{selectedPolicy.strike_date || 'N/A'}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Agent:</div><div className="col-8">{selectedPolicy.agent_name || 'N/A'}</div></div>
+            <div className="row mb-2"><div className="col-4 fw-bold">Branch:</div><div className="col-8">{selectedPolicy.sales_branch || 'N/A'}</div></div>
           </div>
         ),
-        confirmText: 'Close',
-        confirmClass: 'btn-secondary',
-      };
-    }
-
-    if (modalAction === 'edit') {
-      return {
-        title: 'Edit Policy',
-        body: (
-          <div>
-            <p>Edit functionality coming soon...</p>
-            <p className="text-muted">Policy: {selectedPolicy.policy_number}</p>
+        footer: (
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={closeModal}>Close</button>
           </div>
         ),
-        confirmText: 'Close',
-        confirmClass: 'btn-secondary',
       };
     }
 
-    if (modalAction === 'delete') {
-      return {
-        title: 'Delete Policy',
-        body: (
-          <p>Are you sure you want to delete policy <strong>{selectedPolicy.policy_number}</strong> for client <strong>{selectedPolicy.client_name}</strong>?</p>
-        ),
-        confirmText: 'Yes, Delete',
-        confirmClass: 'btn-danger',
-      };
-    }
-
-    return { title: '', body: null, confirmText: '', confirmClass: '' };
+    return { title: '', body: null, footer: null };
   };
 
   const modalContent = getModalContent();
@@ -789,8 +493,8 @@ const AdminBusinesses = () => {
         <div className="content container-fluid">
           <div className="page-header">
             <div className="row">
-              <div className="col-sm-8">
-                <h3 className="page-title">Businesses</h3>
+              <div className="col-sm-7">
+                <h3 className="page-title">Businesses / Policies</h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
@@ -798,23 +502,19 @@ const AdminBusinesses = () => {
                   <li className="breadcrumb-item active">Businesses</li>
                 </ul>
               </div>
-              <div className="col-sm-4 text-end">
+              <div className="col-sm-5 text-end">
                 <button
                   className="btn btn-primary"
-                  onClick={() => openModal('add')}
-                  style={{ backgroundColor: '#c70e2a', borderColor: '#c70e2a' }}
+                  onClick={() => setUploadModalOpen(true)}
+                  style={{ backgroundColor: '#2a9d36', borderColor: '#2a9d36' }}
                 >
-                  <Plus size={16} className="me-1" /> Add Business
+                  <Upload size={16} className="me-1" /> Update Policies
                 </button>
               </div>
             </div>
           </div>
 
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
+          {error && <div className="alert alert-danger">{error}</div>}
 
           <div className="row">
             <div className="col-sm-12">
@@ -822,9 +522,9 @@ const AdminBusinesses = () => {
                 <div className="card-header">
                   <div className="row align-items-center">
                     <div className="col">
-                      <h5 className="card-title mb-0">All Businesses</h5>
+                      <h5 className="card-title mb-0">All Policies</h5>
                       <p className="text-muted mb-0">
-                        Total: <strong className="text-dark">{filteredData.length}</strong> policies
+                        Total: <strong>{filteredData.length}</strong> policies
                       </p>
                     </div>
                     <div className="col-auto">
@@ -853,7 +553,7 @@ const AdminBusinesses = () => {
                       pagination={{
                         total: filteredData.length,
                         showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} entries`,
+                          `Showing ${range[0]} to ${range[1]} of ${total} policies`,
                         showSizeChanger: true,
                         onShowSizeChange: onShowSizeChange,
                         itemRender: itemRender,
@@ -863,9 +563,8 @@ const AdminBusinesses = () => {
                       columns={columns}
                       dataSource={filteredData}
                       rowKey={(record) => record.id}
-                      locale={{
-                        emptyText: 'No policies found'
-                      }}
+                      locale={{ emptyText: 'No policies found' }}
+                      scroll={{ x: 1800 }}
                     />
                   </div>
                 </div>
@@ -875,44 +574,216 @@ const AdminBusinesses = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Delete/View Modal */}
       {modalOpen && (
         <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '800px' }}>
             <div className="modal-content">
               <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
                 <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={closeModal}
-                  aria-label="Close"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                />
+                <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
               </div>
               <div className="modal-body">
                 {modalContent.body}
               </div>
-              {modalAction !== 'add' && (
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className={`btn ${modalContent.confirmClass}`}
-                    onClick={modalAction === 'delete' ? confirmDelete : closeModal}
+              {modalContent.footer}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Modal */}
+      {uploadModalOpen && (
+        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '600px' }}>
+            <div className="modal-content">
+              {/* Modal Header */}
+              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
+                <h5 className="modal-title" style={{ color: '#fff' }}>
+                  <Upload size={18} className="me-2" /> Update Policies
+                </h5>
+                <button type="button" className="btn-close" onClick={resetUploadModal} style={{ filter: 'brightness(0) invert(1)' }} />
+              </div>
+
+              {/* Modal Body */}
+              <div className="modal-body" style={{ padding: '25px' }}>
+                {/* Drag & Drop Area */}
+                {uploadStatus === 'idle' && (
+                  <div
+                    className="drop-zone"
+                    style={{
+                      border: '2px dashed #c70e2a',
+                      borderRadius: '10px',
+                      padding: '40px 20px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: '#fdf0f2',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.style.backgroundColor = '#fce4e8';
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#fdf0f2';
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files[0];
+                      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                        handleFileSelect(file);
+                      }
+                    }}
+                    onClick={() => document.getElementById('fileInput')?.click()}
                   >
-                    {modalContent.confirmText}
-                  </button>
-                  {modalAction !== 'delete' && (
+                    <FileText size={48} style={{ color: '#c70e2a', marginBottom: '15px' }} />
+                    <p style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+                      Drag & drop your Excel file here
+                    </p>
+                    <p style={{ fontSize: '14px', color: '#666' }}>
+                      or <span style={{ color: '#c70e2a', fontWeight: '500' }}>browse</span> to select a file
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#999' }}>
+                      Supports .xlsx and .xls files
+                    </p>
+                    <input
+                      id="fileInput"
+                      type="file"
+                      accept=".xlsx,.xls"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileSelect(file);
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* File Selected */}
+                {uploadFile && uploadStatus === 'idle' && (
+                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center">
+                        <FileText size={24} style={{ color: '#2a9d36' }} />
+                        <span style={{ marginLeft: '10px', fontWeight: '500' }}>{uploadFile.name}</span>
+                        <span style={{ marginLeft: '10px', fontSize: '12px', color: '#999' }}>
+                          ({(uploadFile.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => setUploadFile(null)}
+                        style={{ color: '#c70e2a', background: 'none', border: 'none' }}
+                      >
+                        <XCircle size={18} />
+                      </button>
+                    </div>
+                    <div style={{ marginTop: '15px' }}>
+                      <button
+                        className="btn w-100"
+                        onClick={handleUpload}
+                        style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '10px' }}
+                      >
+                        Upload & Import
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Uploading Progress */}
+                {uploadStatus === 'uploading' && (
+                  <div style={{ padding: '20px 0' }}>
+                    <p style={{ textAlign: 'center', fontWeight: '500' }}>Importing data...</p>
+                    <div style={{ width: '100%', backgroundColor: '#e9ecef', borderRadius: '5px', overflow: 'hidden', height: '20px' }}>
+                      <div
+                        style={{
+                          width: `${uploadProgress}%`,
+                          backgroundColor: '#c70e2a',
+                          height: '100%',
+                          transition: 'width 0.3s ease'
+                        }}
+                      />
+                    </div>
+                    <p style={{ textAlign: 'center', fontSize: '14px', color: '#666', marginTop: '10px' }}>
+                      {uploadProgress < 100 ? `Processing... ${uploadProgress}%` : 'Processing...'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Success Result */}
+                {uploadStatus === 'success' && uploadResult && (
+                  <div style={{ padding: '10px 0' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                      <CheckCircle size={48} style={{ color: '#2a9d36' }} />
+                      <h5 style={{ marginTop: '10px', color: '#2a9d36' }}>Import Complete!</h5>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2a9d36' }}>{uploadResult.newClients}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>New Clients</div>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#F15A29' }}>{uploadResult.updatedClients}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>Updated Clients</div>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2a9d36' }}>{uploadResult.newPolicies}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>New Policies</div>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#c70e2a' }}>{uploadResult.skipped}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>Skipped</div>
+                      </div>
+                    </div>
+                    {uploadResult.errors && uploadResult.errors.length > 0 && (
+                      <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#fdf0f2', borderRadius: '8px' }}>
+                        <p style={{ fontSize: '13px', color: '#c70e2a', marginBottom: '5px' }}>
+                          <AlertCircle size={14} /> {uploadResult.errors.length} error(s) found
+                        </p>
+                        {uploadResult.errors.slice(0, 3).map((err, idx) => (
+                          <p key={idx} style={{ fontSize: '12px', color: '#666', marginBottom: '2px' }}>• {err}</p>
+                        ))}
+                        {uploadResult.errors.length > 3 && (
+                          <p style={{ fontSize: '12px', color: '#666' }}>... and {uploadResult.errors.length - 3} more</p>
+                        )}
+                      </div>
+                    )}
                     <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={closeModal}
+                      className="btn w-100 mt-3"
+                      onClick={resetUploadModal}
+                      style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '10px' }}
                     >
-                      Cancel
+                      Close
                     </button>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+
+                {/* Error Result */}
+                {uploadStatus === 'error' && uploadResult && (
+                  <div style={{ padding: '10px 0' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                      <XCircle size={48} style={{ color: '#c70e2a' }} />
+                      <h5 style={{ marginTop: '10px', color: '#c70e2a' }}>Import Failed</h5>
+                    </div>
+                    <div style={{ padding: '15px', backgroundColor: '#fdf0f2', borderRadius: '8px' }}>
+                      {uploadResult.errors.map((err, idx) => (
+                        <p key={idx} style={{ color: '#c70e2a', marginBottom: '5px' }}>• {err}</p>
+                      ))}
+                    </div>
+                    <button
+                      className="btn w-100 mt-3"
+                      onClick={() => {
+                        setUploadStatus('idle');
+                        setUploadResult(null);
+                        setUploadFile(null);
+                      }}
+                      style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '10px' }}
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -922,3 +793,4 @@ const AdminBusinesses = () => {
 };
 
 export default AdminBusinesses;
+
