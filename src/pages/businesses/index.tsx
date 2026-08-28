@@ -8,7 +8,6 @@ import { Link } from "react-router-dom";
 import Header from "../header";
 import { Eye, Edit, Trash2, FileText, Search, Upload, CheckCircle, XCircle, AlertCircle } from 'react-feather';
 import { policyService } from '../../services/policy';
-import { clientService } from '../../services/client';
 
 interface Policy {
   id: string;
@@ -28,17 +27,11 @@ interface Policy {
   agent_name: string;
   agent_code: string;
   sales_branch: string;
-}
-
-interface Client {
-  id: string;
-  client_name: string;
-  id_no: string;
+  updated_at: string;
 }
 
 const AdminBusinesses = () => {
   const [data, setData] = useState<Policy[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +53,10 @@ const AdminBusinesses = () => {
     skipped: number;
     errors: string[];
   } | null>(null);
+
+  // Policy history state
+const [policyHistory, setPolicyHistory] = useState<any[]>([]);
+const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Handle file selection
   const handleFileSelect = (file: File) => {
@@ -148,36 +145,39 @@ const AdminBusinesses = () => {
     }
   };
 
-  // Load clients for dropdown
-  const loadClients = async () => {
-    try {
-      const response = await clientService.getClients();
-      if (response.success) {
-        setClients(response.data);
-      }
-    } catch (err: any) {
-      console.error('Error loading clients:', err);
-    }
-  };
-
   useEffect(() => {
     loadPolicies();
-    loadClients();
   }, []);
 
   // Open modal
-  const openModal = (action: 'view' | 'delete', policy: Policy) => {
-    setModalAction(action);
-    setSelectedPolicy(policy);
-    setModalOpen(true);
-  };
+const openModal = async (action: 'view' | 'delete', policy: Policy) => {
+  setModalAction(action);
+  setSelectedPolicy(policy);
+  setModalOpen(true);
+  
+  // Load policy history when viewing
+  if (action === 'view') {
+    setLoadingHistory(true);
+    try {
+      const response = await policyService.getPolicyHistory(policy.id);
+      if (response.success) {
+        setPolicyHistory(response.data);
+      }
+    } catch (err) {
+      console.error('Error loading policy history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }
+};
 
   // Close modal
   const closeModal = () => {
-    setModalOpen(false);
-    setModalAction(null);
-    setSelectedPolicy(null);
-  };
+  setModalOpen(false);
+  setModalAction(null);
+  setSelectedPolicy(null);
+  setPolicyHistory([]); // Clear history
+};
 
   // Confirm delete
   const confirmDelete = async () => {
@@ -249,7 +249,7 @@ const AdminBusinesses = () => {
       title: "Client",
       dataIndex: "client_name",
       width: 180,
-      render: (text: string, record: any) => {
+      render: (text: string) => {
         const displayName = text || 'N/A';
         return (
           <div className="d-flex align-items-center">
@@ -357,7 +357,6 @@ const AdminBusinesses = () => {
         if (!value && value !== 0) return 'not given';
         const num = Number(value);
         if (isNaN(num)) return 'N/A';
-        const suffix = ['th', 'st', 'nd', 'rd'];
         const mod100 = num % 100;
         const mod10 = num % 10;
         let ordinal = 'th';
@@ -381,6 +380,41 @@ const AdminBusinesses = () => {
       render: (text: string) => <span className="text-muted">{text || 'N/A'}</span>,
       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
+    {
+  title: "Last Updated",
+  dataIndex: "updated_at",
+  width: 150,
+  render: (date: string) => {
+    if (!date) return 'N/A';
+    const updated = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - updated.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    let timeAgo = '';
+    if (diffMins < 1) {
+      timeAgo = 'Just now';
+    } else if (diffMins < 60) {
+      timeAgo = `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+      timeAgo = `${diffHours}h ago`;
+    } else {
+      timeAgo = `${diffDays}d ago`;
+    }
+    
+    return (
+      <span style={{ fontSize: '12px' }}>
+        {updated.toLocaleDateString()} {updated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <br />
+        <span style={{ color: '#999', fontSize: '11px' }}>{timeAgo}</span>
+      </span>
+    );
+  },
+  sorter: (a: any, b: any) => 
+    new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+},
     {
       title: "Action",
       dataIndex: "",
@@ -453,32 +487,96 @@ const AdminBusinesses = () => {
     }
 
     if (modalAction === 'view' && selectedPolicy) {
-      return {
-        title: 'Policy Details',
-        body: (
-          <div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Policy Number:</div><div className="col-8">{selectedPolicy.policy_number}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Client:</div><div className="col-8">{selectedPolicy.client_name}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Product Type:</div><div className="col-8">{selectedPolicy.product_type}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Status:</div><div className="col-8">{selectedPolicy.policy_status}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Total Sum Insured:</div><div className="col-8">KES {formatCurrency(selectedPolicy.total_sum_insured)}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Annualised Premium:</div><div className="col-8">KES {formatCurrency(selectedPolicy.annualised_premium)}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Initial Gross Premium:</div><div className="col-8">KES {formatCurrency(selectedPolicy.initial_gross_premium)}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">New Gross Premium:</div><div className="col-8">KES {formatCurrency(selectedPolicy.new_gross_premium)}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Frequency:</div><div className="col-8">{selectedPolicy.premium_frequency}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Inception Date:</div><div className="col-8">{selectedPolicy.inception_date ? new Date(selectedPolicy.inception_date).toLocaleDateString() : 'N/A'}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Strike Day:</div><div className="col-8">{selectedPolicy.strike_date || 'N/A'}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Agent:</div><div className="col-8">{selectedPolicy.agent_name || 'N/A'}</div></div>
-            <div className="row mb-2"><div className="col-4 fw-bold">Branch:</div><div className="col-8">{selectedPolicy.sales_branch || 'N/A'}</div></div>
+  return {
+    title: 'Policy Details',
+    body: (
+      <div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Policy Number:</div>
+          <div className="col-8">{selectedPolicy.policy_number}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Client:</div>
+          <div className="col-8">{selectedPolicy.client_name}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Product Type:</div>
+          <div className="col-8">{selectedPolicy.product_type}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Status:</div>
+          <div className="col-8">{selectedPolicy.policy_status}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Total Sum Insured:</div>
+          <div className="col-8">KES {formatCurrency(selectedPolicy.total_sum_insured)}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Annualised Premium:</div>
+          <div className="col-8">KES {formatCurrency(selectedPolicy.annualised_premium)}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Frequency:</div>
+          <div className="col-8">{selectedPolicy.premium_frequency}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Inception Date:</div>
+          <div className="col-8">{selectedPolicy.inception_date ? new Date(selectedPolicy.inception_date).toLocaleDateString() : 'N/A'}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Strike Day:</div>
+          <div className="col-8">{selectedPolicy.strike_date || 'N/A'}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Agent:</div>
+          <div className="col-8">{selectedPolicy.agent_name || 'N/A'}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Branch:</div>
+          <div className="col-8">{selectedPolicy.sales_branch || 'N/A'}</div>
+        </div>
+        <div className="row mb-2">
+          <div className="col-4 fw-bold">Last Updated:</div>
+          <div className="col-8">{selectedPolicy.updated_at ? new Date(selectedPolicy.updated_at).toLocaleString() : 'N/A'}</div>
+        </div>
+        
+        {/* Change History Section */}
+        <hr />
+        <h6 className="mt-3" style={{ color: '#c70e2a' }}>Change History</h6>
+        {loadingHistory ? (
+          <p className="text-muted" style={{ fontSize: '13px' }}>Loading history...</p>
+        ) : policyHistory.length === 0 ? (
+          <p className="text-muted" style={{ fontSize: '13px' }}>No changes recorded</p>
+        ) : (
+          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            {policyHistory.map((change: any, idx: number) => (
+              <div key={idx} style={{ 
+                padding: '8px 12px', 
+                marginBottom: '5px', 
+                backgroundColor: '#f8f9fa', 
+                borderRadius: '4px',
+                fontSize: '13px'
+              }}>
+                <span style={{ fontWeight: '500' }}>{change.field}:</span>
+                <span style={{ color: '#c70e2a' }}>{change.old_value}</span>
+                <span style={{ margin: '0 5px' }}>→</span>
+                <span style={{ color: '#2a9d36' }}>{change.new_value}</span>
+                <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
+                  {new Date(change.changed_at).toLocaleString()}
+                </span>
+              </div>
+            ))}
           </div>
-        ),
-        footer: (
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={closeModal}>Close</button>
-          </div>
-        ),
-      };
-    }
+        )}
+      </div>
+    ),
+    footer: (
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary" onClick={closeModal}>Close</button>
+      </div>
+    ),
+  };
+}
 
     return { title: '', body: null, footer: null };
   };

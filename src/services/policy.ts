@@ -64,4 +64,14 @@ importExcel: async (formData: FormData): Promise<any> => {
   }
 },
 
+// Get policy change history
+getPolicyHistory: async (id: string): Promise<any> => {
+  try {
+    const response = await apiClient.get(`/policies/${id}/history`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to get policy history' };
+  }
+},
+
 };
