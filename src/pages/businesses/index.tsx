@@ -15,6 +15,7 @@ interface Policy {
   client_name: string;
   full_name: string;
   client_id: string;
+  title: string;
   product_type: string;
   policy_status: string;
   premium_frequency: string;
@@ -233,230 +234,211 @@ const openModal = async (action: 'view' | 'delete', policy: Policy) => {
   });
 
   const columns = [
-    {
-      title: "Policy Number",
-      dataIndex: "policy_number",
-      width: 150,
-      render: (text: string) => (
-        <span style={{ color: '#c70e2a', fontWeight: 'bold' }}>
-          <FileText size={14} className="me-1" />
-          {text || 'N/A'}
-        </span>
-      ),
-      sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
-    },
-    {
-      title: "Client",
-      dataIndex: "client_name",
-      width: 180,
-      render: (text: string) => {
-        const displayName = text || 'N/A';
-        return (
-          <div className="d-flex align-items-center">
-            <span 
-              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '32px',
-                height: '32px',
-                backgroundColor: getAvatarColor(displayName),
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                textTransform: 'uppercase'
-              }}
-            >
-              {getInitials(displayName)}
-            </span>
-            <span className="text-dark">{displayName}</span>
-          </div>
-        );
-      },
-      sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
-    },
-    {
-      title: "Product",
-      dataIndex: "product_type",
-      width: 140,
-      render: (text: string) => <span>{text || 'N/A'}</span>,
-      sorter: (a: any, b: any) => (a.product_type || '').localeCompare(b.product_type || ''),
-    },
-    {
-      title: "Status",
-      dataIndex: "policy_status",
-      width: 130,
-      render: (status: string) => {
-        let badgeClass = 'bg-secondary';
-        if (status?.toLowerCase().includes('finalised')) {
-          badgeClass = 'bg-success';
-        } else if (status?.toLowerCase().includes('unfinalised')) {
-          badgeClass = 'bg-warning text-dark';
-        } else if (status?.toLowerCase().includes('cancelled')) {
-          badgeClass = 'bg-danger';
-        } else if (status?.toLowerCase().includes('active')) {
-          badgeClass = 'bg-success';
-        }
-        return (
-          <span className={`badge ${badgeClass} px-2 py-1`} style={{ fontSize: '11px' }}>
-            {status || 'not given'}
-          </span>
-        );
-      },
-      sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
-    },
-    {
-      title: "Sum Insured (KES)",
-      dataIndex: "total_sum_insured",
-      width: 140,
-      render: (value: number) => (
-        <span style={{ fontWeight: '500' }}>KES {formatCurrency(value)}</span>
-      ),
-      sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
-    },
-    {
-      title: "Annual Premium (KES)",
-      dataIndex: "annualised_premium",
-      width: 150,
-      render: (value: number) => (
-        <span style={{ color: '#2a9d36', fontWeight: '600' }}>KES {formatCurrency(value)}</span>
-      ),
-      sorter: (a: any, b: any) => (a.annualised_premium || 0) - (b.annualised_premium || 0),
-    },
-    {
-      title: "Initial Premium",
-      dataIndex: "initial_gross_premium",
-      width: 130,
-      render: (value: number) => <span>KES {formatCurrency(value)}</span>,
-      sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
-    },
-    {
-      title: "New Premium",
-      dataIndex: "new_gross_premium",
-      width: 130,
-      render: (value: number) => <span>KES {formatCurrency(value)}</span>,
-      sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
-    },
-    {
-      title: "Frequency",
-      dataIndex: "premium_frequency",
-      width: 100,
-      render: (text: string) => <span>{text || 'N/A'}</span>,
-    },
-    {
-      title: "Inception Date",
-      dataIndex: "inception_date",
-      width: 120,
-      render: (date: string) => date ? new Date(date).toLocaleDateString() : 'N/A',
-      sorter: (a: any, b: any) => 
-        new Date(a.inception_date).getTime() - new Date(b.inception_date).getTime(),
-    },
-    {
-      title: "Strike Day",
-      dataIndex: "strike_date",
-      width: 100,
-      render: (value: number) => {
-        if (!value && value !== 0) return 'not given';
-        const num = Number(value);
-        if (isNaN(num)) return 'N/A';
-        const mod100 = num % 100;
-        const mod10 = num % 10;
-        let ordinal = 'th';
-        if (mod100 >= 11 && mod100 <= 13) {
-          ordinal = 'th';
-        } else if (mod10 === 1) {
-          ordinal = 'st';
-        } else if (mod10 === 2) {
-          ordinal = 'nd';
-        } else if (mod10 === 3) {
-          ordinal = 'rd';
-        }
-        return <span>{num}{ordinal}</span>;
-      },
-      sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
-    },
-    {
-      title: "Agent",
-      dataIndex: "agent_name",
-      width: 140,
-      render: (text: string) => <span className="text-muted">{text || 'N/A'}</span>,
-      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
-    },
-    {
-  title: "Last Updated",
-  dataIndex: "updated_at",
-  width: 150,
-  render: (date: string) => {
-    if (!date) return 'N/A';
-    const updated = new Date(date);
-    const now = new Date();
-    const diffMs = now.getTime() - updated.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    let timeAgo = '';
-    if (diffMins < 1) {
-      timeAgo = 'Just now';
-    } else if (diffMins < 60) {
-      timeAgo = `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      timeAgo = `${diffHours}h ago`;
-    } else {
-      timeAgo = `${diffDays}d ago`;
-    }
-    
-    return (
-      <span style={{ fontSize: '12px' }}>
-        {updated.toLocaleDateString()} {updated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        <br />
-        <span style={{ color: '#999', fontSize: '11px' }}>{timeAgo}</span>
+  {
+    title: "Policy Number",
+    dataIndex: "policy_number",
+    width: 150,
+    render: (text: string) => (
+      <span style={{ color: '#c70e2a', fontWeight: 'bold' }}>
+        <FileText size={14} className="me-1" />
+        {text || 'N/A'}
       </span>
-    );
+    ),
+    sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
   },
-  sorter: (a: any, b: any) => 
-    new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
-},
-    {
-      title: "Action",
-      dataIndex: "",
-      width: 120,
-      className: "text-end",
-      render: (_: any, record: Policy) => (
-        <div className="text-end">
-          <button
-            className="btn btn-sm me-1"
-            onClick={() => openModal('view', record)}
-            title="View"
-            style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '4px 8px' }}
-          >
-            <Eye size={14} />
-          </button>
-          <button
-            className="btn btn-sm me-1"
-            disabled
-            title="Edit (Coming soon)"
-            style={{ 
-              backgroundColor: '#6c757d', 
-              color: '#fff', 
-              border: 'none', 
-              padding: '4px 8px',
-              opacity: 0.5,
-              cursor: 'not-allowed'
+  {
+    title: "Client",
+    dataIndex: "client_name",
+    width: 180,
+    render: (text: string) => {
+      const displayName = text || 'N/A';
+      return (
+        <div className="d-flex align-items-center">
+          <span 
+            className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+            style={{
+              width: '32px',
+              height: '32px',
+              backgroundColor: getAvatarColor(displayName),
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase'
             }}
           >
-            <Edit size={14} />
-          </button>
-          <button
-            className="btn btn-sm"
-            onClick={() => openModal('delete', record)}
-            title="Delete"
-            style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '4px 8px' }}
-          >
-            <Trash2 size={14} />
-          </button>
+            {getInitials(displayName)}
+          </span>
+          <span className="text-dark">{displayName}</span>
         </div>
-      ),
+      );
     },
-  ];
+    sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
+  },
+  {
+    title: "Status",
+    dataIndex: "policy_status",
+    width: 130,
+    render: (status: string) => {
+      let badgeClass = 'bg-secondary';
+      let icon = null;
+      if (status?.toLowerCase().includes('finalised')) {
+        badgeClass = 'bg-success';
+      } else if (status?.toLowerCase().includes('unfinalised')) {
+        badgeClass = 'bg-warning text-dark';
+      } else if (status?.toLowerCase().includes('cancelled')) {
+        badgeClass = 'bg-danger';
+      } else if (status?.toLowerCase().includes('active')) {
+        badgeClass = 'bg-success';
+      }
+      return (
+        <span className={`badge ${badgeClass} px-2 py-1`} style={{ fontSize: '11px', minWidth: '80px' }}>
+          {status || 'not given'}
+        </span>
+      );
+    },
+    sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
+  },
+  {
+    title: "Frequency",
+    dataIndex: "premium_frequency",
+    width: 100,
+    render: (text: string) => <span>{text || 'N/A'}</span>,
+  },
+  {
+    title: "Initial Premium (KES)",
+    dataIndex: "initial_gross_premium",
+    width: 140,
+    render: (value: number) => (
+      <span style={{ fontWeight: '500' }}>KES {formatCurrency(value)}</span>
+    ),
+    sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
+  },
+  {
+    title: "New Premium (KES)",
+    dataIndex: "new_gross_premium",
+    width: 140,
+    render: (value: number) => (
+      <span style={{ fontWeight: '500', color: '#2a9d36' }}>KES {formatCurrency(value)}</span>
+    ),
+    sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
+  },
+  {
+    title: "Strike Day",
+    dataIndex: "strike_date",
+    width: 100,
+    render: (value: number) => {
+      if (!value && value !== 0) return 'not given';
+      const num = Number(value);
+      if (isNaN(num)) return 'N/A';
+      const mod100 = num % 100;
+      const mod10 = num % 10;
+      let ordinal = 'th';
+      if (mod100 >= 11 && mod100 <= 13) {
+        ordinal = 'th';
+      } else if (mod10 === 1) {
+        ordinal = 'st';
+      } else if (mod10 === 2) {
+        ordinal = 'nd';
+      } else if (mod10 === 3) {
+        ordinal = 'rd';
+      }
+      return <span>{num}{ordinal}</span>;
+    },
+    sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
+  },
+  {
+    title: "Sum Insured (KES)",
+    dataIndex: "total_sum_insured",
+    width: 140,
+    render: (value: number) => (
+      <span style={{ fontWeight: '500' }}>KES {formatCurrency(value)}</span>
+    ),
+    sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
+  },
+  {
+    title: "Agent",
+    dataIndex: "agent_name",
+    width: 140,
+    render: (text: string) => <span className="text-muted">{text || 'N/A'}</span>,
+    sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
+  },
+  {
+    title: "Last Updated",
+    dataIndex: "updated_at",
+    width: 150,
+    render: (date: string) => {
+      if (!date) return 'N/A';
+      const updated = new Date(date);
+      const now = new Date();
+      const diffMs = now.getTime() - updated.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      let timeAgo = '';
+      if (diffMins < 1) {
+        timeAgo = 'Just now';
+      } else if (diffMins < 60) {
+        timeAgo = `${diffMins}m ago`;
+      } else if (diffHours < 24) {
+        timeAgo = `${diffHours}h ago`;
+      } else {
+        timeAgo = `${diffDays}d ago`;
+      }
+      
+      return (
+        <span style={{ fontSize: '12px' }}>
+          {updated.toLocaleDateString()} {updated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <br />
+          <span style={{ color: '#999', fontSize: '11px' }}>{timeAgo}</span>
+        </span>
+      );
+    },
+    sorter: (a: any, b: any) => 
+      new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+  },
+  {
+    title: "Action",
+    dataIndex: "",
+    width: 120,
+    className: "text-end",
+    render: (_: any, record: Policy) => (
+      <div className="text-end">
+        <button
+          className="btn btn-sm me-1"
+          onClick={() => openModal('view', record)}
+          title="View"
+          style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '4px 8px' }}
+        >
+          <Eye size={14} />
+        </button>
+        <button
+          className="btn btn-sm me-1"
+          disabled
+          title="Edit (Coming soon)"
+          style={{ 
+            backgroundColor: '#6c757d', 
+            color: '#fff', 
+            border: 'none', 
+            padding: '4px 8px',
+            opacity: 0.5,
+            cursor: 'not-allowed'
+          }}
+        >
+          <Edit size={14} />
+        </button>
+        <button
+          className="btn btn-sm"
+          onClick={() => openModal('delete', record)}
+          title="Delete"
+          style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '4px 8px' }}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    ),
+  },
+];
 
   // Get modal content
   const getModalContent = () => {
@@ -491,58 +473,115 @@ const openModal = async (action: 'view' | 'delete', policy: Policy) => {
     title: 'Policy Details',
     body: (
       <div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Policy Number:</div>
-          <div className="col-8">{selectedPolicy.policy_number}</div>
+        {/* Policy Header */}
+        <div style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '15px', 
+          borderRadius: '8px',
+          marginBottom: '20px',
+          borderLeft: '4px solid #c70e2a'
+        }}>
+          <div className="row">
+            <div className="col-6">
+              <span style={{ color: '#999', fontSize: '12px' }}>Policy Number</span>
+              <h5 style={{ color: '#c70e2a', fontWeight: 'bold', marginBottom: '0' }}>
+                {selectedPolicy.policy_number}
+              </h5>
+            </div>
+            <div className="col-6 text-end">
+              <span style={{ color: '#999', fontSize: '12px' }}>Status</span>
+              <div>
+                <span className={`badge ${selectedPolicy.policy_status?.toLowerCase().includes('finalised') ? 'bg-success' : 
+                  selectedPolicy.policy_status?.toLowerCase().includes('unfinalised') ? 'bg-warning text-dark' :
+                  selectedPolicy.policy_status?.toLowerCase().includes('cancelled') ? 'bg-danger' : 'bg-secondary'}`} 
+                  style={{ fontSize: '14px', padding: '5px 15px' }}>
+                  {selectedPolicy.policy_status || 'N/A'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Client:</div>
-          <div className="col-8">{selectedPolicy.client_name}</div>
+
+        {/* Two Column Layout */}
+        <div className="row">
+          {/* Left Column */}
+          <div className="col-6">
+            <div style={{ marginBottom: '15px' }}>
+  <span style={{ color: '#999', fontSize: '12px' }}>Client</span>
+  <div style={{ fontWeight: '500' }}>
+    {selectedPolicy.title && selectedPolicy.title.trim() !== '' ? `${selectedPolicy.title} ` : ''}{selectedPolicy.client_name || 'N/A'}
+  </div>
+</div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Client ID</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.client_id || 'N/A'}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Product Type</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.product_type || 'N/A'}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Premium Frequency</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.premium_frequency || 'N/A'}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Inception Date</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.inception_date ? new Date(selectedPolicy.inception_date).toLocaleDateString() : 'N/A'}</div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="col-6">
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Strike Day</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.strike_date || 'N/A'}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Total Sum Insured</span>
+              <div style={{ fontWeight: '500', color: '#2a9d36' }}>KES {formatCurrency(selectedPolicy.total_sum_insured)}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Annualised Premium</span>
+              <div style={{ fontWeight: '500', color: '#2a9d36' }}>KES {formatCurrency(selectedPolicy.annualised_premium)}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>Initial Gross Premium</span>
+              <div style={{ fontWeight: '500' }}>KES {formatCurrency(selectedPolicy.initial_gross_premium)}</div>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ color: '#999', fontSize: '12px' }}>New Gross Premium</span>
+              <div style={{ fontWeight: '500', color: '#c70e2a' }}>KES {formatCurrency(selectedPolicy.new_gross_premium)}</div>
+            </div>
+          </div>
         </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Product Type:</div>
-          <div className="col-8">{selectedPolicy.product_type}</div>
+
+        {/* Agent & Branch Section */}
+        <div style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '12px 15px', 
+          borderRadius: '8px',
+          marginTop: '10px',
+          marginBottom: '15px'
+        }}>
+          <div className="row">
+            <div className="col-6">
+              <span style={{ color: '#999', fontSize: '12px' }}>Agent</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.agent_name || 'N/A'}</div>
+              <span style={{ color: '#999', fontSize: '12px' }}>Agent Code</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.agent_code || 'N/A'}</div>
+            </div>
+            <div className="col-6">
+              <span style={{ color: '#999', fontSize: '12px' }}>Sales Branch</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.sales_branch || 'N/A'}</div>
+              <span style={{ color: '#999', fontSize: '12px' }}>Last Updated</span>
+              <div style={{ fontWeight: '500' }}>{selectedPolicy.updated_at ? new Date(selectedPolicy.updated_at).toLocaleString() : 'N/A'}</div>
+            </div>
+          </div>
         </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Status:</div>
-          <div className="col-8">{selectedPolicy.policy_status}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Total Sum Insured:</div>
-          <div className="col-8">KES {formatCurrency(selectedPolicy.total_sum_insured)}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Annualised Premium:</div>
-          <div className="col-8">KES {formatCurrency(selectedPolicy.annualised_premium)}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Frequency:</div>
-          <div className="col-8">{selectedPolicy.premium_frequency}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Inception Date:</div>
-          <div className="col-8">{selectedPolicy.inception_date ? new Date(selectedPolicy.inception_date).toLocaleDateString() : 'N/A'}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Strike Day:</div>
-          <div className="col-8">{selectedPolicy.strike_date || 'N/A'}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Agent:</div>
-          <div className="col-8">{selectedPolicy.agent_name || 'N/A'}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Branch:</div>
-          <div className="col-8">{selectedPolicy.sales_branch || 'N/A'}</div>
-        </div>
-        <div className="row mb-2">
-          <div className="col-4 fw-bold">Last Updated:</div>
-          <div className="col-8">{selectedPolicy.updated_at ? new Date(selectedPolicy.updated_at).toLocaleString() : 'N/A'}</div>
-        </div>
-        
+
         {/* Change History Section */}
         <hr />
-        <h6 className="mt-3" style={{ color: '#c70e2a' }}>Change History</h6>
+        <h6 className="mt-3" style={{ color: '#c70e2a' }}>📋 Change History</h6>
         {loadingHistory ? (
           <p className="text-muted" style={{ fontSize: '13px' }}>Loading history...</p>
         ) : policyHistory.length === 0 ? (
@@ -553,13 +592,14 @@ const openModal = async (action: 'view' | 'delete', policy: Policy) => {
               <div key={idx} style={{ 
                 padding: '8px 12px', 
                 marginBottom: '5px', 
-                backgroundColor: '#f8f9fa', 
+                backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa', 
                 borderRadius: '4px',
-                fontSize: '13px'
+                fontSize: '13px',
+                borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
               }}>
                 <span style={{ fontWeight: '500' }}>{change.field}:</span>
                 <span style={{ color: '#c70e2a' }}>{change.old_value}</span>
-                <span style={{ margin: '0 5px' }}>→</span>
+                <span style={{ margin: '0 5px', color: '#999' }}>→</span>
                 <span style={{ color: '#2a9d36' }}>{change.new_value}</span>
                 <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
                   {new Date(change.changed_at).toLocaleString()}
