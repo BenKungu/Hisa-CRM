@@ -61,7 +61,51 @@ const AdminBusinesses = () => {
 
   // ============ HELPERS ============
 
-  // Format currency with commas
+  // Clean up policy status - max 3 words
+const cleanPolicyStatus = (status: string) => {
+  if (!status) return 'not given';
+  
+  // Remove "Policy" from anywhere
+  let cleaned = status.replace(/\bPolicy\b/g, '').trim();
+  
+  // Replace em dash with space
+  cleaned = cleaned.replace(/[–-]/g, ' ').trim();
+  
+  // Remove extra spaces
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  // Split into words
+  const words = cleaned.split(' ');
+  
+  // If it's a simple status like "Finalised", "Cancelled", "Active"
+  if (words.length === 1) {
+    return words[0];
+  }
+  
+  // If it's "Unfinalised" with more words
+  if (words[0].toLowerCase() === 'unfinalised') {
+    // Take first 2 words from the rest
+    const rest = words.slice(1);
+    let extra = '';
+    if (rest.length > 0) {
+      // Take max 2 words
+      const takeWords = rest.slice(0, Math.min(2, rest.length));
+      extra = takeWords.join(' ');
+    }
+    if (extra) {
+      return `Unfinalised (${extra})`;
+    }
+    return 'Unfinalised';
+  }
+  
+  // For any other status, take first 3 words
+  if (words.length > 3) {
+    return words.slice(0, 3).join(' ') + '...';
+  }
+  
+  return cleaned;
+};
+
 // Format currency with commas
 const formatCurrency = (value: any) => {
   if (!value && value !== 0) return '0';
@@ -330,23 +374,29 @@ const getStrikeDayWithOrdinal = (value: number) => {
     sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
   },
   {
-    title: "Status",
-    dataIndex: "policy_status",
-    width: 130,
-    render: (status: string) => {
-      let badgeClass = 'bg-secondary';
-      if (status?.toLowerCase().includes('finalised')) badgeClass = 'bg-success';
-      else if (status?.toLowerCase().includes('unfinalised')) badgeClass = 'bg-warning text-dark';
-      else if (status?.toLowerCase().includes('cancelled')) badgeClass = 'bg-danger';
-      else if (status?.toLowerCase().includes('active')) badgeClass = 'bg-success';
-      return (
-        <span className={`badge ${badgeClass} px-2 py-1`} style={{ fontSize: '12px', minWidth: '80px', fontWeight: '500' }}>
-          {status || 'not given'}
-        </span>
-      );
-    },
-    sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
+  title: "Status",
+  dataIndex: "policy_status",
+  width: 160,
+  render: (status: string) => {
+    const cleanStatus = cleanPolicyStatus(status);
+    let badgeClass = 'bg-secondary';
+    if (status?.toLowerCase().includes('finalised')) {
+      badgeClass = 'bg-success';
+    } else if (status?.toLowerCase().includes('unfinalised')) {
+      badgeClass = 'bg-warning text-dark';
+    } else if (status?.toLowerCase().includes('cancelled')) {
+      badgeClass = 'bg-danger';
+    } else if (status?.toLowerCase().includes('active')) {
+      badgeClass = 'bg-success';
+    }
+    return (
+      <span className={`badge ${badgeClass} px-2 py-1`} style={{ fontSize: '12px', minWidth: '80px', fontWeight: '500' }}>
+        {cleanStatus}
+      </span>
+    );
   },
+  sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
+},
   {
     title: "Frequency",
     dataIndex: "premium_frequency",
@@ -728,32 +778,65 @@ const getStrikeDayWithOrdinal = (value: number) => {
             <div className="col-sm-12">
               <div className="card">
                 <div className="card-header">
-                  <div className="row align-items-center">
-                    <div className="col">
-                      <h5 className="card-title mb-0">All Policies</h5>
-                      <p className="text-muted mb-0">
-                        Total: <strong>{filteredData.length}</strong> policies
-                      </p>
-                    </div>
-                    <div className="col-auto">
-                      <div className="form-group mb-0">
-                        <div className="input-group">
-                          <span className="input-group-text bg-white">
-                            <Search size={16} className="text-muted" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search policies..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ minWidth: '250px' }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+  <div className="row align-items-center">
+    <div className="col">
+      <h5 className="card-title mb-0">All Policies</h5>
+      <div className="d-flex align-items-center gap-4 mt-1">
+        {/* Total */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '22px', fontWeight: '700', color: '#2a9d36' }}>
+            {filteredData.length}
+          </span>
+          <span style={{ color: '#999', fontSize: '14px' }}>Total Policies</span>
+        </div>
+        
+        {/* Divider */}
+        <div style={{ width: '1px', height: '25px', backgroundColor: '#dee2e6' }} />
+        
+        {/* Active */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: '#2a9d36' }}>
+            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('active') || p.policy_status?.toLowerCase().includes('finalised')).length}
+          </span>
+          <span style={{ color: '#999', fontSize: '13px' }}>Active</span>
+        </div>
+        
+        {/* Pending */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: '#fd7e14' }}>
+            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('unfinalised')).length}
+          </span>
+          <span style={{ color: '#999', fontSize: '13px' }}>Pending</span>
+        </div>
+        
+        {/* Cancelled */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: '#c70e2a' }}>
+            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('cancelled')).length}
+          </span>
+          <span style={{ color: '#999', fontSize: '13px' }}>Cancelled</span>
+        </div>
+      </div>
+    </div>
+    <div className="col-auto">
+      <div className="form-group mb-0">
+        <div className="input-group">
+          <span className="input-group-text bg-white">
+            <Search size={16} className="text-muted" />
+          </span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search policies..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ minWidth: '250px' }}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
                 <div className="card-body">
                   <div className="table-responsive">
                     <Table
