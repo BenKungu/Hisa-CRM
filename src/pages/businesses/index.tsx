@@ -207,7 +207,7 @@ const openModal = async (action: 'view' | 'delete', policy: Policy) => {
 
   // Get avatar color
   const getAvatarColor = (name: string) => {
-    const colors = ['#c70e2a', '#2a9d36', '#F15A29', '#2c3e8f', '#17a2b8', '#6f42c1'];
+    const colors = [ '#2c3e8f', '#17a2b8', '#6f42c1'];
     const index = (name?.length || 0) % colors.length;
     return colors[index];
   };
@@ -239,7 +239,7 @@ const openModal = async (action: 'view' | 'delete', policy: Policy) => {
     dataIndex: "policy_number",
     width: 150,
     render: (text: string) => (
-      <span style={{ color: '#c70e2a', fontWeight: 'bold' }}>
+      <span style={{ color: '#2a9d36', fontWeight: 'bold' }}>
         <FileText size={14} className="me-1" />
         {text || 'N/A'}
       </span>
@@ -280,7 +280,6 @@ const openModal = async (action: 'view' | 'delete', policy: Policy) => {
     width: 130,
     render: (status: string) => {
       let badgeClass = 'bg-secondary';
-      let icon = null;
       if (status?.toLowerCase().includes('finalised')) {
         badgeClass = 'bg-success';
       } else if (status?.toLowerCase().includes('unfinalised')) {
