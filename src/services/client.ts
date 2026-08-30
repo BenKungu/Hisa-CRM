@@ -20,4 +20,15 @@ export const clientService = {
       throw error.response?.data || { error: 'Failed to get clients' };
     }
   },
+
+// Delete client
+  deleteClient: async (id: string): Promise<any> => {
+    try {
+      const response = await apiClient.delete(`/clients/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to delete client' };
+    }
+  },
+
 };
