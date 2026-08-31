@@ -12,23 +12,26 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      // Try to send OTP
-      await authService.sendOTP(email);
-      
-      navigate('/otp', { state: { email, password } });
-      
-    } catch (err: any) {
-      console.log('OTP likely generated, redirecting to OTP page...');
-      navigate('/otp', { state: { email, password } });
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    // Validate credentials first - send both email and password
+    await authService.sendOTP(email, password);
+    
+    // Only navigate if OTP was sent successfully
+    navigate('/otp', { state: { email, password } });
+    
+  } catch (err: any) {
+    // Show error message from backend
+    setError(err.error || 'Invalid email or password');
+    console.error('Login error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="main-wrapper login-body">

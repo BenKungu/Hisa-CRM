@@ -2,18 +2,17 @@ import apiClient from './api';
 
 export const authService = {
   // Send OTP
-  sendOTP: async (email: string): Promise<any> => {
+  sendOTP: async (email: string, password: string): Promise<any> => {
     try {
-      const response = await apiClient.post('/auth/login', { email });
+      const response = await apiClient.post('/auth/login', { email, password });
       return response.data;
     } catch (error: any) {
-      // Even if email fails, OTP is in database
-      console.log('⚠️ Email not sent, but OTP is in database');
-      return { 
-        success: true, 
-        message: 'OTP generated (check terminal/database)',
-        data: { expiresIn: '5 minutes' }
-      };
+      // Only handle network errors, not invalid credentials
+      if (error.response?.status === 400) {
+        throw error.response.data; // Throw validation errors
+      }
+      // If OTP generation fails for other reasons, still show error
+      throw error.response?.data || { error: 'Failed to send OTP' };
     }
   },
 
