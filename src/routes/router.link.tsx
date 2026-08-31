@@ -3,10 +3,10 @@ import { all_routes } from "./all_routes";
 import { lazy, Suspense } from "react";
 const AdminDashboard = lazy(() => import("../pages/dashboard"));
 const AdminLogin = lazy(() => import("../pages/login"));
-const AppointmentList = lazy(() => import("../pages/businesses"));
+const AdminBusinesses = lazy(() => import("../pages/businesses"));
 const AdminSpecialities = lazy(() => import("../pages/policies"));
-const AdminDoctors = lazy(() => import("../pages/agents"));
-const AdminPatients = lazy(() => import("../pages/clients"));
+const AdminAgents = lazy(() => import("../pages/agents"));
+const AdminClients = lazy(() => import("../pages/clients"));
 const AdminSettings = lazy(() => import("../pages/settings"));
 const AdminProfile = lazy(() => import("../pages/profile/Profile"));
 const AdminRegister = lazy(() => import("../pages/register"));
@@ -39,15 +39,15 @@ export const publicRoutes = [
     route: Route,
   },
   {
-    id: "2",
-    path: route.adminAppointmentList,
-    element: (
-      <Suspense fallback={suspenseFallback}>
-        <AppointmentList />
-      </Suspense>
-    ),
-    route: Route,
-  },
+  path: "/businesses",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminBusinesses />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "businesses",
+},
   {
     id: "3",
     path: route.adminspecialities,
@@ -59,25 +59,25 @@ export const publicRoutes = [
     route: Route,
   },
   {
-    id: "4",
-    path: route.adminDoctorList,
-    element: (
-      <Suspense fallback={suspenseFallback}>
-        <AdminDoctors />
-      </Suspense>
-    ),
-    route: Route,
-  },
+  path: "/agents",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminAgents />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Agents",
+},
   {
-    id: "5",
-    path: route.adminPatientList,
-    element: (
-      <Suspense fallback={suspenseFallback}>
-        <AdminPatients />
-      </Suspense>
-    ),
-    route: Route,
-  },
+  path: "/clients",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminClients />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "clients",
+},
   {
     id: "8",
     path: route.adminSettings,

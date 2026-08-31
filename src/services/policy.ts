@@ -51,6 +51,16 @@ export const policyService = {
     }
   },
 
+  // Get all agents with stats
+getAgents: async (): Promise<any> => {
+  try {
+    const response = await apiClient.get('/policies/agents');
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to get agents' };
+  }
+},
+
 importExcel: async (formData: FormData): Promise<any> => {
   try {
     const response = await apiClient.post('/policies/import-excel', formData, {
