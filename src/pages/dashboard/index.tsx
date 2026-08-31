@@ -13,6 +13,7 @@ import {
 } from 'react-feather';
 import { policyService } from '../../services/policy';
 import { clientService } from '../../services/client';
+import { authService } from '../../services/auth';
 import Header from '../header';
 import SidebarNav from '../sidebar';
 
@@ -53,6 +54,14 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userData = authService.getCurrentUser();
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
 
   const formatCurrency = (value: any) => {
     if (!value && value !== 0) return '0';
@@ -358,9 +367,15 @@ const pieChartOptions = {
           <div className="page-header">
             <div className="row">
               <div className="col-sm-12">
-                <h3 className="page-title">Welcome to Hisa Insurance CRM</h3>
+                <h3 className="page-title">
+                  👋 Welcome back,{' '}
+                  <span style={{ color: '#c70e2a', fontWeight: '700' }}>
+                    {user?.firstName || user?.first_name || 'Admin'}
+                  </span>{' '}
+                  🎉
+                </h3>
                 <ul className="breadcrumb">
-                  <li className="breadcrumb-item active">Dashboard</li>
+                  <li className="breadcrumb-item active">Hisa CRM Dashboard</li>
                 </ul>
               </div>
             </div>
