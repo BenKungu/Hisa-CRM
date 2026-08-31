@@ -38,6 +38,7 @@ interface Policy {
   inception_date: string;
   agent_name: string;
   agent_code: string;
+  client_id: string;
 }
 
 const AdminClients = () => {
@@ -135,6 +136,7 @@ const AdminClients = () => {
     try {
       const response = await policyService.getPolicies();
       if (response.success) {
+        // Filter policies by client_id
         const clientPoliciesData = response.data.filter((p: any) => p.client_id === clientId);
         setClientPolicies(clientPoliciesData);
       }
@@ -145,12 +147,12 @@ const AdminClients = () => {
     }
   };
 
-  const openModal = (action: 'view' | 'delete', client: Client) => {
+  const openModal = async (action: 'view' | 'delete', client: Client) => {
     setModalAction(action);
     setSelectedClient(client);
     setModalOpen(true);
     if (action === 'view') {
-      loadClientPolicies(client.id);
+      await loadClientPolicies(client.id);
     }
   };
 
@@ -237,7 +239,6 @@ const AdminClients = () => {
       fixed: 'left' as const,
       render: (text: string, record: any) => {
         const displayName = text || 'N/A';
-        const fullNameWithTitle = record.title ? `${record.title} ${displayName}` : displayName;
         return (
           <div className="d-flex align-items-center">
             <span 
@@ -259,7 +260,7 @@ const AdminClients = () => {
               {getInitials(displayName)}
             </span>
             <div>
-              <div style={{ fontWeight: '500', fontSize: '13px' }}>{fullNameWithTitle}</div>
+              <div style={{ fontWeight: '500', fontSize: '13px' }}>{displayName}</div>
               <div style={{ fontSize: '11px', color: '#999' }}>
                 ID: {record.id_no || 'No ID'}
               </div>
@@ -348,19 +349,6 @@ const AdminClients = () => {
         </span>
       ),
       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
-    },
-    {
-      title: "Registered",
-      dataIndex: "date_of_registration",
-      width: 120,
-      render: (date: string) => (
-        <span style={{ fontSize: '12px', color: '#555' }}>
-          <Calendar size={13} className="me-1" style={{ color: '#999' }} />
-          {date ? formatDateCompact(date) : 'N/A'}
-        </span>
-      ),
-      sorter: (a: any, b: any) => 
-        new Date(a.date_of_registration || 0).getTime() - new Date(b.date_of_registration || 0).getTime(),
     },
     {
       title: "Last Updated",
@@ -481,6 +469,7 @@ const AdminClients = () => {
       const agentCode = selectedClient.agent_code || 'N/A';
       
       const displayName = selectedClient.client_name || 'N/A';
+      // Show title in modal
       const fullNameWithTitle = selectedClient.title ? `${selectedClient.title} ${displayName}` : displayName;
       
       return {
@@ -556,12 +545,12 @@ const AdminClients = () => {
                   <div style={{ fontWeight: '500' }}>{selectedClient.email || 'N/A'}</div>
                 </div>
                 <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Registration Date</span>
-                  <div style={{ fontWeight: '500' }}>{selectedClient.date_of_registration ? formatDateCompact(selectedClient.date_of_registration) : 'N/A'}</div>
-                </div>
-                <div style={{ marginBottom: '12px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Total Policies</span>
                   <div style={{ fontWeight: '600', color: '#2a9d36' }}>{selectedClient.policy_count || 0}</div>
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ color: '#999', fontSize: '12px' }}>Last Updated</span>
+                  <div style={{ fontWeight: '500' }}>{selectedClient.updated_at ? formatDateCompact(selectedClient.updated_at) : 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -652,12 +641,6 @@ const AdminClients = () => {
   const rowClassName = (record: any, index: number) => {
     return index % 2 === 0 ? 'table-row-even' : 'table-row-odd';
   };
-
-  // Update agent options when data changes
-  useEffect(() => {
-    const agents = Array.from(new Set(data.map(c => c.agent_name).filter(a => a && a !== 'N/A')));
-    // Update agent filter options if needed
-  }, [data]);
 
   return (
     <>
