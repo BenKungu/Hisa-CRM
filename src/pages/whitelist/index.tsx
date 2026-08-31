@@ -28,7 +28,7 @@ const AdminWhitelist = () => {
   const [modalAction, setModalAction] = useState<'approve' | 'reject' | 'remove' | null>(null);
   const [selectedEmail, setSelectedEmail] = useState('');
   const [selectedName, setSelectedName] = useState('');
-  const [selectedId, setSelectedId] = useState('');
+  const [, setSelectedId] = useState('');
 
   // Get current user role
   const user = JSON.parse(localStorage.getItem('user') || '{}');

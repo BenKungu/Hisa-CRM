@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
@@ -6,7 +6,7 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link } from "react-router-dom";
 import Header from "../header";
-import { Eye, Edit, Trash2, Search, Filter, X, Users, FileText, CheckCircle, XCircle, Clock, DollarSign, User, Briefcase } from 'react-feather';
+import { Eye, Search, Filter, X, Users, FileText, CheckCircle, XCircle, Clock, User, Briefcase } from 'react-feather';
 import { policyService } from '../../services/policy';
 
 interface Agent {
@@ -472,7 +472,7 @@ const AdminAgents = () => {
 
   const modalContent = getModalContent();
 
-  const rowClassName = (record: any, index: number) => {
+  const rowClassName = (_record: any, index: number) => {
     return index % 2 === 0 ? 'table-row-even' : 'table-row-odd';
   };
 

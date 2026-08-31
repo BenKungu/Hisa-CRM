@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { 
   Users, 
@@ -10,11 +9,7 @@ import {
   Clock,
   TrendingUp,
   TrendingDown,
-  UserPlus,
   Calendar,
-  Activity,
-  Briefcase,
-  AlertCircle
 } from 'react-feather';
 import { policyService } from '../../services/policy';
 import { clientService } from '../../services/client';
@@ -175,7 +170,6 @@ const AdminDashboard = () => {
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthName = months[date.getMonth()];
       
       const monthPolicies = policies.filter((p: any) => {
