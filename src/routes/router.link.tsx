@@ -4,7 +4,7 @@ import { lazy, Suspense } from "react";
 const AdminDashboard = lazy(() => import("../pages/dashboard"));
 const AdminLogin = lazy(() => import("../pages/login"));
 const AdminBusinesses = lazy(() => import("../pages/businesses"));
-const AdminSpecialities = lazy(() => import("../pages/policies"));
+const AdminPolicyTypes = lazy(() => import("../pages/policy-types"));
 const AdminAgents = lazy(() => import("../pages/agents"));
 const AdminClients = lazy(() => import("../pages/clients"));
 const AdminSettings = lazy(() => import("../pages/settings"));
@@ -48,16 +48,17 @@ export const publicRoutes = [
   route: Route,
   meta_title: "businesses",
 },
-  {
-    id: "3",
-    path: route.adminspecialities,
-    element: (
-      <Suspense fallback={suspenseFallback}>
-        <AdminSpecialities />
-      </Suspense>
-    ),
-    route: Route,
-  },
+
+{
+  path: "/policy-types",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminPolicyTypes />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Policy Types",
+},
   {
   path: "/agents",
   element: (

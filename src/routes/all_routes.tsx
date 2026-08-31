@@ -3,7 +3,7 @@ export const all_routes = {
 
 adminDashboard: "/admin-dashboard",
 adminAppointmentList: "/businesses",
-adminspecialities: "/policies",
+AdminPolicyTypes: "/policy-types",
 adminDoctorList: "/agents",
 adminPatientList: "/clients",
 adminTransactionsList: "/transactions-list",

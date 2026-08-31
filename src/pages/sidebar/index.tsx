@@ -116,7 +116,7 @@ const SidebarNav = () => {
                   </Link>
                 </li>
                 <li className={pathname?.includes("policies") ? "active" : ""}>
-                  <Link to="/policies">
+                  <Link to="/policy-types">
                     <FileText size={16} /> <span>Policy Types</span>
                   </Link>
                 </li>
