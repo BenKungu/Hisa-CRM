@@ -204,7 +204,7 @@ const AdminOTP = () => {
                       setMessage('');
                       setLoading(true);
                       try {
-                        await authService.sendOTP(email);
+                        await authService.sendOTP(email, password);
                         setMessage('✅ New OTP sent! Check your terminal.');
                         setOtp(['', '', '', '', '', '']);
                         inputRefs[0].current?.focus();
