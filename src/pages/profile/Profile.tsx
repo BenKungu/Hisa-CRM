@@ -27,31 +27,36 @@ interface UserProfile {
 const AdminProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Modal visibility state
+  const [showModal, setShowModal] = useState(false);
 
   // Edit form state
   const [editData, setEditData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    country: '',
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    country: "",
     date_of_birth: null as Date | null,
   });
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   // Load profile
   const loadProfile = async () => {
@@ -61,21 +66,27 @@ const AdminProfile = () => {
       if (response.success) {
         setProfile(response.data);
         setEditData({
-          first_name: response.data.first_name || '',
-          last_name: response.data.last_name || '',
-          email: response.data.email || '',
-          phone: response.data.phone || '',
-          address: response.data.address || '',
-          city: response.data.city || '',
-          state: response.data.state || '',
-          zip_code: response.data.zip_code || '',
-          country: response.data.country || '',
-          date_of_birth: response.data.date_of_birth ? new Date(response.data.date_of_birth) : null,
+          first_name: response.data.first_name || "",
+          last_name: response.data.last_name || "",
+          email: response.data.email || "",
+          phone: response.data.phone || "",
+          address: response.data.address || "",
+          city: response.data.city || "",
+          state: response.data.state || "",
+          zip_code: response.data.zip_code || "",
+          country: response.data.country || "",
+          date_of_birth: response.data.date_of_birth
+            ? new Date(response.data.date_of_birth)
+            : null,
         });
-        setSelectedDate(response.data.date_of_birth ? new Date(response.data.date_of_birth) : null);
+        setSelectedDate(
+          response.data.date_of_birth
+            ? new Date(response.data.date_of_birth)
+            : null
+        );
       }
     } catch (err: any) {
-      setError(err.error || 'Failed to load profile');
+      setError(err.error || "Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -92,31 +103,35 @@ const AdminProfile = () => {
       const response = await authService.updateProfile(editData);
       if (response.success) {
         await loadProfile();
-        alert('Profile updated successfully!');
-        const modal = document.getElementById('edit_personal_details');
-        if (modal) {
-          const closeBtn = modal.querySelector('.btn-close') as HTMLButtonElement;
-          if (closeBtn) closeBtn.click();
-        }
+        // Close modal and clean up
+        setShowModal(false);
+        // Ensure backdrop is removed
+        document.body.classList.remove("modal-open");
+        const backdrop = document.querySelector(".modal-backdrop");
+        if (backdrop) backdrop.remove();
+
+        setSuccessMessage("Profile updated successfully!");
+        setTimeout(() => setSuccessMessage(""), 4000);
       }
     } catch (err: any) {
-      alert(err.error || 'Failed to update profile');
+      setErrorMessage(err.error || "Failed to update profile");
+      setTimeout(() => setErrorMessage(""), 4000);
     }
   };
 
   // Handle password change
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError('');
-    setPasswordSuccess('');
+    setPasswordError("");
+    setPasswordSuccess("");
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError("New passwords do not match");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError("Password must be at least 6 characters");
       return;
     }
 
@@ -126,11 +141,15 @@ const AdminProfile = () => {
         passwordData.newPassword
       );
       if (response.success) {
-        setPasswordSuccess('Password changed successfully!');
-        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setPasswordSuccess("Password changed successfully!");
+        setPasswordData({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
       }
     } catch (err: any) {
-      setPasswordError(err.error || 'Failed to change password');
+      setPasswordError(err.error || "Failed to change password");
     }
   };
 
@@ -140,18 +159,31 @@ const AdminProfile = () => {
     setEditData({ ...editData, date_of_birth: date });
   };
 
+  // Open modal
+  const openModal = () => {
+    setShowModal(true);
+  };
+
+  // Close modal manually (without saving)
+  const closeModal = () => {
+    setShowModal(false);
+    document.body.classList.remove("modal-open");
+    const backdrop = document.querySelector(".modal-backdrop");
+    if (backdrop) backdrop.remove();
+  };
+
   // Get avatar initials
   const getUserInitials = () => {
-    if (!profile) return 'U';
-    const first = profile.first_name?.charAt(0)?.toUpperCase() || '';
-    const last = profile.last_name?.charAt(0)?.toUpperCase() || '';
-    return first + last || 'U';
+    if (!profile) return "U";
+    const first = profile.first_name?.charAt(0)?.toUpperCase() || "";
+    const last = profile.last_name?.charAt(0)?.toUpperCase() || "";
+    return first + last || "U";
   };
 
   // Get avatar color
   const getAvatarColor = () => {
-    const name = profile?.first_name || '';
-    const colors = ['#c70e2a', '#2a9d36', '#c70e2a', '#2a9d36'];
+    const name = profile?.first_name || "";
+    const colors = ["#c70e2a", "#2a9d36", "#c70e2a", "#2a9d36"];
     const index = name.length % colors.length;
     return colors[index];
   };
@@ -163,8 +195,8 @@ const AdminProfile = () => {
         <SidebarNav />
         <div className="page-wrapper">
           <div className="content container-fluid">
-            <div className="text-center" style={{ padding: '50px 0' }}>
-              <div className="spinner-border text-primary" role="status" style={{ color: '#c70e2a !important' }}>
+            <div className="text-center" style={{ padding: "50px 0" }}>
+              <div className="spinner-border text-primary" role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
             </div>
@@ -194,6 +226,27 @@ const AdminProfile = () => {
       <SidebarNav />
       <div className="page-wrapper">
         <div className="content container-fluid">
+          {successMessage && (
+            <div className="alert alert-success alert-dismissible fade show" role="alert">
+              {successMessage}
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setSuccessMessage("")}
+              />
+            </div>
+          )}
+          {errorMessage && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              {errorMessage}
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setErrorMessage("")}
+              />
+            </div>
+          )}
+
           <div className="page-header">
             <div className="row">
               <div className="col">
@@ -216,13 +269,13 @@ const AdminProfile = () => {
                     <div
                       className="rounded-circle d-flex align-items-center justify-content-center"
                       style={{
-                        width: '100px',
-                        height: '100px',
+                        width: "100px",
+                        height: "100px",
                         backgroundColor: getAvatarColor(),
-                        color: '#fff',
-                        fontSize: '36px',
-                        fontWeight: 'bold',
-                        textTransform: 'uppercase'
+                        color: "#fff",
+                        fontSize: "36px",
+                        fontWeight: "bold",
+                        textTransform: "uppercase",
                       }}
                     >
                       {getUserInitials()}
@@ -234,26 +287,26 @@ const AdminProfile = () => {
                     </h4>
                     <h6 className="text-muted">{profile?.email}</h6>
                     <div className="about-text">
-                      Role: <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                        {profile?.role?.toUpperCase() || 'Admin'}
+                      Role:{" "}
+                      <span
+                        className="badge"
+                        style={{ backgroundColor: "#c70e2a", color: "#fff" }}
+                      >
+                        {profile?.role?.toUpperCase() || "Admin"}
                       </span>
                       <span className="ms-2">
-                        Status: <span className={`badge ${profile?.is_active ? 'bg-success' : 'bg-danger'}`}>
-                          {profile?.is_active ? 'Active' : 'Inactive'}
+                        Status:{" "}
+                        <span
+                          className={`badge ${
+                            profile?.is_active ? "bg-success" : "bg-danger"
+                          }`}
+                        >
+                          {profile?.is_active ? "Active" : "Inactive"}
                         </span>
                       </span>
                     </div>
                   </div>
                   <div className="col-auto profile-btn">
-                    <Link
-                      to="#"
-                      className="btn"
-                      style={{ backgroundColor: '#c70e2a', color: '#fff', borderColor: '#c70e2a' }}
-                      data-bs-toggle="modal"
-                      data-bs-target="#edit_personal_details"
-                    >
-                      Edit
-                    </Link>
                   </div>
                 </div>
               </div>
@@ -265,7 +318,7 @@ const AdminProfile = () => {
                       className="nav-link active"
                       data-bs-toggle="tab"
                       to="#per_details_tab"
-                      style={{ color: '#c70e2a' }}
+                      style={{ color: "#c70e2a" }}
                     >
                       About
                     </Link>
@@ -290,21 +343,22 @@ const AdminProfile = () => {
                         <div className="card-body">
                           <h5 className="card-title d-flex justify-content-between">
                             <span>Personal Details</span>
-                            <Link
-                              className="edit-link"
-                              data-bs-toggle="modal"
-                              to="#edit_personal_details"
-                              style={{ color: '#c70e2a' }}
+                            <button
+                              className="btn btn-link edit-link"
+                              onClick={openModal}
+                              style={{ color: "#c70e2a", textDecoration: "none" }}
                             >
                               <i className="fa fa-edit me-1" />
                               Edit
-                            </Link>
+                            </button>
                           </h5>
                           <div className="row">
                             <p className="col-sm-2 text-muted text-sm-end mb-0 mb-sm-3">
                               Name
                             </p>
-                            <p className="col-sm-10">{profile?.first_name} {profile?.last_name}</p>
+                            <p className="col-sm-10">
+                              {profile?.first_name} {profile?.last_name}
+                            </p>
                           </div>
                           <div className="row">
                             <p className="col-sm-2 text-muted text-sm-end mb-0 mb-sm-3">
@@ -317,8 +371,11 @@ const AdminProfile = () => {
                               Role
                             </p>
                             <p className="col-sm-10">
-                              <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                                {profile?.role?.toUpperCase() || 'Admin'}
+                              <span
+                                className="badge"
+                                style={{ backgroundColor: "#c70e2a", color: "#fff" }}
+                              >
+                                {profile?.role?.toUpperCase() || "Admin"}
                               </span>
                             </p>
                           </div>
@@ -327,8 +384,12 @@ const AdminProfile = () => {
                               Status
                             </p>
                             <p className="col-sm-10">
-                              <span className={`badge ${profile?.is_active ? 'bg-success' : 'bg-danger'}`}>
-                                {profile?.is_active ? 'Active' : 'Inactive'}
+                              <span
+                                className={`badge ${
+                                  profile?.is_active ? "bg-success" : "bg-danger"
+                                }`}
+                              >
+                                {profile?.is_active ? "Active" : "Inactive"}
                               </span>
                             </p>
                           </div>
@@ -337,7 +398,9 @@ const AdminProfile = () => {
                               Last Login
                             </p>
                             <p className="col-sm-10 mb-0">
-                              {profile?.last_login ? new Date(profile.last_login).toLocaleString() : 'Never'}
+                              {profile?.last_login
+                                ? new Date(profile.last_login).toLocaleString()
+                                : "Never"}
                             </p>
                           </div>
                         </div>
@@ -365,10 +428,12 @@ const AdminProfile = () => {
                                 type="password"
                                 className="form-control"
                                 value={passwordData.oldPassword}
-                                onChange={(e) => setPasswordData({
-                                  ...passwordData,
-                                  oldPassword: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setPasswordData({
+                                    ...passwordData,
+                                    oldPassword: e.target.value,
+                                  })
+                                }
                                 required
                               />
                             </div>
@@ -378,10 +443,12 @@ const AdminProfile = () => {
                                 type="password"
                                 className="form-control"
                                 value={passwordData.newPassword}
-                                onChange={(e) => setPasswordData({
-                                  ...passwordData,
-                                  newPassword: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setPasswordData({
+                                    ...passwordData,
+                                    newPassword: e.target.value,
+                                  })
+                                }
                                 required
                                 minLength={6}
                               />
@@ -392,17 +459,23 @@ const AdminProfile = () => {
                                 type="password"
                                 className="form-control"
                                 value={passwordData.confirmPassword}
-                                onChange={(e) => setPasswordData({
-                                  ...passwordData,
-                                  confirmPassword: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setPasswordData({
+                                    ...passwordData,
+                                    confirmPassword: e.target.value,
+                                  })
+                                }
                                 required
                               />
                             </div>
-                            <button 
-                              className="btn" 
+                            <button
+                              className="btn"
                               type="submit"
-                              style={{ backgroundColor: '#c70e2a', color: '#fff', borderColor: '#c70e2a' }}
+                              style={{
+                                backgroundColor: "#c70e2a",
+                                color: "#fff",
+                                borderColor: "#c70e2a",
+                              }}
                             >
                               Save Changes
                             </button>
@@ -418,23 +491,26 @@ const AdminProfile = () => {
         </div>
       </div>
 
-      {/* Edit Details Modal */}
+      {/* Edit Details Modal - Controlled by React state */}
       <div
-        className="modal fade"
+        className={`modal fade ${showModal ? "show" : ""}`}
         id="edit_personal_details"
-        aria-hidden="true"
+        style={{ display: showModal ? "block" : "none" }}
+        aria-hidden={!showModal}
         role="dialog"
       >
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content">
-            <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-              <h5 className="modal-title" style={{ color: '#fff' }}>Personal Details</h5>
+            <div className="modal-header" style={{ backgroundColor: "#c70e2a", color: "#fff" }}>
+              <h5 className="modal-title" style={{ color: "#fff" }}>
+                Personal Details
+              </h5>
               <button
                 type="button"
                 className="btn-close"
-                data-bs-dismiss="modal"
+                onClick={closeModal}
                 aria-label="Close"
-                style={{ filter: 'brightness(0) invert(1)' }}
+                style={{ filter: "brightness(0) invert(1)" }}
               />
             </div>
             <div className="modal-body">
@@ -447,10 +523,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.first_name}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          first_name: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, first_name: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -462,10 +537,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.last_name}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          last_name: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, last_name: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -491,10 +565,9 @@ const AdminProfile = () => {
                         type="email"
                         className="form-control"
                         value={editData.email}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          email: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, email: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -506,10 +579,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.phone}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          phone: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, phone: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -520,10 +592,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.address}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          address: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, address: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -534,10 +605,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.city}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          city: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, city: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -548,10 +618,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.state}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          state: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, state: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -562,10 +631,9 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.zip_code}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          zip_code: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, zip_code: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -576,18 +644,21 @@ const AdminProfile = () => {
                         type="text"
                         className="form-control"
                         value={editData.country}
-                        onChange={(e) => setEditData({
-                          ...editData,
-                          country: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setEditData({ ...editData, country: e.target.value })
+                        }
                       />
                     </div>
                   </div>
                 </div>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn w-100"
-                  style={{ backgroundColor: '#2a9d36', color: '#fff', borderColor: '#2a9d36' }}
+                  style={{
+                    backgroundColor: "#2a9d36",
+                    color: "#fff",
+                    borderColor: "#2a9d36",
+                  }}
                 >
                   Save Changes
                 </button>
@@ -596,8 +667,10 @@ const AdminProfile = () => {
           </div>
         </div>
       </div>
+      {showModal && <div className="modal-backdrop fade show" />}
     </>
   );
 };
 
 export default AdminProfile;
+

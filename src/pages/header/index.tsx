@@ -234,7 +234,7 @@ const Header: React.FC = () => {
               <Link className="dropdown-item" to="/profile">
                 My Profile
               </Link>
-              <Link className="dropdown-item" to="/settings">
+              <Link className="dropdown-item" to="/profile">
                 Settings
               </Link>
               <button 
