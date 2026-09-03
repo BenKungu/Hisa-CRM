@@ -74,32 +74,40 @@ const AdminBusinesses = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter options
-  const statusOptions = ['Active', 'Finalised', 'Unfinalised', 'Cancelled'];
+  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
+
+  const [downloading, setDownloading] = useState(false);
+  
 
   // ============ HELPERS ============
 
   const cleanPolicyStatus = (status: string) => {
-    if (!status) return 'not given';
-    let cleaned = status.replace(/\bPolicy\b/g, '').trim();
-    cleaned = cleaned.replace(/[–-]/g, ' ').trim();
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    const words = cleaned.split(' ');
-    if (words.length === 1) return words[0];
-    if (words[0].toLowerCase() === 'unfinalised') {
-      const rest = words.slice(1);
-      let extra = '';
-      if (rest.length > 0) {
-        const takeWords = rest.slice(0, Math.min(2, rest.length));
-        extra = takeWords.join(' ');
-      }
-      if (extra) return `Unfinalised (${extra})`;
-      return 'Unfinalised';
-    }
-    if (words.length > 3) return words.slice(0, 3).join(' ') + '...';
-    return cleaned;
-  };
+  if (!status) return 'Not Given';
+  const lower = status.toLowerCase();
+
+  // ✅ Check 'auto' first (specific)
+  if (lower.includes('auto')) return 'Auto';
+
+  // ✅ Check 'unfinalised' before 'finalised' (to avoid false match)
+  if (lower.includes('unfinalised')) return 'Unfinalised';
+
+  // ✅ Then 'finalised'
+  if (lower.includes('finalised')) return 'Finalised';
+
+  // ✅ Check 'paid' or 'active' (but not 'auto' already caught)
+  if (lower.includes('paid') || lower.includes('active')) return 'Paid';
+
+  // ✅ 'cancelled'
+  if (lower.includes('cancelled')) return 'Cancelled';
+
+  // fallback
+  let cleaned = status.replace(/\bPolicy\b/g, '').trim();
+  cleaned = cleaned.replace(/[–-]/g, ' ').trim();
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned || 'Not Given';
+};
 
   const formatCurrency = (value: any) => {
     if (!value && value !== 0) return '0';
@@ -236,6 +244,71 @@ const AdminBusinesses = () => {
     }
   };
 
+const handleExport = async () => {
+  if (!hasActiveFilters()) return;
+
+  setDownloading(true);
+  try {
+    // Build filter params
+    const params: any = {};
+    if (searchTerm) params.search = searchTerm;
+    if (filters.status.length > 0) params.status = filters.status;
+    if (filters.frequency.length > 0) params.frequency = filters.frequency;
+    if (filters.productType.length > 0) params.productType = filters.productType;
+    if (filters.agent.length > 0) params.agent = filters.agent;
+    if (filters.strikeDayRange.length === 2) {
+      params.strikeDayMin = filters.strikeDayRange[0];
+      params.strikeDayMax = filters.strikeDayRange[1];
+    }
+    if (filters.premiumMin > 0) params.premiumMin = filters.premiumMin;
+    if (filters.premiumMax > 0) params.premiumMax = filters.premiumMax;
+
+    const blob = await policyService.exportPolicies(params);
+
+    // ✅ Try to use File System Access API (prompts for save location)
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: `policies_${new Date().toISOString().slice(0,10)}.xlsx`,
+          types: [{
+            description: 'Excel File',
+            accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (err: any) {
+        // User cancelled the save dialog
+        if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+          console.error('Save error:', err);
+          // Fallback to download
+          fallbackDownload(blob);
+        }
+      }
+    } else {
+      // Fallback for older browsers
+      fallbackDownload(blob);
+    }
+  } catch (err) {
+    alert('Failed to download policies.');
+  } finally {
+    setDownloading(false);
+  }
+};
+
+// Fallback download method
+const fallbackDownload = (blob: Blob) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `policies_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
   const resetUploadModal = () => {
     setUploadModalOpen(false);
     setUploadFile(null);
@@ -316,12 +389,11 @@ const AdminBusinesses = () => {
   const getFilteredData = () => {
     let filtered = data;
     if (filters.status.length > 0) {
-      filtered = filtered.filter(item => 
-        filters.status.some(status => 
-          item.policy_status?.toLowerCase().includes(status.toLowerCase())
-        )
-      );
-    }
+  filtered = filtered.filter(item => {
+    const cleaned = cleanPolicyStatus(item.policy_status);
+    return filters.status.some(filter => cleaned === filter);
+  });
+}
     if (filters.frequency.length > 0) {
       filtered = filtered.filter(item => 
         filters.frequency.includes(item.premium_frequency || '')
@@ -426,27 +498,30 @@ const AdminBusinesses = () => {
     },
     sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
   },
-  {
+  
+{
   title: "Status",
   dataIndex: "policy_status",
   width: 150,
   render: (status: string) => {
-    const cleanStatus = cleanPolicyStatus(status);
+    const cleaned = cleanPolicyStatus(status);
     let badgeClass = 'bg-secondary';
     let icon = '';
-    if (status?.toLowerCase().includes('finalised')) {
-      badgeClass = 'bg-success';
-      icon = '✓';
-    } else if (status?.toLowerCase().includes('unfinalised')) {
-      badgeClass = 'bg-warning text-dark';
-      icon = '⏳';
-    } else if (status?.toLowerCase().includes('cancelled')) {
-      badgeClass = 'bg-danger';
-      icon = '✕';
-    } else if (status?.toLowerCase().includes('active')) {
+
+    if (cleaned === 'Paid' || cleaned === 'Auto') {
       badgeClass = 'bg-success';
       icon = '●';
+    } else if (cleaned === 'Finalised') {
+      badgeClass = 'bg-success';
+      icon = '✓';
+    } else if (cleaned === 'Unfinalised') {
+      badgeClass = 'bg-warning text-dark';
+      icon = '⏳';
+    } else if (cleaned === 'Cancelled') {
+      badgeClass = 'bg-danger';
+      icon = '✕';
     }
+
     return (
       <span className={`badge ${badgeClass} px-2 py-1 d-inline-block text-truncate`} 
             style={{ 
@@ -458,12 +533,13 @@ const AdminBusinesses = () => {
               textOverflow: 'ellipsis'
             }}
             title={status || 'N/A'}>
-        {icon} {cleanStatus}
+        {icon} {cleaned}
       </span>
     );
   },
-  sorter: (a: any, b: any) => (a.policy_status || '').localeCompare(b.policy_status || ''),
+  sorter: (a: any, b: any) => cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
 },
+
   {
     title: "Frequency",
     dataIndex: "premium_frequency",
@@ -873,7 +949,7 @@ const AdminBusinesses = () => {
                           <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
                             {filteredData.filter(p => p.policy_status?.toLowerCase().includes('active') || p.policy_status?.toLowerCase().includes('finalised')).length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Active</span>
+                          <span style={{ color: '#999', fontSize: '12px' }}>In Progress</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span style={{ fontSize: '14px', fontWeight: '600', color: '#fd7e14' }}>
@@ -946,7 +1022,6 @@ const AdminBusinesses = () => {
                     </div>
                   </div>
 
-                  {/* ===== FILTERS ===== */}
                   {/* ===== FILTERS ===== */}
 {showFilters && (
   <div className="row mt-2 pt-2" style={{ borderTop: '1px solid #eee' }}>
@@ -1155,6 +1230,27 @@ const AdminBusinesses = () => {
             </div>
           </div>
         </div>
+
+<button
+          className="btn"
+          onClick={handleExport}
+          disabled={!hasActiveFilters() || downloading}
+          style={{
+            backgroundColor: hasActiveFilters() ? '#2a9d36' : '#6c757d',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '4px 12px',
+            fontSize: '13px',
+            fontWeight: '500',
+            opacity: hasActiveFilters() ? 1 : 0.6,
+            cursor: hasActiveFilters() ? 'pointer' : 'not-allowed'
+          }}
+        >
+          <FileText size={14} className="me-1" />
+          {downloading ? 'Exporting...' : 'Download Excel'}
+        </button>
+
       </div>
     </div>
   </div>

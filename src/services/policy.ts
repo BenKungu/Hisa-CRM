@@ -51,6 +51,19 @@ export const policyService = {
     }
   },
 
+  // Export policies with filters (returns file blob)
+  exportPolicies: async (filters: any): Promise<Blob> => {
+    try {
+      const response = await apiClient.get('/policies/export', {
+        params: filters,
+        responseType: 'blob', // Important for file download
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to export policies' };
+    }
+  },
+
   // Get all agents with stats
 getAgents: async (): Promise<any> => {
   try {
@@ -73,6 +86,8 @@ importExcel: async (formData: FormData): Promise<any> => {
     throw error.response?.data || { error: 'Failed to import Excel' };
   }
 },
+
+
 
 // Get policy change history
 getPolicyHistory: async (id: string): Promise<any> => {
