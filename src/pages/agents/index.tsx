@@ -39,6 +39,7 @@ const AdminAgents = () => {
 
   // Filter options
   const statusOptions = ['Active', 'Finalised', 'Cancelled'];
+  const [downloading, setDownloading] = useState(false);
 
   // ============ HELPERS ============
 
@@ -64,10 +65,62 @@ const AdminAgents = () => {
   };
 
   const hasActiveFilters = () => {
-    return filters.minPolicies > 0 || filters.status.length > 0;
-  };
+  return filters.minPolicies > 0 || 
+         filters.status.length > 0 ||
+         searchTerm.trim().length > 0;   // ← Added
+};
 
   // ============ HANDLERS ============
+
+  const handleExport = async () => {
+  if (!hasActiveFilters() && !searchTerm) return; // Only allow when filtering
+
+  setDownloading(true);
+  try {
+    const params: any = {};
+    if (searchTerm) params.search = searchTerm;
+    if (filters.minPolicies > 0) params.minPolicies = filters.minPolicies;
+    if (filters.status.length > 0) params.status = filters.status;
+
+    const blob = await policyService.exportAgents(params);
+
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: `agents_${new Date().toISOString().slice(0,10)}.xlsx`,
+          types: [{
+            description: 'Excel File',
+            accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+          fallbackDownload(blob);
+        }
+      }
+    } else {
+      fallbackDownload(blob);
+    }
+  } catch (err) {
+    alert('Failed to download agents.');
+  } finally {
+    setDownloading(false);
+  }
+};
+
+const fallbackDownload = (blob: Blob) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `agents_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
 
   const loadAgents = async () => {
     setLoading(true);
@@ -656,6 +709,25 @@ const AdminAgents = () => {
                               ))}
                             </div>
                           </div>
+                          <button
+  className="btn"
+  onClick={handleExport}
+  disabled={!hasActiveFilters() || downloading}
+  style={{
+    backgroundColor: hasActiveFilters() ? '#2a9d36' : '#6c757d',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '4px 12px',
+    fontSize: '13px',
+    fontWeight: '500',
+    opacity: hasActiveFilters() ? 1 : 0.6,
+    cursor: hasActiveFilters() ? 'pointer' : 'not-allowed'
+  }}
+>
+  <FileText size={14} className="me-1" />
+  {downloading ? 'Exporting...' : 'Download Excel'}
+</button>
                         </div>
                       </div>
                     </div>

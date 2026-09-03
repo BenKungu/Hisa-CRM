@@ -87,7 +87,17 @@ importExcel: async (formData: FormData): Promise<any> => {
   }
 },
 
-
+exportAgents: async (filters: any): Promise<Blob> => {
+    try {
+      const response = await apiClient.get('/policies/agents/export', {
+        params: filters,
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to export agents' };
+    }
+  },
 
 // Get policy change history
 getPolicyHistory: async (id: string): Promise<any> => {
