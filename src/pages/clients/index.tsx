@@ -53,6 +53,7 @@ const AdminClients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientPolicies, setClientPolicies] = useState<Policy[]>([]);
   const [loadingPolicies, setLoadingPolicies] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -104,8 +105,11 @@ const AdminClients = () => {
   };
 
   const hasActiveFilters = () => {
-    return filters.policyCount.length > 0 || filters.status.length > 0 || filters.agent.length > 0;
-  };
+  return filters.policyCount.length > 0 || 
+         filters.status.length > 0 || 
+         filters.agent.length > 0 ||
+         searchTerm.trim().length > 0;
+};
 
   // ============ HANDLERS ============
 
@@ -146,6 +150,58 @@ const AdminClients = () => {
       setLoadingPolicies(false);
     }
   };
+
+  const handleExport = async () => {
+  if (!hasActiveFilters()) return;
+
+  setDownloading(true);
+  try {
+    const params: any = {};
+    if (searchTerm) params.search = searchTerm;
+    if (filters.policyCount.length > 0) params.policyCount = filters.policyCount;
+    if (filters.status.length > 0) params.status = filters.status;
+    if (filters.agent.length > 0) params.agent = filters.agent;
+
+    const blob = await clientService.exportClients(params);
+
+    // Use showSaveFilePicker if available
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: `clients_${new Date().toISOString().slice(0,10)}.xlsx`,
+          types: [{
+            description: 'Excel File',
+            accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+          fallbackDownload(blob);
+        }
+      }
+    } else {
+      fallbackDownload(blob);
+    }
+  } catch (err) {
+    alert('Failed to download clients.');
+  } finally {
+    setDownloading(false);
+  }
+};
+
+const fallbackDownload = (blob: Blob) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `clients_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
 
   const openModal = async (action: 'view' | 'delete', client: Client) => {
     setModalAction(action);
@@ -870,6 +926,25 @@ const AdminClients = () => {
                               ))}
                             </div>
                           </div>
+                          <button
+  className="btn"
+  onClick={handleExport}
+  disabled={!hasActiveFilters() || downloading}
+  style={{
+    backgroundColor: hasActiveFilters() ? '#2a9d36' : '#6c757d',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '4px 12px',
+    fontSize: '13px',
+    fontWeight: '500',
+    opacity: hasActiveFilters() ? 1 : 0.6,
+    cursor: hasActiveFilters() ? 'pointer' : 'not-allowed'
+  }}
+>
+  <FileText size={14} className="me-1" />
+  {downloading ? 'Exporting...' : 'Download Excel'}
+</button>
                         </div>
                       </div>
                     </div>

@@ -21,6 +21,18 @@ export const clientService = {
     }
   },
 
+  exportClients: async (filters: any): Promise<Blob> => {
+    try {
+      const response = await apiClient.get('/clients/export', {
+        params: filters,
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to export clients' };
+    }
+  },
+
 // Delete client
   deleteClient: async (id: string): Promise<any> => {
     try {
