@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           source: "dist/*"
-          target: "/var/www/hisa-frontend"
+          target: "/var/www/hisa-frontend/dist" 
           strip_components: 1
           overwrite: true
 
