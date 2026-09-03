@@ -368,11 +368,11 @@ const pieChartOptions = {
             <div className="row">
               <div className="col-sm-12">
                 <h3 className="page-title">
-                  🚀 Welcome back,{' '}
+                  👋 Welcome back,{' '}
                   <span style={{ color: '#c70e2a', fontWeight: '700' }}>
                     {user?.firstName || user?.first_name || 'Admin'}
                   </span>{' '}
-                  HISA🎉
+                  🎉
                 </h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item active">Hisa CRM Dashboard</li>
