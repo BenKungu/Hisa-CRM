@@ -12,8 +12,10 @@ import {
   Users,         
   UserCheck,     
   Lock, 
-  CheckCircle,        
+  CheckCircle,
+  RefreshCw,      
 } from "react-feather";
+
 import { all_routes } from "../../routes/all_routes";
 
 const SidebarNav = () => {
@@ -120,6 +122,11 @@ const SidebarNav = () => {
                     <FileText size={16} /> <span>Policy Types</span>
                   </Link>
                 </li>
+                <li className={pathname?.includes("outlook") ? "active" : ""}>
+  <Link to="/outlook">
+    <RefreshCw size={16} /> <span>Outlook</span>
+  </Link>
+</li>
                 <li className={pathname?.includes("whitelist") ? "active" : ""}>
                   <Link to="/whitelist">
                     <CheckCircle size={16} /> <span>Whitelist</span>
