@@ -8,6 +8,7 @@ import { reconciliationService } from '../../services/reconciliation';
 interface ReportItem {
   policyNumber: string;
   clientName: string;
+  agentName: string; 
   outlookFound: boolean;
   dbFound: boolean;
   frequency: string;
@@ -281,8 +282,9 @@ const AdminOutlook = () => {
                                   <th>Policy Number</th>
                                   <th>Client Name</th>
                                   <th>Frequency</th>
-                                  <th>Strike Day (Outlook)</th>
-                                  <th>Strike Day (DB)</th>
+                                  <th>Agent</th>
+                                  <th>Strike(Outlook)</th>
+                                  <th>Strike(DB)</th>
                                   <th>Anomaly</th>
                                 </tr>
                               </thead>
@@ -292,6 +294,7 @@ const AdminOutlook = () => {
                                     <td><strong>{item.policyNumber}</strong></td>
                                     <td>{item.clientName}</td>
                                     <td>{item.frequency}</td>
+                                    <td>{item.agentName || '—'}</td>
                                     <td>{item.strikeDayOutlook ?? 'N/A'}</td>
                                     <td>{item.strikeDayDb ?? 'N/A'}</td>
                                     <td>{getAnomalyBadge(item.anomaly)}</td>
@@ -323,6 +326,7 @@ const AdminOutlook = () => {
                                   <th>Policy Number</th>
                                   <th>Client Name</th>
                                   <th>Frequency</th>
+                                  <th>Agent</th>
                                   <th>Inception Date</th>
                                   <th>Estimated Strike Date</th>
                                 </tr>
@@ -333,6 +337,7 @@ const AdminOutlook = () => {
                                     <td><strong>{item.policyNumber}</strong></td>
                                     <td>{item.clientName}</td>
                                     <td>{item.frequency}</td>
+                                    <td>{item.agentName || '—'}</td>
                                     <td>{item.inceptionDate || 'N/A'}</td>
                                     <td>{item.estimatedDate || 'N/A'}</td>
                                   </tr>
