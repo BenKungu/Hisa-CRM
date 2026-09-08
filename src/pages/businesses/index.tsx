@@ -64,15 +64,17 @@ const AdminBusinesses = () => {
 
   // ===== FILTER STATE =====
   const [filters, setFilters] = useState({
-    status: [] as string[],
-    frequency: [] as string[],
-    productType: [] as string[],
-    agent: [] as string[],
-    strikeDayRange: [] as number[],
-    premiumMin: 0,
-    premiumMax: 0,
-    dateRange: [] as string[],
-  });
+  status: [] as string[],
+  frequency: [] as string[],
+  productType: [] as string[],
+  agent: [] as string[],
+  strikeDayRange: [] as number[],
+  sumInsuredMin: 0,        
+  sumInsuredMax: 0,        
+  newPremiumMin: 0,        
+  newPremiumMax: 0,   
+  dateRange: [] as string[],
+});
   const [showFilters, setShowFilters] = useState(false);
 
   // Filter options
@@ -273,8 +275,10 @@ const handleExport = async () => {
       params.strikeDayMin = filters.strikeDayRange[0];
       params.strikeDayMax = filters.strikeDayRange[1];
     }
-    if (filters.premiumMin > 0) params.premiumMin = filters.premiumMin;
-    if (filters.premiumMax > 0) params.premiumMax = filters.premiumMax;
+    if (filters.sumInsuredMin > 0) params.sumInsuredMin = filters.sumInsuredMin;
+if (filters.sumInsuredMax > 0) params.sumInsuredMax = filters.sumInsuredMax;
+if (filters.newPremiumMin > 0) params.newPremiumMin = filters.newPremiumMin;
+if (filters.newPremiumMax > 0) params.newPremiumMax = filters.newPremiumMax;
 
     const blob = await policyService.exportPolicies(params);
 
@@ -394,9 +398,16 @@ const fallbackDownload = (blob: Blob) => {
   };
 
   const hasActiveFilters = () => {
-    return filters.status.length > 0 || filters.frequency.length > 0 || filters.productType.length > 0 || 
-           filters.strikeDayRange.length > 0 || filters.premiumMin > 0 || filters.premiumMax > 0;
-  };
+  return filters.status.length > 0 ||
+         filters.frequency.length > 0 ||
+         filters.productType.length > 0 ||
+         filters.strikeDayRange.length > 0 ||
+         filters.sumInsuredMin > 0 ||
+         filters.sumInsuredMax > 0 ||
+         filters.newPremiumMin > 0 ||
+         filters.newPremiumMax > 0 ||
+         searchTerm.trim().length > 0;
+};
 
   // ===== FILTERED DATA =====
   const getFilteredData = () => {
@@ -430,16 +441,28 @@ const fallbackDownload = (blob: Blob) => {
         item.strike_date >= min && item.strike_date <= max
       );
     }
-    if (filters.premiumMin > 0) {
-      filtered = filtered.filter(item => 
-        item.annualised_premium >= filters.premiumMin
-      );
-    }
-    if (filters.premiumMax > 0) {
-      filtered = filtered.filter(item => 
-        item.annualised_premium <= filters.premiumMax
-      );
-    }
+    if (filters.sumInsuredMin > 0) {
+  filtered = filtered.filter(item =>
+    (item.total_sum_insured || 0) >= filters.sumInsuredMin
+  );
+}
+if (filters.sumInsuredMax > 0) {
+  filtered = filtered.filter(item =>
+    (item.total_sum_insured || 0) <= filters.sumInsuredMax
+  );
+}
+
+if (filters.newPremiumMin > 0) {
+  filtered = filtered.filter(item =>
+    (item.new_gross_premium || 0) >= filters.newPremiumMin
+  );
+}
+if (filters.newPremiumMax > 0) {
+  filtered = filtered.filter(item =>
+    (item.new_gross_premium || 0) <= filters.newPremiumMax
+  );
+}
+
     if (filters.dateRange.length === 2) {
       const [start, end] = filters.dateRange;
       filtered = filtered.filter(item => 
@@ -590,7 +613,7 @@ const fallbackDownload = (blob: Blob) => {
     sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
   },
   {
-    title: "New Premium",
+    title: "Current Premium",
     dataIndex: "new_gross_premium",
     width: 130,
     align: 'right' as const,
@@ -605,7 +628,7 @@ const fallbackDownload = (blob: Blob) => {
     sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
   },
   {
-    title: "Sum Insured",
+    title: "Total Sum Insured",
     dataIndex: "total_sum_insured",
     width: 130,
     align: 'right' as const,
@@ -1014,18 +1037,20 @@ const fallbackDownload = (blob: Blob) => {
                           <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => {
-                              setFilters({
-                                status: [],
-                                frequency: [],
-                                productType: [],
-                                agent: [],
-                                strikeDayRange: [],
-                                premiumMin: 0,
-                                premiumMax: 0,
-                                dateRange: [],
-                              });
-                              setSearchTerm('');
-                            }}
+  setFilters({
+    status: [],
+    frequency: [],
+    productType: [],
+    agent: [],
+    strikeDayRange: [],
+    sumInsuredMin: 0,
+    sumInsuredMax: 0,
+    newPremiumMin: 0,
+    newPremiumMax: 0,
+    dateRange: [],
+  });
+  setSearchTerm('');
+}}
                             style={{ fontSize: '11px', padding: '4px 8px' }}
                           >
                             <X size={12} className="me-1" /> Clear
@@ -1203,46 +1228,49 @@ const fallbackDownload = (blob: Blob) => {
           </div>
         </div>
 
-        {/* Premium Range */}
-        <div className="dropdown">
-          <button className="btn btn-sm dropdown-toggle" 
-                  data-bs-toggle="dropdown"
-                  style={{ 
-                    fontSize: '12px', 
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    color: '#333'
-                  }}>
-            Premium
-          </button>
-          <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
-            <div className="d-flex gap-2 align-items-center">
-              <input 
-                type="number" 
-                className="form-control form-control-sm" 
-                placeholder="Min" 
-                value={filters.premiumMin || ''}
-                onChange={(e) => {
-                  setFilters({...filters, premiumMin: parseInt(e.target.value) || 0});
-                }}
-                style={{ width: '100px' }}
-              />
-              <span>to</span>
-              <input 
-                type="number" 
-                className="form-control form-control-sm" 
-                placeholder="Max" 
-                value={filters.premiumMax || ''}
-                onChange={(e) => {
-                  setFilters({...filters, premiumMax: parseInt(e.target.value) || 0});
-                }}
-                style={{ width: '100px' }}
-              />
-            </div>
-          </div>
-        </div>
+        {/* Sum Insured Filter */}
+<div className="dropdown">
+  <button className="btn btn-sm dropdown-toggle"
+          data-bs-toggle="dropdown"
+          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
+    Total Sum Insured
+  </button>
+  <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
+    <div className="d-flex gap-2 align-items-center">
+      <input type="number" className="form-control form-control-sm" placeholder="Min"
+             value={filters.sumInsuredMin || ''}
+             onChange={(e) => setFilters({...filters, sumInsuredMin: parseInt(e.target.value) || 0})}
+             style={{ width: '100px' }} />
+      <span>to</span>
+      <input type="number" className="form-control form-control-sm" placeholder="Max"
+             value={filters.sumInsuredMax || ''}
+             onChange={(e) => setFilters({...filters, sumInsuredMax: parseInt(e.target.value) || 0})}
+             style={{ width: '100px' }} />
+    </div>
+  </div>
+</div>
+
+{/* New Premium Filter */}
+<div className="dropdown">
+  <button className="btn btn-sm dropdown-toggle"
+          data-bs-toggle="dropdown"
+          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
+    Current Premium
+  </button>
+  <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
+    <div className="d-flex gap-2 align-items-center">
+      <input type="number" className="form-control form-control-sm" placeholder="Min"
+             value={filters.newPremiumMin || ''}
+             onChange={(e) => setFilters({...filters, newPremiumMin: parseInt(e.target.value) || 0})}
+             style={{ width: '100px' }} />
+      <span>to</span>
+      <input type="number" className="form-control form-control-sm" placeholder="Max"
+             value={filters.newPremiumMax || ''}
+             onChange={(e) => setFilters({...filters, newPremiumMax: parseInt(e.target.value) || 0})}
+             style={{ width: '100px' }} />
+    </div>
+  </div>
+</div>
 
 <button
           className="btn"
