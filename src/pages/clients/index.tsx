@@ -35,6 +35,7 @@ interface Policy {
   policy_number: string;
   policy_status: string;
   product_type: string;
+  new_gross_premium: number;
   annualised_premium: number;
   inception_date: string;
   agent_name: string;
@@ -729,7 +730,7 @@ const fallbackDownload = (blob: Blob) => {
                         {policy.policy_status || 'N/A'}
                       </span>
                       <span style={{ marginLeft: '10px', fontSize: '12px', color: '#2a9d36' }}>
-                        KES {formatCurrency(policy.annualised_premium)}
+                        KES {formatCurrency(policy.new_gross_premium)}
                       </span>
                     </div>
                   </div>
