@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
@@ -79,6 +80,17 @@ const AdminBusinesses = () => {
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
   const [downloading, setDownloading] = useState(false);
+
+  const location = useLocation();
+
+useEffect(() => {
+  // Read search param from URL
+  const params = new URLSearchParams(location.search);
+  const searchQuery = params.get('search');
+  if (searchQuery) {
+    setSearchTerm(searchQuery);
+  }
+}, [location.search]);
   
 
   // ============ HELPERS ============

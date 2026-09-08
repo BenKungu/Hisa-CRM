@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
@@ -54,6 +55,7 @@ const AdminClients = () => {
   const [clientPolicies, setClientPolicies] = useState<Policy[]>([]);
   const [loadingPolicies, setLoadingPolicies] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const navigate = useNavigate();
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -649,23 +651,35 @@ const fallbackDownload = (blob: Blob) => {
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {clientPolicies.map((policy, idx) => (
                   <div key={idx} style={{ 
-                    padding: '8px 12px', 
-                    marginBottom: '5px', 
-                    backgroundColor: '#f8f9fa', 
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap'
-                  }}>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>{policy.policy_number}</span>
-                      <span className="text-muted" style={{ fontSize: '11px', marginLeft: '10px' }}>
-                        {policy.product_type || 'N/A'}
-                      </span>
-                    </div>
-                    <div>
+  padding: '8px 12px', 
+  marginBottom: '5px', 
+  backgroundColor: '#f8f9fa', 
+  borderRadius: '4px',
+  fontSize: '13px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  cursor: 'pointer',
+  transition: 'background-color 0.15s',
+}}>
+  <div>
+    <span 
+      style={{ 
+        fontWeight: '500', 
+        color: '#0d6efd', 
+        textDecoration: 'underline',
+        cursor: 'pointer'
+      }}
+      onClick={() => navigate(`/businesses?search=${policy.policy_number}`)}
+    >
+      {policy.policy_number}
+    </span>
+    <span className="text-muted" style={{ fontSize: '11px', marginLeft: '10px' }}>
+      {policy.product_type || 'N/A'}
+    </span>
+  </div>
+  <div>
                       <span className={`badge ${policy.policy_status?.toLowerCase().includes('finalised') ? 'bg-success' : 
                         policy.policy_status?.toLowerCase().includes('unfinalised') ? 'bg-warning text-dark' :
                         policy.policy_status?.toLowerCase().includes('cancelled') ? 'bg-danger' : 'bg-secondary'}`} 
