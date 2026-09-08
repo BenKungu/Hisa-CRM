@@ -16,6 +16,7 @@ interface Policy {
   client_name: string;
   full_name: string;
   client_id: string;
+  client_id_no: string;
   title: string;
   product_type: string;
   policy_status: string;
@@ -801,7 +802,7 @@ const fallbackDownload = (blob: Blob) => {
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Client ID</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.client_id || 'N/A'}</div>
+                  <div style={{ fontWeight: '500' }}>{selectedPolicy.client_id_no || 'N/A'}</div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Product Type</span>
