@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
 import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Header from "../header";
 import { Eye, Search, Filter, X, Users, FileText, CheckCircle, XCircle, Clock, User, Briefcase } from 'react-feather';
 import { policyService } from '../../services/policy';
@@ -63,6 +63,16 @@ const AdminAgents = () => {
     const index = (name?.length || 0) % colors.length;
     return colors[index];
   };
+
+  const location = useLocation();
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const searchQuery = params.get('search');
+  if (searchQuery) {
+    setSearchTerm(searchQuery);
+  }
+}, [location.search]);
 
   const hasActiveFilters = () => {
   return filters.minPolicies > 0 || 

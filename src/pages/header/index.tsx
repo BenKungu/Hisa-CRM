@@ -7,6 +7,7 @@ import {
   logoSmall,
 } from "../../core/data/json/imagepath";
 import { authService } from "../../services/auth";
+import { searchService } from "../../services/search";
 
 interface User {
   id: string;
@@ -113,6 +114,56 @@ const Header: React.FC = () => {
     return user.email || '';
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+const [searchResults, setSearchResults] = useState<any>(null);
+const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+const [searchLoading, setSearchLoading] = useState(false);
+
+// Debounce search
+useEffect(() => {
+  const timer = setTimeout(() => {
+    if (searchQuery.trim().length >= 2) {
+      performSearch(searchQuery.trim());
+    } else {
+      setSearchResults(null);
+      setShowSearchDropdown(false);
+    }
+  }, 300);
+  return () => clearTimeout(timer);
+}, [searchQuery]);
+
+const performSearch = async (query: string) => {
+  setSearchLoading(true);
+  try {
+    const response = await searchService.search(query);
+    if (response.success) {
+      setSearchResults(response.data);
+      setShowSearchDropdown(true);
+    }
+  } catch (error) {
+    console.error('Search error:', error);
+  } finally {
+    setSearchLoading(false);
+  }
+};
+
+const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setSearchQuery(e.target.value);
+  if (e.target.value.trim().length === 0) {
+    setShowSearchDropdown(false);
+    setSearchResults(null);
+  }
+};
+
+const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
+    e.preventDefault();
+    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    setShowSearchDropdown(false);
+  }
+};
+
+
   return (
     <>
       <div className="header">
@@ -128,18 +179,147 @@ const Header: React.FC = () => {
           <AlignLeft size={20} />
         </Link>
 
-        <div className="top-nav-search">
-          <form>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search here"
-            />
-            <button className="btn" type="submit">
-              <Search size={16} />
-            </button>
-          </form>
-        </div>
+<div className="top-nav-search" style={{ position: 'relative' }}>
+  <form onSubmit={(e) => { e.preventDefault(); /* handled by keydown */ }}>
+    <input
+      type="text"
+  className="form-control"
+  placeholder="Search clients, policies, agents..."
+  style={{
+    borderColor: '#e0e0e0',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  }}
+  onFocus={(e) => {
+    e.currentTarget.style.borderColor = '#2a9d36';
+    e.currentTarget.style.boxShadow = '0 0 0 0.2rem rgba(42, 157, 54, 0.25)';
+    if (searchQuery.trim().length >= 2 && searchResults) {
+      setShowSearchDropdown(true);
+    }
+  }}
+  onBlur={(e) => {
+    e.currentTarget.style.borderColor = '#e0e0e0';
+    e.currentTarget.style.boxShadow = 'none';
+    setTimeout(() => setShowSearchDropdown(false), 200);
+  }}
+      value={searchQuery}
+      onChange={handleSearchInputChange}
+      onKeyDown={handleSearchKeyDown}
+    />
+    <button className="btn" type="submit">
+      <Search size={16} />
+    </button>
+  </form>
+
+  {/* Dropdown – right-aligned, fixed width */}
+  {showSearchDropdown && searchResults && (
+    <div 
+      className="search-dropdown"
+      style={{
+        position: 'absolute',
+        top: 'calc(100% + 4px)',
+        right: 'auto',          
+        left: 0,     
+        width: '480px',
+        maxWidth: '90vw',
+        backgroundColor: '#fff',
+      border: '1px solid #e0e0e0',
+      borderRadius: '8px',
+      boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+      maxHeight: '460px',
+      overflowY: 'auto',
+      zIndex: 1050,
+      padding: '8px 0',
+      }}
+    >
+      {searchLoading && <div className="text-center p-2">Loading...</div>}
+    {!searchLoading && (
+      <>
+      {/* Clients */}
+        {searchResults.clients?.length > 0 && (
+  <div style={{ backgroundColor: '#fdf0f2', borderRadius: '4px', margin: '0 4px 4px 4px' }}>
+    <div style={{ padding: '4px 12px', fontWeight: '600', color: '#c70e2a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      👤 Clients
+    </div>
+    {searchResults.clients.map((item: any) => (
+      <Link
+        key={item.id}
+        to={item.url}
+        className="dropdown-item"
+        style={{ padding: '4px 12px', display: 'flex', flexDirection: 'column', whiteSpace: 'normal', color: '#333' }}
+        onClick={() => setShowSearchDropdown(false)}
+      >
+        <span style={{ fontWeight: '500' }}>{item.label}</span>
+        <span style={{ fontSize: '11px', color: '#999' }}>{item.subtitle}</span>
+      </Link>
+    ))}
+  </div>
+)}
+        {/* Policies */}
+        {searchResults.policies?.length > 0 && (
+  <div style={{ backgroundColor: '#eaf7ed', borderRadius: '4px', margin: '0 4px 4px 4px' }}>
+    <div style={{ padding: '4px 12px', fontWeight: '600', color: '#2a9d36', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      📄 Policies
+    </div>
+    {searchResults.policies.map((item: any) => (
+      <Link
+        key={item.id}
+        to={item.url}
+        className="dropdown-item"
+        style={{ padding: '4px 12px', display: 'flex', flexDirection: 'column', whiteSpace: 'normal', color: '#333' }}
+        onClick={() => setShowSearchDropdown(false)}
+      >
+        <span style={{ fontWeight: '500' }}>{item.label}</span>
+        <span style={{ fontSize: '11px', color: '#999' }}>{item.subtitle}</span>
+      </Link>
+    ))}
+  </div>
+)}
+        {/* Agents */}
+        {searchResults.agents?.length > 0 && (
+  <div style={{ backgroundColor: '#fef3e8', borderRadius: '4px', margin: '0 4px 4px 4px' }}>
+    <div style={{ padding: '4px 12px', fontWeight: '600', color: '#F15A29', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      🤝 Agents
+    </div>
+    {searchResults.agents.map((item: any) => (
+      <Link
+        key={item.id}
+        to={item.url}
+        className="dropdown-item"
+        style={{ padding: '4px 12px', display: 'flex', flexDirection: 'column', whiteSpace: 'normal', color: '#333' }}
+        onClick={() => setShowSearchDropdown(false)}
+      >
+        <span style={{ fontWeight: '500' }}>{item.label}</span>
+        <span style={{ fontSize: '11px', color: '#999' }}>{item.subtitle}</span>
+      </Link>
+    ))}
+  </div>
+)}
+        {(!searchResults.clients?.length && !searchResults.policies?.length && !searchResults.agents?.length) && (
+          <div className="text-center p-2 text-muted">No results found</div>
+        )}
+
+        {/* See all results – primary red */}
+        {searchQuery.trim().length >= 2 && (
+          <div style={{ margin: '4px 0', borderTop: '1px solid #eee' }}></div>
+        )}
+        <Link
+          to={`/search?q=${encodeURIComponent(searchQuery.trim())}`}
+          className="dropdown-item text-center"
+          style={{
+            fontWeight: '500',
+            color: '#c70e2a',
+            padding: '8px 16px',
+            display: 'block',
+          }}
+          onClick={() => setShowSearchDropdown(false)}
+        >
+          See all results
+        </Link>
+      </>
+    )}
+  </div>
+)}
+</div>
 
         <Link
           to="#"

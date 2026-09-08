@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
@@ -57,6 +57,16 @@ const AdminClients = () => {
   const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
 
+  const location = useLocation();
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const searchQuery = params.get('search');
+  if (searchQuery) {
+    setSearchTerm(searchQuery);
+  }
+}, [location.search]);
+
   // Filter state
   const [filters, setFilters] = useState({
     policyCount: [] as string[],
@@ -92,6 +102,35 @@ const AdminClients = () => {
     const ordinal = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : suffix[Math.min(day % 10, 3)] || 'th';
     return `${day}${ordinal} ${month} ${year}`;
   };
+
+// Helper: check if a phone number matches a search term (any format)
+const phoneMatches = (phone: string | undefined | null, search: string): boolean => {
+  if (!phone || !search) return false;
+  const phoneDigits = phone.replace(/\D/g, '');
+  const searchDigits = search.replace(/\D/g, '');
+  if (!searchDigits) return false;
+
+  // Direct contains
+  if (phoneDigits.includes(searchDigits) || searchDigits.includes(phoneDigits)) return true;
+
+  // Remove leading 0 from search (e.g., 0722310 → 722310)
+  const searchNoLeadingZero = searchDigits.replace(/^0+/, '');
+  if (searchNoLeadingZero && phoneDigits.includes(searchNoLeadingZero)) return true;
+
+  // Remove country code from phone and compare
+  const phoneNoCountry = phoneDigits.replace(/^254/, '');
+  if (phoneNoCountry && searchDigits.includes(phoneNoCountry)) return true;
+
+  // Suffix match (last N digits)
+  const minLen = Math.min(phoneDigits.length, searchDigits.length);
+  if (minLen >= 4) {
+    const phoneSuffix = phoneDigits.slice(-minLen);
+    const searchSuffix = searchDigits.slice(-minLen);
+    if (phoneSuffix === searchSuffix) return true;
+  }
+
+  return false;
+};
 
   const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -266,20 +305,23 @@ const fallbackDownload = (blob: Blob) => {
     }
 
     if (filters.agent.length > 0) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         filters.agent.includes(item.agent_name)
       );
     }
 
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.client_name?.toLowerCase().includes(search) ||
-        item.full_name?.toLowerCase().includes(search) ||
-        item.id_no?.toLowerCase().includes(search) ||
-        item.phone_no?.toLowerCase().includes(search) ||
-        item.email?.toLowerCase().includes(search)
-      );
+      filtered = filtered.filter(item => {
+        const matchesText =
+          item.client_name?.toLowerCase().includes(search) ||
+          item.full_name?.toLowerCase().includes(search) ||
+          item.id_no?.toLowerCase().includes(search) ||
+          item.email?.toLowerCase().includes(search);
+        if (matchesText) return true;
+        if (item.phone_no && phoneMatches(item.phone_no, searchTerm)) return true;
+        return false;
+      });
     }
 
     return filtered;

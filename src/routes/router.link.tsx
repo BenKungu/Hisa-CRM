@@ -13,6 +13,8 @@ const AdminRegister = lazy(() => import("../pages/register"));
 const AdminForgotPassword = lazy(() => import("../pages/forgotpassword"));
 const AdminLockscreen = lazy(() => import("../pages/lockscreen"));
 const AdminOutlook = lazy(() => import('../pages/outlook'));
+const SearchResults = lazy(() => import('../pages/search'));
+
 
 const AdminOTP = lazy(() => import("../pages/otp"));
 const AdminWhitelist = lazy(() => import("../pages/whitelist"));
@@ -186,6 +188,16 @@ export const authRoutes = [
   ),
   route: Route,
   meta_title: "Outlook",
+},
+{
+  path: "/search",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchResults />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Search Results",
 },
 
 ];
