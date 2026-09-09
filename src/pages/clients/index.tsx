@@ -21,6 +21,7 @@ interface Client {
   id_no: string;
   phone_no: string;
   email: string;
+  dob: string | null;
   date_of_registration: string;
   policy_count: number;
   finalised_count: number;
@@ -73,6 +74,7 @@ useEffect(() => {
     policyCount: [] as string[],
     status: [] as string[],
     agent: [] as string[],
+    dobFilter: { type: 'none' } as { type: string; month?: number; day?: number },
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -85,6 +87,16 @@ useEffect(() => {
 
   // ============ HELPERS ============
 
+  const getOrdinal = (n: number): string => {
+  const lastTwo = n % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return 'th';
+  const lastDigit = n % 10;
+  if (lastDigit === 1) return 'st';
+  if (lastDigit === 2) return 'nd';
+  if (lastDigit === 3) return 'rd';
+  return 'th';
+};
+
   const formatCurrency = (value: any) => {
     if (!value && value !== 0) return '0';
     const num = Number(value);
@@ -93,16 +105,24 @@ useEffect(() => {
   };
 
   const formatDateCompact = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear();
-    const suffix = ['th', 'st', 'nd', 'rd'];
-    const ordinal = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : suffix[Math.min(day % 10, 3)] || 'th';
-    return `${day}${ordinal} ${month} ${year}`;
-  };
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'short' });
+  const year = date.getFullYear();
+  return `${day}${getOrdinal(day)} ${month} ${year}`;
+};
+
+    
+const formatBirthday = (dateString: string | null) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'long' });
+  return `${day}${getOrdinal(day)} ${month}`;
+};
 
 // Helper: check if a phone number matches a search term (any format)
 const phoneMatches = (phone: string | undefined | null, search: string): boolean => {
@@ -150,6 +170,7 @@ const phoneMatches = (phone: string | undefined | null, search: string): boolean
   return filters.policyCount.length > 0 || 
          filters.status.length > 0 || 
          filters.agent.length > 0 ||
+         filters.dobFilter.type !== 'none' ||
          searchTerm.trim().length > 0;
 };
 
@@ -203,6 +224,13 @@ const phoneMatches = (phone: string | undefined | null, search: string): boolean
     if (filters.policyCount.length > 0) params.policyCount = filters.policyCount;
     if (filters.status.length > 0) params.status = filters.status;
     if (filters.agent.length > 0) params.agent = filters.agent;
+    if (filters.dobFilter.type !== 'none') {
+  params.dobType = filters.dobFilter.type;
+  if (filters.dobFilter.type === 'custom') {
+    params.dobMonth = filters.dobFilter.month;
+    params.dobDay = filters.dobFilter.day;
+  }
+}
 
     const blob = await clientService.exportClients(params);
 
@@ -311,6 +339,68 @@ const fallbackDownload = (blob: Blob) => {
       );
     }
 
+    // DOB Birthday Filter (month/day only)
+if (filters.dobFilter.type !== 'none') {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let startDate: Date | null = null;
+  let endDate: Date | null = null;
+
+  switch (filters.dobFilter.type) {
+    case 'today':
+      startDate = new Date(today);
+      endDate = new Date(today);
+      break;
+    case 'thisWeek': {
+      startDate = new Date(today);
+      endDate = new Date(today);
+      endDate.setDate(endDate.getDate() + 6);
+      break;
+    }
+    case 'thisMonth': {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      break;
+    }
+    case 'custom': {
+      if (filters.dobFilter.month && filters.dobFilter.day) {
+        const month = filters.dobFilter.month;
+        const day = filters.dobFilter.day;
+        // Find the next occurrence of this birthday
+        let bday = new Date(now.getFullYear(), month - 1, day);
+        if (bday < today) {
+          bday = new Date(now.getFullYear() + 1, month - 1, day);
+        }
+        startDate = new Date(bday);
+        endDate = new Date(bday);
+      }
+      break;
+    }
+    default: break;
+  }
+
+  if (startDate && endDate) {
+    filtered = filtered.filter(item => {
+      if (!item.dob) return false;
+      const dob = new Date(item.dob);
+      const dobMonth = dob.getMonth() + 1;
+      const dobDay = dob.getDate();
+
+      // Helper: get next occurrence of this birthday (starting from a given date)
+      const getNextBirthday = (month: number, day: number, fromDate: Date) => {
+        let bday = new Date(fromDate.getFullYear(), month - 1, day);
+        if (bday < fromDate) {
+          bday = new Date(fromDate.getFullYear() + 1, month - 1, day);
+        }
+        return bday;
+      };
+
+      const nextBday = getNextBirthday(dobMonth, dobDay, startDate);
+      // Check if nextBday falls within the range
+      return nextBday >= startDate && nextBday <= endDate;
+    });
+  }
+}
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(item => {
@@ -418,27 +508,32 @@ const fallbackDownload = (blob: Blob) => {
       },
       sorter: (a: any, b: any) => (a.policy_count || 0) - (b.policy_count || 0),
     },
-    {
-      title: "Finalised",
-      dataIndex: "finalised_count",
-      width: 100,
-      align: 'center' as const,
-      render: (count: number) => (
-        <span style={{ 
-          fontWeight: '600', 
-          fontSize: '14px',
-          color: '#2a9d36',
-          backgroundColor: count > 0 ? '#e8f5e9' : '#f5f5f5',
-          padding: '2px 10px',
-          borderRadius: '12px',
-          display: 'inline-block'
-        }}>
-          <CheckCircle size={12} className="me-1" />
-          {count || 0}
-        </span>
-      ),
-      sorter: (a: any, b: any) => (a.finalised_count || 0) - (b.finalised_count || 0),
-    },
+  {
+  title: "DOB",
+  dataIndex: "dob",
+  width: 120,
+  render: (text: string) => {
+    if (!text) return '—';
+    const date = new Date(text);
+    if (isNaN(date.getTime())) return '—';
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+
+    // Correct ordinal
+    const lastTwo = day % 100;
+    let suffix = 'th';
+    if (lastTwo < 11 || lastTwo > 13) {
+      const lastDigit = day % 10;
+      if (lastDigit === 1) suffix = 'st';
+      else if (lastDigit === 2) suffix = 'nd';
+      else if (lastDigit === 3) suffix = 'rd';
+    }
+
+    return `${day}${suffix} ${month} ${year}`;
+  },
+  sorter: (a: any, b: any) => (a.dob || '').localeCompare(b.dob || ''),
+},
     {
       title: "Agent",
       dataIndex: "agent_name",
@@ -628,9 +723,11 @@ const fallbackDownload = (blob: Blob) => {
                   <div style={{ fontWeight: '500' }}>{selectedClient.first_name || 'N/A'}</div>
                 </div>
                 <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Last Name</span>
-                  <div style={{ fontWeight: '500' }}>{selectedClient.last_name || 'N/A'}</div>
-                </div>
+  <span style={{ color: '#999', fontSize: '12px' }}>Birthday</span>
+  <div style={{ fontWeight: '500', color: '#F15A29' }}>
+    {selectedClient.dob ? formatBirthday(selectedClient.dob) : 'N/A'}
+  </div>
+</div>
                 <div style={{ marginBottom: '12px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>ID Number</span>
                   <div style={{ fontWeight: '500' }}>{selectedClient.id_no || 'N/A'}</div>
@@ -639,7 +736,7 @@ const fallbackDownload = (blob: Blob) => {
               <div className="col-6">
                 <div style={{ marginBottom: '12px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Phone</span>
-                  <div style={{ fontWeight: '500' }}>{selectedClient.phone_no || 'N/A'}</div>
+                  <div style={{ fontWeight: '500', color: '#0d6efd' }}>{selectedClient.phone_no || 'N/A'}</div>
                 </div>
                 <div style={{ marginBottom: '12px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Email</span>
@@ -853,7 +950,7 @@ const fallbackDownload = (blob: Blob) => {
                           <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => {
-                              setFilters({ policyCount: [], status: [], agent: [] });
+                              setFilters({ policyCount: [], status: [], agent: [], dobFilter: { type: 'none' } });
                               setSearchTerm('');
                             }}
                             style={{ fontSize: '11px', padding: '4px 8px' }}
@@ -983,6 +1080,178 @@ const fallbackDownload = (blob: Blob) => {
                               ))}
                             </div>
                           </div>
+                        {/* DOB Birthday Filter */}
+
+{/* DOB Birthday Filter – Improved UI */}
+<div className="dropdown">
+  <button
+    className="btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    style={{
+      fontSize: '12px',
+      backgroundColor: '#f8f9fa',
+      border: '1px solid #d1d5db',
+      borderRadius: '6px',
+      padding: '4px 12px',
+      color: '#333',
+    }}
+  >
+    🎂 Birthday{' '}
+    {filters.dobFilter.type !== 'none' && (
+      <span
+        className="badge"
+        style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}
+      >
+        1
+      </span>
+    )}
+  </button>
+
+  <div className="dropdown-menu p-3" style={{ minWidth: '260px' }}>
+    {/* Custom Filter – highlighted */}
+    <div className="mb-2">
+      <div className="d-flex align-items-center gap-2">
+        <input
+          className="form-check-input"
+          type="radio"
+          name="dobType"
+          id="dobCustom"
+          checked={filters.dobFilter.type === 'custom'}
+          onChange={() =>
+            setFilters({
+              ...filters,
+              dobFilter: { type: 'custom', month: 1, day: 1 },
+            })
+          }
+        />
+        <label className="form-check-label fw-semibold" htmlFor="dobCustom">
+          Custom Date
+        </label>
+      </div>
+      {filters.dobFilter.type === 'custom' && (
+        <div className="d-flex gap-2 mt-1 ps-4">
+          <div style={{ position: 'relative' }}>
+            <select
+              className="form-select form-select-sm"
+              style={{ width: '80px' }}
+              value={filters.dobFilter.month || 1}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  dobFilter: {
+                    ...filters.dobFilter,
+                    month: parseInt(e.target.value),
+                  },
+                })
+              }
+            >
+              <option value="">MM</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={m}>
+                  {String(m).padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span style={{ color: '#999' }}>/</span>
+          <div style={{ position: 'relative' }}>
+            <select
+              className="form-select form-select-sm"
+              style={{ width: '80px' }}
+              value={filters.dobFilter.day || 1}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  dobFilter: {
+                    ...filters.dobFilter,
+                    day: parseInt(e.target.value),
+                  },
+                })
+              }
+            >
+              <option value="">DD</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={d}>
+                  {String(d).padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <hr className="my-2" />
+
+    {/* Preset filters */}
+    <div className="d-flex flex-column gap-1">
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="radio"
+          name="dobType"
+          id="dobToday"
+          checked={filters.dobFilter.type === 'today'}
+          onChange={() =>
+            setFilters({ ...filters, dobFilter: { type: 'today' } })
+          }
+        />
+        <label className="form-check-label" htmlFor="dobToday">
+          📅 Today
+        </label>
+      </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="radio"
+          name="dobType"
+          id="dobThisWeek"
+          checked={filters.dobFilter.type === 'thisWeek'}
+          onChange={() =>
+            setFilters({ ...filters, dobFilter: { type: 'thisWeek' } })
+          }
+        />
+        <label className="form-check-label" htmlFor="dobThisWeek">
+          📆 This Week
+        </label>
+      </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="radio"
+          name="dobType"
+          id="dobThisMonth"
+          checked={filters.dobFilter.type === 'thisMonth'}
+          onChange={() =>
+            setFilters({ ...filters, dobFilter: { type: 'thisMonth' } })
+          }
+        />
+        <label className="form-check-label" htmlFor="dobThisMonth">
+          📆 This Month
+        </label>
+      </div>
+    </div>
+
+    <hr className="my-2" />
+
+    <div className="form-check">
+      <input
+        className="form-check-input"
+        type="radio"
+        name="dobType"
+        id="dobNone"
+        checked={filters.dobFilter.type === 'none'}
+        onChange={() =>
+          setFilters({ ...filters, dobFilter: { type: 'none' } })
+        }
+      />
+      <label className="form-check-label text-muted" htmlFor="dobNone">
+        ✕ No filter
+      </label>
+    </div>
+  </div>
+</div>
+
                           <button
   className="btn"
   onClick={handleExport}

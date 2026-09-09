@@ -25,6 +25,10 @@ interface Policy {
   annualised_premium: number;
   initial_gross_premium: number;
   new_gross_premium: number;
+  initial_frequency: string;
+  inflation_protection: number | null;
+  premium_payment_term: string;
+  maturity_payout_period: string;
   inception_date: string;
   strike_date: number;
   agent_name: string;
@@ -132,28 +136,46 @@ useEffect(() => {
   };
 
   const formatDateToOrdinal = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'long' });
-    const year = date.getFullYear();
-    const suffix = ['th', 'st', 'nd', 'rd'];
-    const ordinal = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : suffix[Math.min(day % 10, 3)] || 'th';
-    return `${day}${ordinal} ${month} ${year}`;
-  };
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'long' });
+  const year = date.getFullYear();
+
+  // Correct ordinal
+  const lastTwo = day % 100;
+  let suffix = 'th';
+  if (lastTwo < 11 || lastTwo > 13) {
+    const lastDigit = day % 10;
+    if (lastDigit === 1) suffix = 'st';
+    else if (lastDigit === 2) suffix = 'nd';
+    else if (lastDigit === 3) suffix = 'rd';
+  }
+
+  return `${day}${suffix} ${month} ${year}`;
+};
 
   const formatDateCompact = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear();
-    const suffix = ['th', 'st', 'nd', 'rd'];
-    const ordinal = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : suffix[Math.min(day % 10, 3)] || 'th';
-    return `${day}${ordinal} ${month} ${year}`;
-  };
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'short' });
+  const year = date.getFullYear();
+
+  // Correct ordinal
+  const lastTwo = day % 100;
+  let suffix = 'th';
+  if (lastTwo < 11 || lastTwo > 13) {
+    const lastDigit = day % 10;
+    if (lastDigit === 1) suffix = 'st';
+    else if (lastDigit === 2) suffix = 'nd';
+    else if (lastDigit === 3) suffix = 'rd';
+  }
+
+  return `${day}${suffix} ${month} ${year}`;
+};
 
   const getStrikeDayWithOrdinal = (value: number) => {
     if (!value && value !== 0) return null;
@@ -196,6 +218,26 @@ useEffect(() => {
     if (f.includes('semi')) return '#6f42c1';
     return '#6c757d';
   };
+
+  const getMaturityInfo = (inceptionDate: string, premiumPaymentTerm: string) => {
+  if (!inceptionDate || !premiumPaymentTerm) return null;
+  const termYears = parseInt(premiumPaymentTerm);
+  if (isNaN(termYears)) return null;
+  const inception = new Date(inceptionDate);
+  if (isNaN(inception.getTime())) return null;
+  const maturityDate = new Date(inception);
+  maturityDate.setFullYear(maturityDate.getFullYear() + termYears);
+  // Calculate remaining months
+  const now = new Date();
+  let years = maturityDate.getFullYear() - now.getFullYear();
+  let months = maturityDate.getMonth() - now.getMonth();
+  if (months < 0) { years--; months += 12; }
+  // If already matured
+  if (years < 0 || (years === 0 && months < 0)) {
+    return { status: 'Matured', date: maturityDate };
+  }
+  return { status: `${years}y ${months}m remaining`, date: maturityDate };
+};
 
   // ============ HANDLERS ============
 
@@ -832,13 +874,21 @@ if (filters.newPremiumMax > 0) {
                   <div style={{ fontWeight: '500' }}>{selectedPolicy.product_type || 'N/A'}</div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Premium Frequency</span>
+                  <span style={{ color: '#999', fontSize: '12px' }}>Current Frequency</span>
                   <div style={{ fontWeight: '500' , color: '#0d6efd'}}>{selectedPolicy.premium_frequency || 'N/A'}</div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Inception Date</span>
                   <div style={{ fontWeight: '500', color: '#F15A29' }}>{formatDateToOrdinal(selectedPolicy.inception_date)}</div>
                 </div>
+                <div style={{ marginBottom: '15px' }}>
+  <span style={{ color: '#999', fontSize: '12px' }}>Initial Frequency</span>
+  <div style={{ fontWeight: '500' }}>{selectedPolicy.initial_frequency || 'N/A'}</div>
+</div>
+<div style={{ marginBottom: '15px' }}>
+  <span style={{ color: '#999', fontSize: '12px' }}>Premium Payment Term</span>
+  <div style={{ fontWeight: '500' }}>{selectedPolicy.premium_payment_term || 'N/A'}</div>
+</div>
               </div>
               <div className="col-6">
                 <div style={{ marginBottom: '15px' }}>
@@ -863,7 +913,33 @@ if (filters.newPremiumMax > 0) {
                   <span style={{ color: '#999', fontSize: '12px' }}>New Gross Premium</span>
                   <div style={{ fontWeight: '600', color: '#c70e2a' }}>KES {formatCurrency(selectedPolicy.new_gross_premium)}</div>
                 </div>
+                
+<div style={{ marginBottom: '15px' }}>
+  <span style={{ color: '#999', fontSize: '12px' }}>Inflation Protection</span>
+  <div style={{ fontWeight: '500' }}>
+    {selectedPolicy.inflation_protection !== null ? `${selectedPolicy.inflation_protection}%` : 'N/A'}
+  </div>
+</div>
+
+{(() => {
+  const info = getMaturityInfo(selectedPolicy.inception_date, selectedPolicy.premium_payment_term);
+  if (info) {
+    return (
+      <div style={{ marginBottom: '15px' }}>
+        <span style={{ color: '#999', fontSize: '12px' }}>Maturity</span>
+        <div style={{ fontWeight: '500', color: info.status === 'Matured' ? '#c70e2a' : '#2a9d36' }}>
+          {info.status === 'Matured' ? '✅ Matured' : `⏳ ${info.status}`}
+        </div>
+        <div style={{ fontSize: '12px', color: '#666' }}>
+          Matures on: {formatDateToOrdinal(info.date.toISOString())}
+        </div>
+      </div>
+    );
+  }
+  return null;
+})()}
               </div>
+              
             </div>
             <div style={{ 
               backgroundColor: '#f8f9fa', 
