@@ -78,6 +78,7 @@ const AdminBusinesses = () => {
   newPremiumMin: 0,        
   newPremiumMax: 0,   
   dateRange: [] as string[],
+  maturityFilter: { type: 'none' } as { type: string },
 });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -321,6 +322,7 @@ const handleExport = async () => {
 if (filters.sumInsuredMax > 0) params.sumInsuredMax = filters.sumInsuredMax;
 if (filters.newPremiumMin > 0) params.newPremiumMin = filters.newPremiumMin;
 if (filters.newPremiumMax > 0) params.newPremiumMax = filters.newPremiumMax;
+if (filters.maturityFilter.type !== 'none') params.maturityType = filters.maturityFilter.type;
 
     const blob = await policyService.exportPolicies(params);
 
@@ -448,7 +450,9 @@ const fallbackDownload = (blob: Blob) => {
          filters.sumInsuredMax > 0 ||
          filters.newPremiumMin > 0 ||
          filters.newPremiumMax > 0 ||
-         searchTerm.trim().length > 0;
+         searchTerm.trim().length > 0 ||
+         filters.maturityFilter.type !== 'none'
+
 };
 
   // ===== FILTERED DATA =====
@@ -511,6 +515,41 @@ if (filters.newPremiumMax > 0) {
         item.inception_date >= start && item.inception_date <= end
       );
     }
+
+   // ===== Maturity filter =====
+if (filters.maturityFilter.type !== 'none') {
+  const now = new Date();
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  const endOf3Months = new Date(now.getFullYear(), now.getMonth() + 4, 0, 23, 59, 59, 999);
+  const endOf12Months = new Date(now.getFullYear(), now.getMonth() + 13, 0, 23, 59, 59, 999);
+
+  filtered = filtered.filter(item => {
+    if (!item.inception_date || !item.premium_payment_term) return false;
+    const termYears = parseInt(item.premium_payment_term);
+    if (isNaN(termYears)) return false;
+    const inception = new Date(item.inception_date);
+    if (isNaN(inception.getTime())) return false;
+    const maturityDate = new Date(inception);
+    maturityDate.setFullYear(maturityDate.getFullYear() + termYears);
+
+    switch (filters.maturityFilter.type) {
+      case 'lastMonth':
+        return maturityDate >= startOfLastMonth && maturityDate <= endOfLastMonth;
+      case 'thisMonth':
+        return maturityDate >= startOfThisMonth && maturityDate <= endOfThisMonth;
+      case 'next3Months':
+        return maturityDate >= startOfThisMonth && maturityDate <= endOf3Months;
+      case 'next12Months':
+        return maturityDate >= startOfThisMonth && maturityDate <= endOf12Months;
+      default:
+        return true;
+    }
+  });
+}
+
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
@@ -1124,6 +1163,7 @@ if (filters.newPremiumMax > 0) {
     newPremiumMin: 0,
     newPremiumMax: 0,
     dateRange: [],
+    maturityFilter: { type: 'none' },
   });
   setSearchTerm('');
 }}
@@ -1344,6 +1384,48 @@ if (filters.newPremiumMax > 0) {
              value={filters.newPremiumMax || ''}
              onChange={(e) => setFilters({...filters, newPremiumMax: parseInt(e.target.value) || 0})}
              style={{ width: '100px' }} />
+    </div>
+  </div>
+</div>
+
+{/* Maturity Filter */}
+<div className="dropdown">
+  <button className="btn btn-sm dropdown-toggle"
+          data-bs-toggle="dropdown"
+          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
+    🎯 Maturity {filters.maturityFilter.type !== 'none' && <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>1</span>}
+  </button>
+  <div className="dropdown-menu p-3" style={{ minWidth: '220px' }}>
+    <div className="form-check">
+      <input className="form-check-input" type="radio" name="matType" id="matNone"
+             checked={filters.maturityFilter.type === 'none'}
+             onChange={() => setFilters({...filters, maturityFilter: { type: 'none' }})} />
+      <label className="form-check-label" htmlFor="matNone">No filter</label>
+    </div>
+    <hr className="my-1" />
+    <div className="form-check">
+      <input className="form-check-input" type="radio" name="matType" id="matLastMonth"
+             checked={filters.maturityFilter.type === 'lastMonth'}
+             onChange={() => setFilters({...filters, maturityFilter: { type: 'lastMonth' }})} />
+      <label className="form-check-label" htmlFor="matLastMonth">Matured last month</label>
+    </div>
+    <div className="form-check">
+      <input className="form-check-input" type="radio" name="matType" id="matThisMonth"
+             checked={filters.maturityFilter.type === 'thisMonth'}
+             onChange={() => setFilters({...filters, maturityFilter: { type: 'thisMonth' }})} />
+      <label className="form-check-label" htmlFor="matThisMonth">Maturing this month</label>
+    </div>
+    <div className="form-check">
+      <input className="form-check-input" type="radio" name="matType" id="mat3Months"
+             checked={filters.maturityFilter.type === 'next3Months'}
+             onChange={() => setFilters({...filters, maturityFilter: { type: 'next3Months' }})} />
+      <label className="form-check-label" htmlFor="mat3Months">Maturing in 3 months</label>
+    </div>
+    <div className="form-check">
+      <input className="form-check-input" type="radio" name="matType" id="matThisYear"
+             checked={filters.maturityFilter.type === 'thisYear'}
+             onChange={() => setFilters({...filters, maturityFilter: { type: 'next12Months' }})} />
+      <label className="form-check-label" htmlFor="matThisYear">Maturing this year</label>
     </div>
   </div>
 </div>
