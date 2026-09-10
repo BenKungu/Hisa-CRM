@@ -35,6 +35,10 @@ interface Policy {
   inflation_protection: number | null;
   premium_payment_term: string;
   maturity_payout_period: string;
+  new_gross_premium_at_lapse: number | null;
+  expected_premium: number | null;
+  total_premium_paid: number | null;
+  arrears_due: number | null;
   inception_date: string;
   strike_date: number;
   agent_name: string;
@@ -111,7 +115,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled'];
+  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -129,6 +133,7 @@ const AdminBusinesses = () => {
     if (lower.includes('finalised')) return 'Finalised';
     if (lower.includes('paid') || lower.includes('active')) return 'Paid';
     if (lower.includes('cancelled')) return 'Cancelled';
+    if (lower.includes('lapsed')) return 'Lapsed';
 
     let cleaned = status.replace(/\bPolicy\b/g, '').trim();
     cleaned = cleaned.replace(/[–-]/g, ' ').trim();
@@ -649,18 +654,27 @@ const AdminBusinesses = () => {
         else if (cleaned === 'Finalised')   { badgeClass = 'bg-success'; icon = '✓'; }
         else if (cleaned === 'Unfinalised') { badgeClass = 'bg-warning text-dark'; icon = '⏳'; }
         else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
+        else if (cleaned === 'Lapsed') {
+  badgeClass = 'bg-danger';
+  icon = '⚠';
+}
 
         return (
           <span
-            className={`badge ${badgeClass} px-2 py-1 d-inline-block text-truncate`}
-            style={{
-              fontSize: '11px', maxWidth: '130px', fontWeight: '500',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-            }}
-            title={status || 'N/A'}
-          >
-            {icon} {cleaned}
-          </span>
+  className={`badge ${badgeClass} px-2 py-1 d-inline-block text-truncate`}
+  style={{
+    fontSize: '11px',
+    maxWidth: '130px',
+    fontWeight: '500',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    ...(cleaned === 'Lapsed' ? { backgroundColor: '#7f1d1d', color: '#fff' } : {})
+  }}
+  title={status || 'N/A'}
+>
+  {icon} {cleaned}
+</span>
         );
       },
       sorter: (a: any, b: any) =>
@@ -986,8 +1000,75 @@ const AdminBusinesses = () => {
                     </div>
                   );
                 })()}
+
+
+
               </div>
             </div>
+
+            {/* Lapsed & Arrears — full width, only for Lapsed policies with values */}
+{cleanPolicyStatus(selectedPolicy.policy_status) === 'Lapsed' &&
+ (selectedPolicy.expected_premium !== null ||
+  selectedPolicy.total_premium_paid !== null ||
+  selectedPolicy.arrears_due !== null ||
+  selectedPolicy.new_gross_premium_at_lapse !== null) && (
+  <div style={{
+    backgroundColor: '#fef2f2',
+    padding: '15px',
+    borderRadius: '8px',
+    marginTop: '10px',
+    marginBottom: '15px',
+    borderLeft: '4px solid #7f1d1d'
+  }}>
+    <div style={{ fontSize: '12px', color: '#7f1d1d', fontWeight: '600', marginBottom: '12px' }}>
+      ⚠ Lapse &amp; Arrears
+    </div>
+
+    <div className="row">
+      {/* Left column – lapse premium + expected */}
+      <div className="col-6">
+        {selectedPolicy.new_gross_premium_at_lapse !== null && (
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Premium at Lapse</span>
+            <div style={{ fontWeight: '500', color: '#7f1d1d' }}>
+              KES {formatCurrency(selectedPolicy.new_gross_premium_at_lapse)}
+            </div>
+          </div>
+        )}
+
+        {selectedPolicy.expected_premium !== null && (
+          <div style={{ marginBottom: '0' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Expected Premium</span>
+            <div style={{ fontWeight: '500' }}>
+              KES {formatCurrency(selectedPolicy.expected_premium)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Right column – paid + arrears */}
+      <div className="col-6">
+        {selectedPolicy.total_premium_paid !== null && (
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Total Premium Paid</span>
+            <div style={{ fontWeight: '500', color: '#2a9d36' }}>
+              KES {formatCurrency(selectedPolicy.total_premium_paid)}
+            </div>
+          </div>
+        )}
+
+        {selectedPolicy.arrears_due !== null && (
+          <div style={{ marginBottom: '0' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Arrears Due</span>
+            <div style={{ fontWeight: '700', color: '#c70e2a', fontSize: '15px' }}>
+              KES {formatCurrency(selectedPolicy.arrears_due)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
             {/* Agent + branch footer */}
             <div style={{
@@ -1130,6 +1211,12 @@ const AdminBusinesses = () => {
                           </span>
                           <span style={{ color: '#999', fontSize: '12px' }}>Cancelled</span>
                         </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+  <span style={{ fontSize: '14px', fontWeight: '600', color: '#7f1d1d' }}>
+    {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Lapsed').length}
+  </span>
+  <span style={{ color: '#999', fontSize: '12px' }}>Lapsed</span>
+</div>
                       </div>
                     </div>
                     <div className="col-auto">
