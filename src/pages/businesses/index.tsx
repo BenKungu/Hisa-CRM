@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Table } from "antd";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
 import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
-import { Link } from "react-router-dom";
 import Header from "../header";
-import { Eye, Edit, Trash2, FileText, Search, Upload, CheckCircle, XCircle, AlertCircle, Filter, X } from 'react-feather';
+import {
+  Eye, Edit, Trash2, FileText, Search, Upload,
+  CheckCircle, XCircle, AlertCircle, Filter, X
+} from 'react-feather';
 import { policyService } from '../../services/policy';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface Policy {
   id: string;
@@ -37,98 +43,100 @@ interface Policy {
   updated_at: string;
 }
 
-const AdminBusinesses = () => {
-  const [data, setData] = useState<Policy[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Modal state
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalAction, setModalAction] = useState<'view' | 'delete' | null>(null);
-  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
-
-  // Upload modal state
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
-  const [uploadResult, setUploadResult] = useState<{
+interface UploadResult {
   newClients: number;
   updatedClients: number;
   newPolicies: number;
   updatedPolicies: number;
   skipped: number;
   errors: string[];
-} | null>(null);
+}
 
-  // Policy history state
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+const AdminBusinesses = () => {
+  // --------------------------------------------------------------------------
+  // State – data
+  // --------------------------------------------------------------------------
+  const [data, setData] = useState<Policy[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // --------------------------------------------------------------------------
+  // State – filters
+  // --------------------------------------------------------------------------
+  const [filters, setFilters] = useState({
+    status: [] as string[],
+    frequency: [] as string[],
+    productType: [] as string[],
+    agent: [] as string[],
+    strikeDayRange: [] as number[],
+    sumInsuredMin: 0,
+    sumInsuredMax: 0,
+    newPremiumMin: 0,
+    newPremiumMax: 0,
+    dateRange: [] as string[],
+    maturityFilter: { type: 'none' } as { type: string },
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // --------------------------------------------------------------------------
+  // State – view/delete modal
+  // --------------------------------------------------------------------------
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState<'view' | 'delete' | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [policyHistory, setPolicyHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // ===== FILTER STATE =====
-  const [filters, setFilters] = useState({
-  status: [] as string[],
-  frequency: [] as string[],
-  productType: [] as string[],
-  agent: [] as string[],
-  strikeDayRange: [] as number[],
-  sumInsuredMin: 0,        
-  sumInsuredMax: 0,        
-  newPremiumMin: 0,        
-  newPremiumMax: 0,   
-  dateRange: [] as string[],
-  maturityFilter: { type: 'none' } as { type: string },
-});
-  const [showFilters, setShowFilters] = useState(false);
+  // --------------------------------------------------------------------------
+  // State – upload modal
+  // --------------------------------------------------------------------------
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
 
-  // Filter options
-  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled'];
-  const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
-  const productOptions = ['Education Policy', 'Endowment Policy'];
-
+  // --------------------------------------------------------------------------
+  // State – export
+  // --------------------------------------------------------------------------
   const [downloading, setDownloading] = useState(false);
 
   const location = useLocation();
 
-useEffect(() => {
-  // Read search param from URL
-  const params = new URLSearchParams(location.search);
-  const searchQuery = params.get('search');
-  if (searchQuery) {
-    setSearchTerm(searchQuery);
-  }
-}, [location.search]);
-  
+  // --------------------------------------------------------------------------
+  // Static filter options
+  // --------------------------------------------------------------------------
+  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled'];
+  const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
+  const productOptions = ['Education Policy', 'Endowment Policy'];
 
-  // ============ HELPERS ============
+  // ==========================================================================
+  // HELPERS
+  // ==========================================================================
 
+  /** Clean/normalise a raw policy status into one of the defined buckets. */
   const cleanPolicyStatus = (status: string) => {
-  if (!status) return 'Not Given';
-  const lower = status.toLowerCase();
+    if (!status) return 'Not Given';
+    const lower = status.toLowerCase();
 
-  // ✅ Check 'auto' first (specific)
-  if (lower.includes('auto')) return 'Auto';
+    if (lower.includes('auto')) return 'Auto';
+    if (lower.includes('unfinalised')) return 'Unfinalised';
+    if (lower.includes('finalised')) return 'Finalised';
+    if (lower.includes('paid') || lower.includes('active')) return 'Paid';
+    if (lower.includes('cancelled')) return 'Cancelled';
 
-  // ✅ Check 'unfinalised' before 'finalised' (to avoid false match)
-  if (lower.includes('unfinalised')) return 'Unfinalised';
+    let cleaned = status.replace(/\bPolicy\b/g, '').trim();
+    cleaned = cleaned.replace(/[–-]/g, ' ').trim();
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    return cleaned || 'Not Given';
+  };
 
-  // ✅ Then 'finalised'
-  if (lower.includes('finalised')) return 'Finalised';
-
-  // ✅ Check 'paid' or 'active' (but not 'auto' already caught)
-  if (lower.includes('paid') || lower.includes('active')) return 'Paid';
-
-  // ✅ 'cancelled'
-  if (lower.includes('cancelled')) return 'Cancelled';
-
-  // fallback
-  let cleaned = status.replace(/\bPolicy\b/g, '').trim();
-  cleaned = cleaned.replace(/[–-]/g, ' ').trim();
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
-  return cleaned || 'Not Given';
-};
-
+  /** Format a number as a thousands-separated currency string. */
   const formatCurrency = (value: any) => {
     if (!value && value !== 0) return '0';
     const num = Number(value);
@@ -136,67 +144,48 @@ useEffect(() => {
     return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   };
 
+  /** Add correct ordinal suffix to a day number (1 → 1st, 2 → 2nd, 11 → 11th). */
+  const getOrdinalSuffix = (day: number): string => {
+    const lastTwo = day % 100;
+    if (lastTwo >= 11 && lastTwo <= 13) return 'th';
+    const lastDigit = day % 10;
+    if (lastDigit === 1) return 'st';
+    if (lastDigit === 2) return 'nd';
+    if (lastDigit === 3) return 'rd';
+    return 'th';
+  };
+
+  /** Long date with ordinal, e.g., "10th June 2027". */
   const formatDateToOrdinal = (dateString: string) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'N/A';
-  const day = date.getDate();
-  const month = date.toLocaleString('default', { month: 'long' });
-  const year = date.getFullYear();
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'long' });
+    const year = date.getFullYear();
+    return `${day}${getOrdinalSuffix(day)} ${month} ${year}`;
+  };
 
-  // Correct ordinal
-  const lastTwo = day % 100;
-  let suffix = 'th';
-  if (lastTwo < 11 || lastTwo > 13) {
-    const lastDigit = day % 10;
-    if (lastDigit === 1) suffix = 'st';
-    else if (lastDigit === 2) suffix = 'nd';
-    else if (lastDigit === 3) suffix = 'rd';
-  }
-
-  return `${day}${suffix} ${month} ${year}`;
-};
-
+  /** Short date with ordinal, e.g., "10th Jun 2027". */
   const formatDateCompact = (dateString: string) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'N/A';
-  const day = date.getDate();
-  const month = date.toLocaleString('default', { month: 'short' });
-  const year = date.getFullYear();
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day}${getOrdinalSuffix(day)} ${month} ${year}`;
+  };
 
-  // Correct ordinal
-  const lastTwo = day % 100;
-  let suffix = 'th';
-  if (lastTwo < 11 || lastTwo > 13) {
-    const lastDigit = day % 10;
-    if (lastDigit === 1) suffix = 'st';
-    else if (lastDigit === 2) suffix = 'nd';
-    else if (lastDigit === 3) suffix = 'rd';
-  }
-
-  return `${day}${suffix} ${month} ${year}`;
-};
-
+  /** Strike day number with ordinal suffix, e.g., "5th". */
   const getStrikeDayWithOrdinal = (value: number) => {
     if (!value && value !== 0) return null;
     const num = Number(value);
     if (isNaN(num)) return null;
-    const mod100 = num % 100;
-    const mod10 = num % 10;
-    let ordinal = 'th';
-    if (mod100 >= 11 && mod100 <= 13) {
-      ordinal = 'th';
-    } else if (mod10 === 1) {
-      ordinal = 'st';
-    } else if (mod10 === 2) {
-      ordinal = 'nd';
-    } else if (mod10 === 3) {
-      ordinal = 'rd';
-    }
-    return `${num}${ordinal}`;
+    return `${num}${getOrdinalSuffix(num)}`;
   };
 
+  /** Two-letter uppercase initials from a full name. */
   const getInitials = (name: string) => {
     if (!name) return 'U';
     const parts = name.trim().split(' ');
@@ -204,12 +193,13 @@ useEffect(() => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
+  /** Deterministic avatar colour based on name length. */
   const getAvatarColor = (name: string) => {
     const colors = ['#2c3e8f', '#6f42c1'];
-    const index = (name?.length || 0) % colors.length;
-    return colors[index];
+    return colors[(name?.length || 0) % colors.length];
   };
 
+  /** Frequency label colour. */
   const getFrequencyColor = (freq: string) => {
     if (!freq) return '#6c757d';
     const f = freq.toLowerCase();
@@ -220,163 +210,45 @@ useEffect(() => {
     return '#6c757d';
   };
 
+  /** Compute maturity date + remaining time from inception + term (years). */
   const getMaturityInfo = (inceptionDate: string, premiumPaymentTerm: string) => {
-  if (!inceptionDate || !premiumPaymentTerm) return null;
-  const termYears = parseInt(premiumPaymentTerm);
-  if (isNaN(termYears)) return null;
-  const inception = new Date(inceptionDate);
-  if (isNaN(inception.getTime())) return null;
-  const maturityDate = new Date(inception);
-  maturityDate.setFullYear(maturityDate.getFullYear() + termYears);
-  // Calculate remaining months
-  const now = new Date();
-  let years = maturityDate.getFullYear() - now.getFullYear();
-  let months = maturityDate.getMonth() - now.getMonth();
-  if (months < 0) { years--; months += 12; }
-  // If already matured
-  if (years < 0 || (years === 0 && months < 0)) {
-    return { status: 'Matured', date: maturityDate };
-  }
-  return { status: `${years}y ${months}m remaining`, date: maturityDate };
-};
+    if (!inceptionDate || !premiumPaymentTerm) return null;
+    const termYears = parseInt(premiumPaymentTerm);
+    if (isNaN(termYears)) return null;
+    const inception = new Date(inceptionDate);
+    if (isNaN(inception.getTime())) return null;
 
-  // ============ HANDLERS ============
+    const maturityDate = new Date(inception);
+    maturityDate.setFullYear(maturityDate.getFullYear() + termYears);
 
-  const handleFileSelect = (file: File) => {
-    setUploadFile(file);
-    setUploadStatus('idle');
-    setUploadResult(null);
+    const now = new Date();
+    let years = maturityDate.getFullYear() - now.getFullYear();
+    let months = maturityDate.getMonth() - now.getMonth();
+    if (months < 0) { years--; months += 12; }
+
+    if (years < 0 || (years === 0 && months < 0)) {
+      return { status: 'Matured', date: maturityDate };
+    }
+    return { status: `${years}y ${months}m remaining`, date: maturityDate };
   };
 
-  const handleUpload = async () => {
-    if (!uploadFile) return;
-    setUploadStatus('uploading');
-    setUploadProgress(0);
-    const formData = new FormData();
-    formData.append('file', uploadFile);
-    try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-      const response = await policyService.importExcel(formData);
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      if (response.success) {
-        setUploadStatus('success');
-        setUploadResult({
-          newClients: response.data.newClients || 0,
-          updatedClients: response.data.updatedClients || 0,
-          newPolicies: response.data.newPolicies || 0,
-          updatedPolicies: response.data.updatedPolicies || 0,
-          skipped: response.data.skipped || 0,
-          errors: response.data.errors || []
-        });
-        await loadPolicies();
-      } else {
-        setUploadStatus('error');
-        setUploadResult({
-          newClients: 0,
-          updatedClients: 0,
-          newPolicies: 0,
-          updatedPolicies: 0,
-          skipped: 0,
-          errors: [response.error || 'Import failed']
-        });
-      }
-    } catch (err: any) {
-      setUploadStatus('error');
-      setUploadResult({
-        newClients: 0,
-        updatedClients: 0,
-        newPolicies: 0,
-        updatedPolicies: 0,
-        skipped: 0,
-        errors: [err.error || 'Import failed']
-      });
-    }
+  /** Are any filters active? */
+  const hasActiveFilters = () => {
+    return filters.status.length > 0 ||
+           filters.frequency.length > 0 ||
+           filters.productType.length > 0 ||
+           filters.strikeDayRange.length > 0 ||
+           filters.sumInsuredMin > 0 ||
+           filters.sumInsuredMax > 0 ||
+           filters.newPremiumMin > 0 ||
+           filters.newPremiumMax > 0 ||
+           searchTerm.trim().length > 0 ||
+           filters.maturityFilter.type !== 'none';
   };
 
-const handleExport = async () => {
-  if (!hasActiveFilters()) return;
-
-  setDownloading(true);
-  try {
-    // Build filter params
-    const params: any = {};
-    if (searchTerm) params.search = searchTerm;
-    if (filters.status.length > 0) params.status = filters.status;
-    if (filters.frequency.length > 0) params.frequency = filters.frequency;
-    if (filters.productType.length > 0) params.productType = filters.productType;
-    if (filters.agent.length > 0) params.agent = filters.agent;
-    if (filters.strikeDayRange.length === 2) {
-      params.strikeDayMin = filters.strikeDayRange[0];
-      params.strikeDayMax = filters.strikeDayRange[1];
-    }
-    if (filters.sumInsuredMin > 0) params.sumInsuredMin = filters.sumInsuredMin;
-if (filters.sumInsuredMax > 0) params.sumInsuredMax = filters.sumInsuredMax;
-if (filters.newPremiumMin > 0) params.newPremiumMin = filters.newPremiumMin;
-if (filters.newPremiumMax > 0) params.newPremiumMax = filters.newPremiumMax;
-if (filters.maturityFilter.type !== 'none') params.maturityType = filters.maturityFilter.type;
-
-    const blob = await policyService.exportPolicies(params);
-
-    // ✅ Try to use File System Access API (prompts for save location)
-    if ('showSaveFilePicker' in window) {
-      try {
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: `policies_${new Date().toISOString().slice(0,10)}.xlsx`,
-          types: [{
-            description: 'Excel File',
-            accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
-          }]
-        });
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-      } catch (err: any) {
-        // User cancelled the save dialog
-        if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
-          console.error('Save error:', err);
-          // Fallback to download
-          fallbackDownload(blob);
-        }
-      }
-    } else {
-      // Fallback for older browsers
-      fallbackDownload(blob);
-    }
-  } catch (err) {
-    alert('Failed to download policies.');
-  } finally {
-    setDownloading(false);
-  }
-};
-
-// Fallback download method
-const fallbackDownload = (blob: Blob) => {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `policies_${new Date().toISOString().slice(0,10)}.xlsx`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-};
-
-  const resetUploadModal = () => {
-    setUploadModalOpen(false);
-    setUploadFile(null);
-    setUploadProgress(0);
-    setUploadStatus('idle');
-    setUploadResult(null);
-  };
+  // ==========================================================================
+  // DATA LOADING
+  // ==========================================================================
 
   const loadPolicies = async () => {
     setLoading(true);
@@ -396,21 +268,165 @@ const fallbackDownload = (blob: Blob) => {
     }
   };
 
+  // Read `?search=` query param from the URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchQuery = params.get('search');
+    if (searchQuery) setSearchTerm(searchQuery);
+  }, [location.search]);
+
+  // Initial load
   useEffect(() => {
     loadPolicies();
   }, []);
+
+  // ==========================================================================
+  // HANDLERS – Upload / Import
+  // ==========================================================================
+
+  const handleFileSelect = (file: File) => {
+    setUploadFile(file);
+    setUploadStatus('idle');
+    setUploadResult(null);
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+    setUploadStatus('uploading');
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+
+    try {
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) { clearInterval(progressInterval); return 90; }
+          return prev + 10;
+        });
+      }, 300);
+
+      const response = await policyService.importExcel(formData);
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (response.success) {
+        setUploadStatus('success');
+        setUploadResult({
+          newClients: response.data.newClients || 0,
+          updatedClients: response.data.updatedClients || 0,
+          newPolicies: response.data.newPolicies || 0,
+          updatedPolicies: response.data.updatedPolicies || 0,
+          skipped: response.data.skipped || 0,
+          errors: response.data.errors || []
+        });
+        await loadPolicies();
+      } else {
+        setUploadStatus('error');
+        setUploadResult({
+          newClients: 0, updatedClients: 0, newPolicies: 0, updatedPolicies: 0,
+          skipped: 0, errors: [response.error || 'Import failed']
+        });
+      }
+    } catch (err: any) {
+      setUploadStatus('error');
+      setUploadResult({
+        newClients: 0, updatedClients: 0, newPolicies: 0, updatedPolicies: 0,
+        skipped: 0, errors: [err.error || 'Import failed']
+      });
+    }
+  };
+
+  const resetUploadModal = () => {
+    setUploadModalOpen(false);
+    setUploadFile(null);
+    setUploadProgress(0);
+    setUploadStatus('idle');
+    setUploadResult(null);
+  };
+
+  // ==========================================================================
+  // HANDLERS – Export
+  // ==========================================================================
+
+  const fallbackDownload = (blob: Blob) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `policies_${new Date().toISOString().slice(0,10)}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async () => {
+    if (!hasActiveFilters()) return;
+    setDownloading(true);
+
+    try {
+      // Build filter params from current filter state
+      const params: any = {};
+      if (searchTerm) params.search = searchTerm;
+      if (filters.status.length > 0) params.status = filters.status;
+      if (filters.frequency.length > 0) params.frequency = filters.frequency;
+      if (filters.productType.length > 0) params.productType = filters.productType;
+      if (filters.agent.length > 0) params.agent = filters.agent;
+      if (filters.strikeDayRange.length === 2) {
+        params.strikeDayMin = filters.strikeDayRange[0];
+        params.strikeDayMax = filters.strikeDayRange[1];
+      }
+      if (filters.sumInsuredMin > 0) params.sumInsuredMin = filters.sumInsuredMin;
+      if (filters.sumInsuredMax > 0) params.sumInsuredMax = filters.sumInsuredMax;
+      if (filters.newPremiumMin > 0) params.newPremiumMin = filters.newPremiumMin;
+      if (filters.newPremiumMax > 0) params.newPremiumMax = filters.newPremiumMax;
+      if (filters.maturityFilter.type !== 'none') params.maturityType = filters.maturityFilter.type;
+
+      const blob = await policyService.exportPolicies(params);
+
+      // Prefer the File System Access API when available (lets user pick save location)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: `policies_${new Date().toISOString().slice(0,10)}.xlsx`,
+            types: [{
+              description: 'Excel File',
+              accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        } catch (err: any) {
+          if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+            console.error('Save error:', err);
+            fallbackDownload(blob);
+          }
+        }
+      } else {
+        fallbackDownload(blob);
+      }
+    } catch (err) {
+      alert('Failed to download policies.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // ==========================================================================
+  // HANDLERS – View / Delete modal
+  // ==========================================================================
 
   const openModal = async (action: 'view' | 'delete', policy: Policy) => {
     setModalAction(action);
     setSelectedPolicy(policy);
     setModalOpen(true);
+
     if (action === 'view') {
       setLoadingHistory(true);
       try {
         const response = await policyService.getPolicyHistory(policy.id);
-        if (response.success) {
-          setPolicyHistory(response.data);
-        }
+        if (response.success) setPolicyHistory(response.data);
       } catch (err) {
         console.error('Error loading policy history:', err);
       } finally {
@@ -441,115 +457,124 @@ const fallbackDownload = (blob: Blob) => {
     }
   };
 
-  const hasActiveFilters = () => {
-  return filters.status.length > 0 ||
-         filters.frequency.length > 0 ||
-         filters.productType.length > 0 ||
-         filters.strikeDayRange.length > 0 ||
-         filters.sumInsuredMin > 0 ||
-         filters.sumInsuredMax > 0 ||
-         filters.newPremiumMin > 0 ||
-         filters.newPremiumMax > 0 ||
-         searchTerm.trim().length > 0 ||
-         filters.maturityFilter.type !== 'none'
+  const resetFilters = () => {
+    setFilters({
+      status: [],
+      frequency: [],
+      productType: [],
+      agent: [],
+      strikeDayRange: [],
+      sumInsuredMin: 0,
+      sumInsuredMax: 0,
+      newPremiumMin: 0,
+      newPremiumMax: 0,
+      dateRange: [],
+      maturityFilter: { type: 'none' },
+    });
+    setSearchTerm('');
+  };
 
-};
+  // ==========================================================================
+  // FILTERING LOGIC
+  // ==========================================================================
 
-  // ===== FILTERED DATA =====
   const getFilteredData = () => {
     let filtered = data;
+
+    // Status
     if (filters.status.length > 0) {
-  filtered = filtered.filter(item => {
-    const cleaned = cleanPolicyStatus(item.policy_status);
-    return filters.status.some(filter => cleaned === filter);
-  });
-}
+      filtered = filtered.filter(item => {
+        const cleaned = cleanPolicyStatus(item.policy_status);
+        return filters.status.some(filter => cleaned === filter);
+      });
+    }
+
+    // Frequency
     if (filters.frequency.length > 0) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         filters.frequency.includes(item.premium_frequency || '')
       );
     }
+
+    // Product type
     if (filters.productType.length > 0) {
-      filtered = filtered.filter(item => 
-        filters.productType.some(type => 
+      filtered = filtered.filter(item =>
+        filters.productType.some(type =>
           item.product_type?.toLowerCase().includes(type.toLowerCase())
         )
       );
     }
+
+    // Agent
     if (filters.agent.length > 0) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         filters.agent.includes(item.agent_name || '')
       );
     }
+
+    // Strike day range
     if (filters.strikeDayRange.length === 2) {
       const [min, max] = filters.strikeDayRange;
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.strike_date >= min && item.strike_date <= max
       );
     }
+
+    // Sum insured range
     if (filters.sumInsuredMin > 0) {
-  filtered = filtered.filter(item =>
-    (item.total_sum_insured || 0) >= filters.sumInsuredMin
-  );
-}
-if (filters.sumInsuredMax > 0) {
-  filtered = filtered.filter(item =>
-    (item.total_sum_insured || 0) <= filters.sumInsuredMax
-  );
-}
+      filtered = filtered.filter(item => (item.total_sum_insured || 0) >= filters.sumInsuredMin);
+    }
+    if (filters.sumInsuredMax > 0) {
+      filtered = filtered.filter(item => (item.total_sum_insured || 0) <= filters.sumInsuredMax);
+    }
 
-if (filters.newPremiumMin > 0) {
-  filtered = filtered.filter(item =>
-    (item.new_gross_premium || 0) >= filters.newPremiumMin
-  );
-}
-if (filters.newPremiumMax > 0) {
-  filtered = filtered.filter(item =>
-    (item.new_gross_premium || 0) <= filters.newPremiumMax
-  );
-}
+    // Current premium range
+    if (filters.newPremiumMin > 0) {
+      filtered = filtered.filter(item => (item.new_gross_premium || 0) >= filters.newPremiumMin);
+    }
+    if (filters.newPremiumMax > 0) {
+      filtered = filtered.filter(item => (item.new_gross_premium || 0) <= filters.newPremiumMax);
+    }
 
+    // Inception date range (kept for future use)
     if (filters.dateRange.length === 2) {
       const [start, end] = filters.dateRange;
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.inception_date >= start && item.inception_date <= end
       );
     }
 
-   // ===== Maturity filter =====
-if (filters.maturityFilter.type !== 'none') {
-  const now = new Date();
-  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  const endOf3Months = new Date(now.getFullYear(), now.getMonth() + 4, 0, 23, 59, 59, 999);
-  const endOf12Months = new Date(now.getFullYear(), now.getMonth() + 13, 0, 23, 59, 59, 999);
+    // Maturity filter – compares only the computed maturity month
+    if (filters.maturityFilter.type !== 'none') {
+      const now = new Date();
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      const endOf3Months = new Date(now.getFullYear(), now.getMonth() + 4, 0, 23, 59, 59, 999);
+      const endOf12Months = new Date(now.getFullYear(), now.getMonth() + 13, 0, 23, 59, 59, 999);
 
-  filtered = filtered.filter(item => {
-    if (!item.inception_date || !item.premium_payment_term) return false;
-    const termYears = parseInt(item.premium_payment_term);
-    if (isNaN(termYears)) return false;
-    const inception = new Date(item.inception_date);
-    if (isNaN(inception.getTime())) return false;
-    const maturityDate = new Date(inception);
-    maturityDate.setFullYear(maturityDate.getFullYear() + termYears);
+      filtered = filtered.filter(item => {
+        if (!item.inception_date || !item.premium_payment_term) return false;
+        const termYears = parseInt(item.premium_payment_term);
+        if (isNaN(termYears)) return false;
+        const inception = new Date(item.inception_date);
+        if (isNaN(inception.getTime())) return false;
 
-    switch (filters.maturityFilter.type) {
-      case 'lastMonth':
-        return maturityDate >= startOfLastMonth && maturityDate <= endOfLastMonth;
-      case 'thisMonth':
-        return maturityDate >= startOfThisMonth && maturityDate <= endOfThisMonth;
-      case 'next3Months':
-        return maturityDate >= startOfThisMonth && maturityDate <= endOf3Months;
-      case 'next12Months':
-        return maturityDate >= startOfThisMonth && maturityDate <= endOf12Months;
-      default:
-        return true;
+        const maturityDate = new Date(inception);
+        maturityDate.setFullYear(maturityDate.getFullYear() + termYears);
+
+        switch (filters.maturityFilter.type) {
+          case 'lastMonth':    return maturityDate >= startOfLastMonth && maturityDate <= endOfLastMonth;
+          case 'thisMonth':    return maturityDate >= startOfThisMonth && maturityDate <= endOfThisMonth;
+          case 'next3Months':  return maturityDate >= startOfThisMonth && maturityDate <= endOf3Months;
+          case 'next12Months': return maturityDate >= startOfThisMonth && maturityDate <= endOf12Months;
+          default: return true;
+        }
+      });
     }
-  });
-}
 
+    // Free-text search
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
@@ -561,277 +586,246 @@ if (filters.maturityFilter.type !== 'none') {
         item.agent_name?.toLowerCase().includes(search)
       );
     }
+
     return filtered;
   };
 
   const filteredData = getFilteredData();
 
-  // ============ TABLE COLUMNS ============
+  // ==========================================================================
+  // TABLE COLUMNS
+  // ==========================================================================
 
   const columns = [
-  {
-    title: "Policy Number",
-    dataIndex: "policy_number",
-    width: 140,
-    fixed: 'left' as const,
-    render: (text: string) => (
-      <span style={{ color: '#2a9d36', fontWeight: '600', fontSize: '13px' }}>
-        <FileText size={12} className="me-1" style={{ color: '#2a9d36' }} />
-        {text || 'N/A'}
-      </span>
-    ),
-    sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
-  },
-  {
-    title: "Client",
-    dataIndex: "client_name",
-    width: 180,
-    fixed: 'left' as const,
-    render: (text: string) => {
-      const displayName = text || 'N/A';
-      return (
-        <div className="d-flex align-items-center">
-          <span 
-            className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-            style={{
-              width: '28px',
-              height: '28px',
-              minWidth: '28px',
-              minHeight: '28px',
-              backgroundColor: getAvatarColor(displayName),
-              color: '#fff',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              borderRadius: '50%',
-              flexShrink: 0
-            }}
-          >
-            {getInitials(displayName)}
-          </span>
-          <span style={{ fontSize: '13px', fontWeight: '500' }}>{displayName}</span>
-        </div>
-      );
-    },
-    sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
-  },
-  
-{
-  title: "Status",
-  dataIndex: "policy_status",
-  width: 150,
-  render: (status: string) => {
-    const cleaned = cleanPolicyStatus(status);
-    let badgeClass = 'bg-secondary';
-    let icon = '';
-
-    if (cleaned === 'Paid' || cleaned === 'Auto') {
-      badgeClass = 'bg-success';
-      icon = '●';
-    } else if (cleaned === 'Finalised') {
-      badgeClass = 'bg-success';
-      icon = '✓';
-    } else if (cleaned === 'Unfinalised') {
-      badgeClass = 'bg-warning text-dark';
-      icon = '⏳';
-    } else if (cleaned === 'Cancelled') {
-      badgeClass = 'bg-danger';
-      icon = '✕';
-    }
-
-    return (
-      <span className={`badge ${badgeClass} px-2 py-1 d-inline-block text-truncate`} 
-            style={{ 
-              fontSize: '11px', 
-              maxWidth: '130px', 
-              fontWeight: '500',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-            title={status || 'N/A'}>
-        {icon} {cleaned}
-      </span>
-    );
-  },
-  sorter: (a: any, b: any) => cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
-},
-
-  {
-    title: "Frequency",
-    dataIndex: "premium_frequency",
-    width: 90,
-    render: (text: string) => {
-      const color = getFrequencyColor(text);
-      return (
-        <span style={{ 
-          color: color, 
-          fontWeight: '500', 
-          fontSize: '11px',
-          backgroundColor: color + '15',
-          padding: '2px 8px',
-          borderRadius: '4px',
-          display: 'inline-block'
-        }}>
+    {
+      title: "Policy Number",
+      dataIndex: "policy_number",
+      width: 140,
+      fixed: 'left' as const,
+      render: (text: string) => (
+        <span style={{ color: '#2a9d36', fontWeight: '600', fontSize: '13px' }}>
+          <FileText size={12} className="me-1" style={{ color: '#2a9d36' }} />
           {text || 'N/A'}
         </span>
-      );
+      ),
+      sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
     },
-  },
-  {
-    title: "Initial Premium",
-    dataIndex: "initial_gross_premium",
-    width: 130,
-    align: 'right' as const,
-    onCell: () => ({
-      style: { backgroundColor: '#f8fffa' }
-    }),
-    render: (value: number) => (
-      <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
-        KES {formatCurrency(value)}
-      </span>
-    ),
-    sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
-  },
-  {
-    title: "Current Premium",
-    dataIndex: "new_gross_premium",
-    width: 130,
-    align: 'right' as const,
-    onCell: () => ({
-      style: { backgroundColor: '#f0fdf4', fontWeight: 'bold' }
-    }),
-    render: (value: number) => (
-      <span style={{ fontWeight: '700', color: '#2a9d36', fontSize: '13px' }}>
-        KES {formatCurrency(value)}
-      </span>
-    ),
-    sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
-  },
-  {
-    title: "Total Sum Insured",
-    dataIndex: "total_sum_insured",
-    width: 130,
-    align: 'right' as const,
-    onCell: () => ({
-      style: { backgroundColor: '#f8fffa' }
-    }),
-    render: (value: number) => (
-      <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
-        KES {formatCurrency(value)}
-      </span>
-    ),
-    sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
-  },
-  {
-    title: "Strike Day",
-    dataIndex: "strike_date",
-    width: 95,
-    onCell: () => ({
-      style: { backgroundColor: '#f0f7ff' }
-    }),
-    render: (value: number) => {
-      if (!value && value !== 0) return <span style={{ color: '#999', fontSize: '12px' }}>—</span>;
-      const display = getStrikeDayWithOrdinal(value);
-      if (!display) return '—';
-      return (
-        <span style={{ 
-          color: '#0d6efd', 
-          fontWeight: '700', 
-          fontSize: '13px',
-          backgroundColor: '#dbeafe',
-          padding: '2px 10px',
-          borderRadius: '4px',
-          display: 'inline-block'
-        }}>
-          {display}
-        </span>
-      );
+    {
+      title: "Client",
+      dataIndex: "client_name",
+      width: 180,
+      fixed: 'left' as const,
+      render: (text: string) => {
+        const displayName = text || 'N/A';
+        return (
+          <div className="d-flex align-items-center">
+            <span
+              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+              style={{
+                width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
+                backgroundColor: getAvatarColor(displayName), color: '#fff',
+                fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
+                borderRadius: '50%', flexShrink: 0
+              }}
+            >
+              {getInitials(displayName)}
+            </span>
+            <span style={{ fontSize: '13px', fontWeight: '500' }}>{displayName}</span>
+          </div>
+        );
+      },
+      sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
-    sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
-  },
-  {
-    title: "Agent",
-    dataIndex: "agent_name",
-    width: 130,
-    render: (text: string) => <span className="text-muted" style={{ fontSize: '12px' }}>{text || '—'}</span>,
-    sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
-  },
-  {
-    title: "Last Updated",
-    dataIndex: "updated_at",
-    width: 130,
-    render: (date: string) => {
-      if (!date) return '—';
-      const updated = new Date(date);
-      const now = new Date();
-      const diffMs = now.getTime() - updated.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-      let timeAgo = '';
-      if (diffMins < 1) timeAgo = 'Now';
-      else if (diffMins < 60) timeAgo = `${diffMins}m`;
-      else if (diffHours < 24) timeAgo = `${diffHours}h`;
-      else timeAgo = `${diffDays}d`;
-      return (
-        <div style={{ fontSize: '11px' }}>
-          <div>{formatDateCompact(date)}</div>
-          <div style={{ color: '#999', fontSize: '10px' }}>{timeAgo}</div>
-        </div>
-      );
-    },
-    sorter: (a: any, b: any) => 
-      new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
-  },
-  {
-    title: "",
-    dataIndex: "",
-    width: 110,
-    className: "text-end",
-    fixed: 'right' as const,
-    render: (_: any, record: Policy) => (
-      <div className="text-end" style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-        <button
-          className="btn btn-sm"
-          onClick={() => openModal('view', record)}
-          title="View"
-          style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
-        >
-          <Eye size={13} />
-        </button>
-        <button
-          className="btn btn-sm"
-          disabled
-          title="Edit (Coming soon)"
-          style={{ 
-            backgroundColor: '#6c757d', 
-            color: '#fff', 
-            border: 'none', 
-            padding: '2px 6px',
-            opacity: 0.4,
-            cursor: 'not-allowed',
-            borderRadius: '4px'
-          }}
-        >
-          <Edit size={13} />
-        </button>
-        <button
-          className="btn btn-sm"
-          onClick={() => openModal('delete', record)}
-          title="Delete"
-          style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
-        >
-          <Trash2 size={13} />
-        </button>
-      </div>
-    ),
-  },
-];
+    {
+      title: "Status",
+      dataIndex: "policy_status",
+      width: 150,
+      render: (status: string) => {
+        const cleaned = cleanPolicyStatus(status);
+        let badgeClass = 'bg-secondary';
+        let icon = '';
 
-  // ============ MODAL CONTENT ============
+        if (cleaned === 'Paid' || cleaned === 'Auto') { badgeClass = 'bg-success'; icon = '●'; }
+        else if (cleaned === 'Finalised')   { badgeClass = 'bg-success'; icon = '✓'; }
+        else if (cleaned === 'Unfinalised') { badgeClass = 'bg-warning text-dark'; icon = '⏳'; }
+        else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
+
+        return (
+          <span
+            className={`badge ${badgeClass} px-2 py-1 d-inline-block text-truncate`}
+            style={{
+              fontSize: '11px', maxWidth: '130px', fontWeight: '500',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+            }}
+            title={status || 'N/A'}
+          >
+            {icon} {cleaned}
+          </span>
+        );
+      },
+      sorter: (a: any, b: any) =>
+        cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
+    },
+    {
+      title: "Frequency",
+      dataIndex: "premium_frequency",
+      width: 90,
+      render: (text: string) => {
+        const color = getFrequencyColor(text);
+        return (
+          <span style={{
+            color: color, fontWeight: '500', fontSize: '11px',
+            backgroundColor: color + '15', padding: '2px 8px',
+            borderRadius: '4px', display: 'inline-block'
+          }}>
+            {text || 'N/A'}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Initial Premium",
+      dataIndex: "initial_gross_premium",
+      width: 130,
+      align: 'right' as const,
+      onCell: () => ({ style: { backgroundColor: '#f8fffa' } }),
+      render: (value: number) => (
+        <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
+          KES {formatCurrency(value)}
+        </span>
+      ),
+      sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
+    },
+    {
+      title: "Current Premium",
+      dataIndex: "new_gross_premium",
+      width: 130,
+      align: 'right' as const,
+      onCell: () => ({ style: { backgroundColor: '#f0fdf4', fontWeight: 'bold' } }),
+      render: (value: number) => (
+        <span style={{ fontWeight: '700', color: '#2a9d36', fontSize: '13px' }}>
+          KES {formatCurrency(value)}
+        </span>
+      ),
+      sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
+    },
+    {
+      title: "Total Sum Insured",
+      dataIndex: "total_sum_insured",
+      width: 130,
+      align: 'right' as const,
+      onCell: () => ({ style: { backgroundColor: '#f8fffa' } }),
+      render: (value: number) => (
+        <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
+          KES {formatCurrency(value)}
+        </span>
+      ),
+      sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
+    },
+    {
+      title: "Strike Day",
+      dataIndex: "strike_date",
+      width: 95,
+      onCell: () => ({ style: { backgroundColor: '#f0f7ff' } }),
+      render: (value: number) => {
+        if (!value && value !== 0) return <span style={{ color: '#999', fontSize: '12px' }}>—</span>;
+        const display = getStrikeDayWithOrdinal(value);
+        if (!display) return '—';
+        return (
+          <span style={{
+            color: '#0d6efd', fontWeight: '700', fontSize: '13px',
+            backgroundColor: '#dbeafe', padding: '2px 10px',
+            borderRadius: '4px', display: 'inline-block'
+          }}>
+            {display}
+          </span>
+        );
+      },
+      sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
+    },
+    {
+      title: "Agent",
+      dataIndex: "agent_name",
+      width: 130,
+      render: (text: string) => (
+        <span className="text-muted" style={{ fontSize: '12px' }}>{text || '—'}</span>
+      ),
+      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
+    },
+    {
+      title: "Last Updated",
+      dataIndex: "updated_at",
+      width: 130,
+      render: (date: string) => {
+        if (!date) return '—';
+        const updated = new Date(date);
+        const now = new Date();
+        const diffMs = now.getTime() - updated.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        let timeAgo = '';
+        if (diffMins < 1) timeAgo = 'Now';
+        else if (diffMins < 60) timeAgo = `${diffMins}m`;
+        else if (diffHours < 24) timeAgo = `${diffHours}h`;
+        else timeAgo = `${diffDays}d`;
+
+        return (
+          <div style={{ fontSize: '11px' }}>
+            <div>{formatDateCompact(date)}</div>
+            <div style={{ color: '#999', fontSize: '10px' }}>{timeAgo}</div>
+          </div>
+        );
+      },
+      sorter: (a: any, b: any) =>
+        new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+    },
+    {
+      title: "",
+      dataIndex: "",
+      width: 110,
+      className: "text-end",
+      fixed: 'right' as const,
+      render: (_: any, record: Policy) => (
+        <div className="text-end" style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+          <button
+            className="btn btn-sm"
+            onClick={() => openModal('view', record)}
+            title="View"
+            style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
+          >
+            <Eye size={13} />
+          </button>
+          <button
+            className="btn btn-sm"
+            disabled
+            title="Edit (Coming soon)"
+            style={{
+              backgroundColor: '#6c757d', color: '#fff', border: 'none',
+              padding: '2px 6px', opacity: 0.4, cursor: 'not-allowed', borderRadius: '4px'
+            }}
+          >
+            <Edit size={13} />
+          </button>
+          <button
+            className="btn btn-sm"
+            onClick={() => openModal('delete', record)}
+            title="Delete"
+            style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  // ==========================================================================
+  // MODAL CONTENT – View / Delete
+  // ==========================================================================
 
   const getModalContent = () => {
+    // ---- Delete confirmation ----
     if (modalAction === 'delete' && selectedPolicy) {
       return {
         title: 'Delete Policy',
@@ -845,9 +839,9 @@ if (filters.maturityFilter.type !== 'none') {
         footer: (
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-            <button 
-              type="button" 
-              className="btn" 
+            <button
+              type="button"
+              className="btn"
               onClick={confirmDelete}
               style={{ backgroundColor: '#c70e2a', color: '#fff', borderColor: '#c70e2a' }}
             >
@@ -858,17 +852,16 @@ if (filters.maturityFilter.type !== 'none') {
       };
     }
 
+    // ---- View details ----
     if (modalAction === 'view' && selectedPolicy) {
       return {
         title: 'Policy Details',
         body: (
           <div>
-            <div style={{ 
-              backgroundColor: '#f8f9fa', 
-              padding: '15px', 
-              borderRadius: '8px',
-              marginBottom: '20px',
-              borderLeft: '4px solid #c70e2a'
+            {/* Header – policy number + status */}
+            <div style={{
+              backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px',
+              marginBottom: '20px', borderLeft: '4px solid #c70e2a'
             }}>
               <div className="row">
                 <div className="col-6">
@@ -896,12 +889,16 @@ if (filters.maturityFilter.type !== 'none') {
                 </div>
               </div>
             </div>
+
+            {/* Two-column body */}
             <div className="row">
+              {/* Left column */}
               <div className="col-6">
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Client</span>
                   <div style={{ fontWeight: '500' }}>
-                    {selectedPolicy.title && selectedPolicy.title.trim() !== '' ? `${selectedPolicy.title} ` : ''}{selectedPolicy.client_name || 'N/A'}
+                    {selectedPolicy.title && selectedPolicy.title.trim() !== '' ? `${selectedPolicy.title} ` : ''}
+                    {selectedPolicy.client_name || 'N/A'}
                   </div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
@@ -914,21 +911,27 @@ if (filters.maturityFilter.type !== 'none') {
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Current Frequency</span>
-                  <div style={{ fontWeight: '500' , color: '#0d6efd'}}>{selectedPolicy.premium_frequency || 'N/A'}</div>
+                  <div style={{ fontWeight: '500', color: '#0d6efd' }}>
+                    {selectedPolicy.premium_frequency || 'N/A'}
+                  </div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Inception Date</span>
-                  <div style={{ fontWeight: '500', color: '#F15A29' }}>{formatDateToOrdinal(selectedPolicy.inception_date)}</div>
+                  <div style={{ fontWeight: '500', color: '#F15A29' }}>
+                    {formatDateToOrdinal(selectedPolicy.inception_date)}
+                  </div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
-  <span style={{ color: '#999', fontSize: '12px' }}>Initial Frequency</span>
-  <div style={{ fontWeight: '500' }}>{selectedPolicy.initial_frequency || 'N/A'}</div>
-</div>
-<div style={{ marginBottom: '15px' }}>
-  <span style={{ color: '#999', fontSize: '12px' }}>Premium Payment Term</span>
-  <div style={{ fontWeight: '500' }}>{selectedPolicy.premium_payment_term || 'N/A'}</div>
-</div>
+                  <span style={{ color: '#999', fontSize: '12px' }}>Initial Frequency</span>
+                  <div style={{ fontWeight: '500' }}>{selectedPolicy.initial_frequency || 'N/A'}</div>
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <span style={{ color: '#999', fontSize: '12px' }}>Premium Payment Term</span>
+                  <div style={{ fontWeight: '500' }}>{selectedPolicy.premium_payment_term || 'N/A'}</div>
+                </div>
               </div>
+
+              {/* Right column */}
               <div className="col-6">
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Strike Day</span>
@@ -938,54 +941,58 @@ if (filters.maturityFilter.type !== 'none') {
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Total Sum Insured</span>
-                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>KES {formatCurrency(selectedPolicy.total_sum_insured)}</div>
+                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>
+                    KES {formatCurrency(selectedPolicy.total_sum_insured)}
+                  </div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Annualised Premium</span>
-                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>KES {formatCurrency(selectedPolicy.annualised_premium)}</div>
+                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>
+                    KES {formatCurrency(selectedPolicy.annualised_premium)}
+                  </div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>Initial Gross Premium</span>
-                  <div style={{ fontWeight: '500' }}>KES {formatCurrency(selectedPolicy.initial_gross_premium)}</div>
+                  <div style={{ fontWeight: '500' }}>
+                    KES {formatCurrency(selectedPolicy.initial_gross_premium)}
+                  </div>
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                   <span style={{ color: '#999', fontSize: '12px' }}>New Gross Premium</span>
-                  <div style={{ fontWeight: '600', color: '#c70e2a' }}>KES {formatCurrency(selectedPolicy.new_gross_premium)}</div>
+                  <div style={{ fontWeight: '600', color: '#c70e2a' }}>
+                    KES {formatCurrency(selectedPolicy.new_gross_premium)}
+                  </div>
                 </div>
-                
-<div style={{ marginBottom: '15px' }}>
-  <span style={{ color: '#999', fontSize: '12px' }}>Inflation Protection</span>
-  <div style={{ fontWeight: '500' }}>
-    {selectedPolicy.inflation_protection !== null ? `${selectedPolicy.inflation_protection}%` : 'N/A'}
-  </div>
-</div>
+                <div style={{ marginBottom: '15px' }}>
+                  <span style={{ color: '#999', fontSize: '12px' }}>Inflation Protection</span>
+                  <div style={{ fontWeight: '500' }}>
+                    {selectedPolicy.inflation_protection !== null ? `${selectedPolicy.inflation_protection}%` : 'N/A'}
+                  </div>
+                </div>
 
-{(() => {
-  const info = getMaturityInfo(selectedPolicy.inception_date, selectedPolicy.premium_payment_term);
-  if (info) {
-    return (
-      <div style={{ marginBottom: '15px' }}>
-        <span style={{ color: '#999', fontSize: '12px' }}>Maturity</span>
-        <div style={{ fontWeight: '500', color: info.status === 'Matured' ? '#c70e2a' : '#2a9d36' }}>
-          {info.status === 'Matured' ? '✅ Matured' : `⏳ ${info.status}`}
-        </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>
-          Matures on: {formatDateToOrdinal(info.date.toISOString())}
-        </div>
-      </div>
-    );
-  }
-  return null;
-})()}
+                {/* Maturity block */}
+                {(() => {
+                  const info = getMaturityInfo(selectedPolicy.inception_date, selectedPolicy.premium_payment_term);
+                  if (!info) return null;
+                  return (
+                    <div style={{ marginBottom: '15px' }}>
+                      <span style={{ color: '#999', fontSize: '12px' }}>Maturity</span>
+                      <div style={{ fontWeight: '500', color: info.status === 'Matured' ? '#c70e2a' : '#2a9d36' }}>
+                        {info.status === 'Matured' ? '✅ Matured' : `⏳ ${info.status}`}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        Matures on: {formatDateToOrdinal(info.date.toISOString())}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-              
             </div>
-            <div style={{ 
-              backgroundColor: '#f8f9fa', 
-              padding: '12px 15px', 
-              borderRadius: '8px',
-              marginTop: '10px',
-              marginBottom: '15px'
+
+            {/* Agent + branch footer */}
+            <div style={{
+              backgroundColor: '#f8f9fa', padding: '12px 15px',
+              borderRadius: '8px', marginTop: '10px', marginBottom: '15px'
             }}>
               <div className="row">
                 <div className="col-6">
@@ -998,10 +1005,14 @@ if (filters.maturityFilter.type !== 'none') {
                   <span style={{ color: '#999', fontSize: '12px' }}>Sales Branch</span>
                   <div style={{ fontWeight: '500' }}>{selectedPolicy.sales_branch || 'N/A'}</div>
                   <span style={{ color: '#999', fontSize: '12px' }}>Last Updated</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.updated_at ? formatDateToOrdinal(selectedPolicy.updated_at) : 'N/A'}</div>
+                  <div style={{ fontWeight: '500' }}>
+                    {selectedPolicy.updated_at ? formatDateToOrdinal(selectedPolicy.updated_at) : 'N/A'}
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Change history */}
             <hr />
             <h6 className="mt-3" style={{ color: '#c70e2a' }}>📋 Change History</h6>
             {loadingHistory ? (
@@ -1011,12 +1022,10 @@ if (filters.maturityFilter.type !== 'none') {
             ) : (
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {policyHistory.map((change: any, idx: number) => (
-                  <div key={idx} style={{ 
-                    padding: '8px 12px', 
-                    marginBottom: '5px', 
-                    backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa', 
-                    borderRadius: '4px',
-                    fontSize: '13px',
+                  <div key={idx} style={{
+                    padding: '8px 12px', marginBottom: '5px',
+                    backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa',
+                    borderRadius: '4px', fontSize: '13px',
                     borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
                   }}>
                     <span style={{ fontWeight: '500' }}>{change.field}:</span>
@@ -1039,21 +1048,28 @@ if (filters.maturityFilter.type !== 'none') {
         ),
       };
     }
+
     return { title: '', body: null, footer: null };
   };
 
   const modalContent = getModalContent();
 
-  const rowClassName = (_record: any, index: number) => {
-    return index % 2 === 0 ? 'table-row-even' : 'table-row-odd';
-  };
+  // ==========================================================================
+  // RENDER
+  // ==========================================================================
+
+  const rowClassName = (_record: any, index: number) =>
+    index % 2 === 0 ? 'table-row-even' : 'table-row-odd';
 
   return (
     <>
       <Header />
       <SidebarNav />
+
       <div className="page-wrapper">
         <div className="content container-fluid">
+
+          {/* Page header */}
           <div className="page-header">
             <div className="row">
               <div className="col-sm-7">
@@ -1082,9 +1098,9 @@ if (filters.maturityFilter.type !== 'none') {
           <div className="row">
             <div className="col-sm-12">
               <div className="card">
-                {/* ===== IMPROVED HEADER ===== */}
+
+                {/* ---------- Card header: stats + search + filter toggle ---------- */}
                 <div className="card-header">
-                  {/* Top Row: Title + Stats */}
                   <div className="row align-items-center mb-2">
                     <div className="col">
                       <h5 className="card-title mb-0">All Policies</h5>
@@ -1118,6 +1134,7 @@ if (filters.maturityFilter.type !== 'none') {
                     </div>
                     <div className="col-auto">
                       <div className="d-flex align-items-center gap-2">
+                        {/* Search */}
                         <div className="input-group input-group-sm" style={{ width: '200px' }}>
                           <span className="input-group-text bg-white">
                             <Search size={14} className="text-muted" />
@@ -1130,43 +1147,29 @@ if (filters.maturityFilter.type !== 'none') {
                             onChange={(e) => setSearchTerm(e.target.value)}
                           />
                         </div>
+                        {/* Filter toggle */}
                         <button
                           className="btn btn-sm"
                           onClick={() => setShowFilters(!showFilters)}
-                          style={{ 
+                          style={{
                             backgroundColor: showFilters || hasActiveFilters() ? '#c70e2a' : '#f1f3f5',
                             color: showFilters || hasActiveFilters() ? '#fff' : '#333',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 10px',
-                            fontSize: '12px'
+                            border: 'none', borderRadius: '4px', padding: '4px 10px', fontSize: '12px'
                           }}
                         >
                           <Filter size={14} className="me-1" />
                           Filters
-                          {hasActiveFilters() && <span className="badge bg-white text-dark ms-1" style={{ fontSize: '10px' }}>
-                            {filters.status.length + filters.frequency.length + filters.productType.length}
-                          </span>}
+                          {hasActiveFilters() && (
+                            <span className="badge bg-white text-dark ms-1" style={{ fontSize: '10px' }}>
+                              {filters.status.length + filters.frequency.length + filters.productType.length}
+                            </span>
+                          )}
                         </button>
+                        {/* Clear */}
                         {hasActiveFilters() && (
                           <button
                             className="btn btn-sm btn-outline-danger"
-                            onClick={() => {
-  setFilters({
-    status: [],
-    frequency: [],
-    productType: [],
-    agent: [],
-    strikeDayRange: [],
-    sumInsuredMin: 0,
-    sumInsuredMax: 0,
-    newPremiumMin: 0,
-    newPremiumMax: 0,
-    dateRange: [],
-    maturityFilter: { type: 'none' },
-  });
-  setSearchTerm('');
-}}
+                            onClick={resetFilters}
                             style={{ fontSize: '11px', padding: '4px 8px' }}
                           >
                             <X size={12} className="me-1" /> Clear
@@ -1176,286 +1179,275 @@ if (filters.maturityFilter.type !== 'none') {
                     </div>
                   </div>
 
-                  {/* ===== FILTERS ===== */}
-{showFilters && (
-  <div className="row mt-2 pt-2" style={{ borderTop: '1px solid #eee' }}>
-    <div className="col-12">
-      <div className="d-flex flex-wrap align-items-center gap-2">
-        {/* Status Filter */}
-        <div className="dropdown">
-          <button className="btn btn-sm dropdown-toggle" 
-                  data-bs-toggle="dropdown" 
-                  style={{ 
-                    fontSize: '12px', 
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    color: '#333'
-                  }}>
-            Status {filters.status.length > 0 && <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>{filters.status.length}</span>}
-          </button>
-          <div className="dropdown-menu p-2" style={{ minWidth: '180px' }}>
-            {statusOptions.map(option => (
-              <div className="form-check" key={option}>
-                <input 
-                  className="form-check-input" 
-                  type="checkbox" 
-                  id={`status-${option}`}
-                  checked={filters.status.includes(option)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setFilters({...filters, status: [...filters.status, option]});
-                    } else {
-                      setFilters({...filters, status: filters.status.filter(s => s !== option)});
-                    }
-                  }}
-                />
-                <label className="form-check-label" htmlFor={`status-${option}`}>
-                  {option}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
+                  {/* ---------- Filter bar ---------- */}
+                  {showFilters && (
+                    <div className="row mt-2 pt-2" style={{ borderTop: '1px solid #eee' }}>
+                      <div className="col-12">
+                        <div className="d-flex flex-wrap align-items-center gap-2">
 
-        {/* Frequency Filter */}
-        <div className="dropdown">
-          <button className="btn btn-sm dropdown-toggle" 
-                  data-bs-toggle="dropdown"
-                  style={{ 
-                    fontSize: '12px', 
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    color: '#333'
-                  }}>
-            Frequency {filters.frequency.length > 0 && <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>{filters.frequency.length}</span>}
-          </button>
-          <div className="dropdown-menu p-2" style={{ minWidth: '150px' }}>
-            {frequencyOptions.map(option => (
-              <div className="form-check" key={option}>
-                <input 
-                  className="form-check-input" 
-                  type="checkbox" 
-                  id={`freq-${option}`}
-                  checked={filters.frequency.includes(option)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setFilters({...filters, frequency: [...filters.frequency, option]});
-                    } else {
-                      setFilters({...filters, frequency: filters.frequency.filter(f => f !== option)});
-                    }
-                  }}
-                />
-                <label className="form-check-label" htmlFor={`freq-${option}`}>
-                  {option}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
+                          {/* Status filter */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Status {filters.status.length > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>
+                                  {filters.status.length}
+                                </span>
+                              )}
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '180px' }}>
+                              {statusOptions.map(option => (
+                                <div className="form-check" key={option}>
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`status-${option}`}
+                                    checked={filters.status.includes(option)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) setFilters({...filters, status: [...filters.status, option]});
+                                      else setFilters({...filters, status: filters.status.filter(s => s !== option)});
+                                    }}
+                                  />
+                                  <label className="form-check-label" htmlFor={`status-${option}`}>{option}</label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-        {/* Product Filter */}
-        <div className="dropdown">
-          <button className="btn btn-sm dropdown-toggle" 
-                  data-bs-toggle="dropdown"
-                  style={{ 
-                    fontSize: '12px', 
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    color: '#333'
-                  }}>
-            Product
-          </button>
-          <div className="dropdown-menu p-2" style={{ minWidth: '180px' }}>
-            {productOptions.map(option => (
-              <div className="form-check" key={option}>
-                <input 
-                  className="form-check-input" 
-                  type="checkbox" 
-                  id={`product-${option}`}
-                  checked={filters.productType.includes(option)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setFilters({...filters, productType: [...filters.productType, option]});
-                    } else {
-                      setFilters({...filters, productType: filters.productType.filter(p => p !== option)});
-                    }
-                  }}
-                />
-                <label className="form-check-label" htmlFor={`product-${option}`}>
-                  {option}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
+                          {/* Frequency filter */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Frequency {filters.frequency.length > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>
+                                  {filters.frequency.length}
+                                </span>
+                              )}
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '150px' }}>
+                              {frequencyOptions.map(option => (
+                                <div className="form-check" key={option}>
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`freq-${option}`}
+                                    checked={filters.frequency.includes(option)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) setFilters({...filters, frequency: [...filters.frequency, option]});
+                                      else setFilters({...filters, frequency: filters.frequency.filter(f => f !== option)});
+                                    }}
+                                  />
+                                  <label className="form-check-label" htmlFor={`freq-${option}`}>{option}</label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-        {/* Strike Day */}
-        <div className="dropdown">
-          <button className="btn btn-sm dropdown-toggle" 
-                  data-bs-toggle="dropdown"
-                  style={{ 
-                    fontSize: '12px', 
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '4px 12px',
-                    color: '#333'
-                  }}>
-            Strike Day
-          </button>
-          <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
-            <div className="d-flex gap-2 align-items-center">
-              <input 
-                type="number" 
-                className="form-control form-control-sm" 
-                placeholder="Min" 
-                value={filters.strikeDayRange[0] || ''}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setFilters({
-                    ...filters, 
-                    strikeDayRange: [val || 0, filters.strikeDayRange[1] || 0]
-                  });
-                }}
-                style={{ width: '80px' }}
-              />
-              <span>to</span>
-              <input 
-                type="number" 
-                className="form-control form-control-sm" 
-                placeholder="Max" 
-                value={filters.strikeDayRange[1] || ''}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setFilters({
-                    ...filters, 
-                    strikeDayRange: [filters.strikeDayRange[0] || 0, val || 0]
-                  });
-                }}
-                style={{ width: '80px' }}
-              />
-            </div>
-          </div>
-        </div>
+                          {/* Product filter */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Product
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '180px' }}>
+                              {productOptions.map(option => (
+                                <div className="form-check" key={option}>
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`product-${option}`}
+                                    checked={filters.productType.includes(option)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) setFilters({...filters, productType: [...filters.productType, option]});
+                                      else setFilters({...filters, productType: filters.productType.filter(p => p !== option)});
+                                    }}
+                                  />
+                                  <label className="form-check-label" htmlFor={`product-${option}`}>{option}</label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-        {/* Sum Insured Filter */}
-<div className="dropdown">
-  <button className="btn btn-sm dropdown-toggle"
-          data-bs-toggle="dropdown"
-          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
-    Total Sum Insured
-  </button>
-  <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
-    <div className="d-flex gap-2 align-items-center">
-      <input type="number" className="form-control form-control-sm" placeholder="Min"
-             value={filters.sumInsuredMin || ''}
-             onChange={(e) => setFilters({...filters, sumInsuredMin: parseInt(e.target.value) || 0})}
-             style={{ width: '100px' }} />
-      <span>to</span>
-      <input type="number" className="form-control form-control-sm" placeholder="Max"
-             value={filters.sumInsuredMax || ''}
-             onChange={(e) => setFilters({...filters, sumInsuredMax: parseInt(e.target.value) || 0})}
-             style={{ width: '100px' }} />
-    </div>
-  </div>
-</div>
+                          {/* Strike day range */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Strike Day
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
+                              <div className="d-flex gap-2 align-items-center">
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  placeholder="Min"
+                                  value={filters.strikeDayRange[0] || ''}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    setFilters({...filters, strikeDayRange: [val || 0, filters.strikeDayRange[1] || 0]});
+                                  }}
+                                  style={{ width: '80px' }}
+                                />
+                                <span>to</span>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  placeholder="Max"
+                                  value={filters.strikeDayRange[1] || ''}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    setFilters({...filters, strikeDayRange: [filters.strikeDayRange[0] || 0, val || 0]});
+                                  }}
+                                  style={{ width: '80px' }}
+                                />
+                              </div>
+                            </div>
+                          </div>
 
-{/* New Premium Filter */}
-<div className="dropdown">
-  <button className="btn btn-sm dropdown-toggle"
-          data-bs-toggle="dropdown"
-          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
-    Current Premium
-  </button>
-  <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
-    <div className="d-flex gap-2 align-items-center">
-      <input type="number" className="form-control form-control-sm" placeholder="Min"
-             value={filters.newPremiumMin || ''}
-             onChange={(e) => setFilters({...filters, newPremiumMin: parseInt(e.target.value) || 0})}
-             style={{ width: '100px' }} />
-      <span>to</span>
-      <input type="number" className="form-control form-control-sm" placeholder="Max"
-             value={filters.newPremiumMax || ''}
-             onChange={(e) => setFilters({...filters, newPremiumMax: parseInt(e.target.value) || 0})}
-             style={{ width: '100px' }} />
-    </div>
-  </div>
-</div>
+                          {/* Sum insured range */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Total Sum Insured
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
+                              <div className="d-flex gap-2 align-items-center">
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  placeholder="Min"
+                                  value={filters.sumInsuredMin || ''}
+                                  onChange={(e) => setFilters({...filters, sumInsuredMin: parseInt(e.target.value) || 0})}
+                                  style={{ width: '100px' }}
+                                />
+                                <span>to</span>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  placeholder="Max"
+                                  value={filters.sumInsuredMax || ''}
+                                  onChange={(e) => setFilters({...filters, sumInsuredMax: parseInt(e.target.value) || 0})}
+                                  style={{ width: '100px' }}
+                                />
+                              </div>
+                            </div>
+                          </div>
 
-{/* Maturity Filter */}
-<div className="dropdown">
-  <button className="btn btn-sm dropdown-toggle"
-          data-bs-toggle="dropdown"
-          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
-    🎯 Maturity {filters.maturityFilter.type !== 'none' && <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>1</span>}
-  </button>
-  <div className="dropdown-menu p-3" style={{ minWidth: '220px' }}>
-    <div className="form-check">
-      <input className="form-check-input" type="radio" name="matType" id="matNone"
-             checked={filters.maturityFilter.type === 'none'}
-             onChange={() => setFilters({...filters, maturityFilter: { type: 'none' }})} />
-      <label className="form-check-label" htmlFor="matNone">No filter</label>
-    </div>
-    <hr className="my-1" />
-    <div className="form-check">
-      <input className="form-check-input" type="radio" name="matType" id="matLastMonth"
-             checked={filters.maturityFilter.type === 'lastMonth'}
-             onChange={() => setFilters({...filters, maturityFilter: { type: 'lastMonth' }})} />
-      <label className="form-check-label" htmlFor="matLastMonth">Matured last month</label>
-    </div>
-    <div className="form-check">
-      <input className="form-check-input" type="radio" name="matType" id="matThisMonth"
-             checked={filters.maturityFilter.type === 'thisMonth'}
-             onChange={() => setFilters({...filters, maturityFilter: { type: 'thisMonth' }})} />
-      <label className="form-check-label" htmlFor="matThisMonth">Maturing this month</label>
-    </div>
-    <div className="form-check">
-      <input className="form-check-input" type="radio" name="matType" id="mat3Months"
-             checked={filters.maturityFilter.type === 'next3Months'}
-             onChange={() => setFilters({...filters, maturityFilter: { type: 'next3Months' }})} />
-      <label className="form-check-label" htmlFor="mat3Months">Maturing in 3 months</label>
-    </div>
-    <div className="form-check">
-      <input className="form-check-input" type="radio" name="matType" id="matThisYear"
-             checked={filters.maturityFilter.type === 'thisYear'}
-             onChange={() => setFilters({...filters, maturityFilter: { type: 'next12Months' }})} />
-      <label className="form-check-label" htmlFor="matThisYear">Maturing this year</label>
-    </div>
-  </div>
-</div>
+                          {/* Current premium range */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Current Premium
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '240px' }}>
+                              <div className="d-flex gap-2 align-items-center">
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  placeholder="Min"
+                                  value={filters.newPremiumMin || ''}
+                                  onChange={(e) => setFilters({...filters, newPremiumMin: parseInt(e.target.value) || 0})}
+                                  style={{ width: '100px' }}
+                                />
+                                <span>to</span>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  placeholder="Max"
+                                  value={filters.newPremiumMax || ''}
+                                  onChange={(e) => setFilters({...filters, newPremiumMax: parseInt(e.target.value) || 0})}
+                                  style={{ width: '100px' }}
+                                />
+                              </div>
+                            </div>
+                          </div>
 
-<button
-          className="btn"
-          onClick={handleExport}
-          disabled={!hasActiveFilters() || downloading}
-          style={{
-            backgroundColor: hasActiveFilters() ? '#2a9d36' : '#6c757d',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '4px 12px',
-            fontSize: '13px',
-            fontWeight: '500',
-            opacity: hasActiveFilters() ? 1 : 0.6,
-            cursor: hasActiveFilters() ? 'pointer' : 'not-allowed'
-          }}
-        >
-          <FileText size={14} className="me-1" />
-          {downloading ? 'Exporting...' : 'Download Excel'}
-        </button>
+                          {/* Maturity filter */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              🎯 Maturity {filters.maturityFilter.type !== 'none' && (
+                                <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>1</span>
+                              )}
+                            </button>
+                            <div className="dropdown-menu p-3" style={{ minWidth: '220px' }}>
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" name="matType" id="matNone"
+                                  checked={filters.maturityFilter.type === 'none'}
+                                  onChange={() => setFilters({...filters, maturityFilter: { type: 'none' }})} />
+                                <label className="form-check-label" htmlFor="matNone">No filter</label>
+                              </div>
+                              <hr className="my-1" />
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" name="matType" id="matLastMonth"
+                                  checked={filters.maturityFilter.type === 'lastMonth'}
+                                  onChange={() => setFilters({...filters, maturityFilter: { type: 'lastMonth' }})} />
+                                <label className="form-check-label" htmlFor="matLastMonth">Matured last month</label>
+                              </div>
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" name="matType" id="matThisMonth"
+                                  checked={filters.maturityFilter.type === 'thisMonth'}
+                                  onChange={() => setFilters({...filters, maturityFilter: { type: 'thisMonth' }})} />
+                                <label className="form-check-label" htmlFor="matThisMonth">Maturing this month</label>
+                              </div>
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" name="matType" id="mat3Months"
+                                  checked={filters.maturityFilter.type === 'next3Months'}
+                                  onChange={() => setFilters({...filters, maturityFilter: { type: 'next3Months' }})} />
+                                <label className="form-check-label" htmlFor="mat3Months">Maturing in 3 months</label>
+                              </div>
+                              <div className="form-check">
+                                <input className="form-check-input" type="radio" name="matType" id="mat12Months"
+                                  checked={filters.maturityFilter.type === 'next12Months'}
+                                  onChange={() => setFilters({...filters, maturityFilter: { type: 'next12Months' }})} />
+                                <label className="form-check-label" htmlFor="mat12Months">Maturing in 12 months</label>
+                              </div>
+                            </div>
+                          </div>
 
-      </div>
-    </div>
-  </div>
-)}
+                          {/* Export */}
+                          <button
+                            className="btn"
+                            onClick={handleExport}
+                            disabled={!hasActiveFilters() || downloading}
+                            style={{
+                              backgroundColor: hasActiveFilters() ? '#2a9d36' : '#6c757d',
+                              color: '#fff', border: 'none', borderRadius: '4px',
+                              padding: '4px 12px', fontSize: '13px', fontWeight: '500',
+                              opacity: hasActiveFilters() ? 1 : 0.6,
+                              cursor: hasActiveFilters() ? 'pointer' : 'not-allowed'
+                            }}
+                          >
+                            <FileText size={14} className="me-1" />
+                            {downloading ? 'Exporting...' : 'Download Excel'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* ---------- Table ---------- */}
                 <div className="card-body">
                   <div className="table-responsive">
                     <Table
@@ -1485,6 +1477,7 @@ if (filters.maturityFilter.type !== 'none') {
         </div>
       </div>
 
+      {/* Table styles */}
       <style>{`
         .table-row-even { background-color: #ffffff; }
         .table-row-odd { background-color: #f8f9fa; }
@@ -1514,12 +1507,12 @@ if (filters.maturityFilter.type !== 'none') {
           overflow: hidden !important;
           flex-shrink: 0 !important;
         }
-        .avatar span {
-          border-radius: 50% !important;
-        }
+        .avatar span { border-radius: 50% !important; }
       `}</style>
 
-      {/* Modal */}
+      {/* =====================================================================
+          MODAL – View / Delete
+          ===================================================================== */}
       {modalOpen && (
         <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '800px' }}>
@@ -1528,16 +1521,16 @@ if (filters.maturityFilter.type !== 'none') {
                 <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
                 <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
               </div>
-              <div className="modal-body">
-                {modalContent.body}
-              </div>
+              <div className="modal-body">{modalContent.body}</div>
               {modalContent.footer}
             </div>
           </div>
         </div>
       )}
 
-      {/* Upload Modal */}
+      {/* =====================================================================
+          MODAL – Upload / Import Excel
+          ===================================================================== */}
       {uploadModalOpen && (
         <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '600px' }}>
@@ -1549,31 +1542,22 @@ if (filters.maturityFilter.type !== 'none') {
                 <button type="button" className="btn-close" onClick={resetUploadModal} style={{ filter: 'brightness(0) invert(1)' }} />
               </div>
               <div className="modal-body" style={{ padding: '25px' }}>
+
+                {/* Idle – drop zone */}
                 {uploadStatus === 'idle' && (
                   <div
                     className="drop-zone"
                     style={{
-                      border: '2px dashed #c70e2a',
-                      borderRadius: '10px',
-                      padding: '40px 20px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: '#fdf0f2',
+                      border: '2px dashed #c70e2a', borderRadius: '10px', padding: '40px 20px',
+                      textAlign: 'center', cursor: 'pointer', backgroundColor: '#fdf0f2',
                       transition: 'all 0.3s ease'
                     }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.currentTarget.style.backgroundColor = '#fce4e8';
-                    }}
-                    onDragLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#fdf0f2';
-                    }}
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.backgroundColor = '#fce4e8'; }}
+                    onDragLeave={(e) => { e.currentTarget.style.backgroundColor = '#fdf0f2'; }}
                     onDrop={(e) => {
                       e.preventDefault();
                       const file = e.dataTransfer.files[0];
-                      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                        handleFileSelect(file);
-                      }
+                      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) handleFileSelect(file);
                     }}
                     onClick={() => document.getElementById('fileInput')?.click()}
                   >
@@ -1584,9 +1568,7 @@ if (filters.maturityFilter.type !== 'none') {
                     <p style={{ fontSize: '14px', color: '#666' }}>
                       or <span style={{ color: '#c70e2a', fontWeight: '500' }}>browse</span> to select a file
                     </p>
-                    <p style={{ fontSize: '12px', color: '#999' }}>
-                      Supports .xlsx and .xls files
-                    </p>
+                    <p style={{ fontSize: '12px', color: '#999' }}>Supports .xlsx and .xls files</p>
                     <input
                       id="fileInput"
                       type="file"
@@ -1599,6 +1581,8 @@ if (filters.maturityFilter.type !== 'none') {
                     />
                   </div>
                 )}
+
+                {/* Idle – file selected */}
                 {uploadFile && uploadStatus === 'idle' && (
                   <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
                     <div className="d-flex align-items-center justify-content-between">
@@ -1628,24 +1612,21 @@ if (filters.maturityFilter.type !== 'none') {
                     </div>
                   </div>
                 )}
+
+                {/* Uploading */}
                 {uploadStatus === 'uploading' && (
                   <div style={{ padding: '20px 0' }}>
                     <p style={{ textAlign: 'center', fontWeight: '500' }}>Importing data...</p>
                     <div style={{ width: '100%', backgroundColor: '#e9ecef', borderRadius: '5px', overflow: 'hidden', height: '20px' }}>
-                      <div
-                        style={{
-                          width: `${uploadProgress}%`,
-                          backgroundColor: '#c70e2a',
-                          height: '100%',
-                          transition: 'width 0.3s ease'
-                        }}
-                      />
+                      <div style={{ width: `${uploadProgress}%`, backgroundColor: '#c70e2a', height: '100%', transition: 'width 0.3s ease' }} />
                     </div>
                     <p style={{ textAlign: 'center', fontSize: '14px', color: '#666', marginTop: '10px' }}>
                       {uploadProgress < 100 ? `Processing... ${uploadProgress}%` : 'Processing...'}
                     </p>
                   </div>
                 )}
+
+                {/* Success */}
                 {uploadStatus === 'success' && uploadResult && (
                   <div style={{ padding: '10px 0' }}>
                     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -1696,6 +1677,8 @@ if (filters.maturityFilter.type !== 'none') {
                     </button>
                   </div>
                 )}
+
+                {/* Error */}
                 {uploadStatus === 'error' && uploadResult && (
                   <div style={{ padding: '10px 0' }}>
                     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -1708,7 +1691,7 @@ if (filters.maturityFilter.type !== 'none') {
                       ))}
                     </div>
                     <button
-                      className="btn w-100 mt-3"
+                      className="w-100 mt-3 btn"
                       onClick={() => {
                         setUploadStatus('idle');
                         setUploadResult(null);
