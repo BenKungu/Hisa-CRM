@@ -45,6 +45,13 @@ interface Policy {
   agent_code: string;
   sales_branch: string;
   updated_at: string;
+  endorsement_date: string | null;
+surrender_amount: number | null;
+cancellation_request_date: string | null;
+surrender_date: string | null;
+surrender_reason: string;
+months_paid: number | null;
+duration_in_force: number | null;
 }
 
 interface UploadResult {
@@ -115,7 +122,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed'];
+  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed', 'Surrendered'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -132,6 +139,7 @@ const AdminBusinesses = () => {
     if (lower.includes('unfinalised')) return 'Unfinalised';
     if (lower.includes('finalised')) return 'Finalised';
     if (lower.includes('paid') || lower.includes('active')) return 'Paid';
+    if (lower.includes('surrendered')) return 'Surrendered';
     if (lower.includes('cancelled')) return 'Cancelled';
     if (lower.includes('lapsed')) return 'Lapsed';
 
@@ -654,10 +662,8 @@ const AdminBusinesses = () => {
         else if (cleaned === 'Finalised')   { badgeClass = 'bg-success'; icon = '✓'; }
         else if (cleaned === 'Unfinalised') { badgeClass = 'bg-warning text-dark'; icon = '⏳'; }
         else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
-        else if (cleaned === 'Lapsed') {
-  badgeClass = 'bg-danger';
-  icon = '⚠';
-}
+        else if (cleaned === 'Lapsed') {badgeClass = 'bg-danger';icon = '⚠';}
+        else if (cleaned === 'Surrendered') {badgeClass = 'bg-secondary';icon = '⇦';}
 
         return (
           <span
@@ -669,7 +675,8 @@ const AdminBusinesses = () => {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    ...(cleaned === 'Lapsed' ? { backgroundColor: '#7f1d1d', color: '#fff' } : {})
+    ...(cleaned === 'Lapsed' ? { backgroundColor: '#7f1d1d', color: '#fff' } : {}),
+    ...(cleaned === 'Surrendered' ? { backgroundColor: '#475569', color: '#fff' } : {})
   }}
   title={status || 'N/A'}
 >
@@ -1070,6 +1077,74 @@ const AdminBusinesses = () => {
   </div>
 )}
 
+{/* Surrender details — only for Surrendered policies */}
+{cleanPolicyStatus(selectedPolicy.policy_status) === 'Surrendered' && (
+  <div style={{
+    backgroundColor: '#f1f5f9',
+    padding: '15px',
+    borderRadius: '8px',
+    marginTop: '10px',
+    marginBottom: '15px',
+    borderLeft: '4px solid #475569'
+  }}>
+    <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600', marginBottom: '12px' }}>
+      ⇦ Surrender Details
+    </div>
+
+    <div className="row">
+      <div className="col-6">
+        {selectedPolicy.surrender_amount !== null && (
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Surrender Amount</span>
+            <div style={{ fontWeight: '600', color: '#475569' }}>
+              KES {formatCurrency(selectedPolicy.surrender_amount)}
+            </div>
+          </div>
+        )}
+
+        {selectedPolicy.months_paid !== null && (
+          <div style={{ marginBottom: '0' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Months Paid</span>
+            <div style={{ fontWeight: '500' }}>
+              {selectedPolicy.months_paid}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="col-6">
+        {selectedPolicy.duration_in_force !== null && (
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Duration in Force</span>
+            <div style={{ fontWeight: '500' }}>
+              {selectedPolicy.duration_in_force} month{selectedPolicy.duration_in_force !== 1 ? 's' : ''}
+            </div>
+          </div>
+        )}
+
+        {selectedPolicy.surrender_reason && (
+          <div style={{ marginBottom: '0' }}>
+            <span style={{ color: '#999', fontSize: '12px' }}>Surrender Reason</span>
+            <div style={{ fontWeight: '500', color: '#475569' }}>
+              {selectedPolicy.surrender_reason}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Endorsement date — shown only for Surrendered */}
+    {selectedPolicy.endorsement_date && (
+      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #cbd5e1' }}>
+        <span style={{ color: '#999', fontSize: '12px' }}>Endorsement Date</span>
+        <div style={{ fontWeight: '500' }}>
+          {formatDateCompact(selectedPolicy.endorsement_date)}
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
             {/* Agent + branch footer */}
             <div style={{
               backgroundColor: '#f8f9fa', padding: '12px 15px',
@@ -1102,23 +1177,50 @@ const AdminBusinesses = () => {
               <p className="text-muted" style={{ fontSize: '13px' }}>No changes recorded</p>
             ) : (
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                {policyHistory.map((change: any, idx: number) => (
-                  <div key={idx} style={{
-                    padding: '8px 12px', marginBottom: '5px',
-                    backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa',
-                    borderRadius: '4px', fontSize: '13px',
-                    borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
-                  }}>
-                    <span style={{ fontWeight: '500' }}>{change.field}:</span>
-                    <span style={{ color: '#c70e2a' }}>{change.old_value}</span>
-                    <span style={{ margin: '0 5px', color: '#999' }}>→</span>
-                    <span style={{ color: '#2a9d36' }}>{change.new_value}</span>
-                    <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
-                      {new Date(change.changed_at).toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
+  {policyHistory.map((change: any, idx: number) => (
+    <div key={idx} style={{
+      padding: '8px 12px', marginBottom: '5px',
+      backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa',
+      borderRadius: '4px', fontSize: '13px',
+      borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
+    }}>
+      <span style={{ fontWeight: '500' }}>{change.field}:</span>
+      {(() => {
+        const dateFields = ['Endorsement Date', 'Inception Date', 'Last Updated'];
+        const currencyFields = ['Total Sum Insured', 'Annual Premium', 'New Gross Premium',
+                                'Initial Gross Premium', 'Expected Premium', 'Total Premium Paid',
+                                'Arrears Due'];
+
+        const formatValue = (val: string) => {
+          if (!val || val === 'N/A') return val;
+
+          if (dateFields.includes(change.field)) {
+            const d = new Date(val);
+            if (!isNaN(d.getTime())) return formatDateCompact(val);
+          }
+
+          if (currencyFields.includes(change.field)) {
+            const n = parseFloat(val);
+            if (!isNaN(n)) return `KES ${formatCurrency(n)}`;
+          }
+
+          return val;
+        };
+
+        return (
+          <>
+            <span style={{ color: '#c70e2a' }}>{formatValue(change.old_value)}</span>
+            <span style={{ margin: '0 5px', color: '#999' }}>→</span>
+            <span style={{ color: '#2a9d36' }}>{formatValue(change.new_value)}</span>
+          </>
+        );
+      })()}
+      <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
+        {new Date(change.changed_at).toLocaleString()}
+      </span>
+    </div>
+  ))}
+</div>
             )}
           </div>
         ),
@@ -1197,19 +1299,7 @@ const AdminBusinesses = () => {
                           <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
                             {filteredData.filter(p => p.policy_status?.toLowerCase().includes('active') || p.policy_status?.toLowerCase().includes('finalised')).length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>In Progress</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#fd7e14' }}>
-                            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('unfinalised')).length}
-                          </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Pending</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#c70e2a' }}>
-                            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('cancelled')).length}
-                          </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Cancelled</span>
+                          <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
   <span style={{ fontSize: '14px', fontWeight: '600', color: '#7f1d1d' }}>
@@ -1217,6 +1307,20 @@ const AdminBusinesses = () => {
   </span>
   <span style={{ color: '#999', fontSize: '12px' }}>Lapsed</span>
 </div>
+<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+  <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+    {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Surrendered').length}
+  </span>
+  <span style={{ color: '#999', fontSize: '12px' }}>Surrendered</span>
+</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#c70e2a' }}>
+                            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('cancelled')).length}
+                          </span>
+                          <span style={{ color: '#999', fontSize: '12px' }}>Cancelled</span>
+                        </div>
+                        
+
                       </div>
                     </div>
                     <div className="col-auto">
