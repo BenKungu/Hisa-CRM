@@ -26,7 +26,7 @@ const Header: React.FC = () => {
   useEffect(() => {
     // Get user from localStorage
     const userData = authService.getCurrentUser();
-    console.log('Header - User data from localStorage:', userData); // Debug
+    console.log('Header - User data from localStorage:', userData);
     
     if (userData) {
       setUser(userData);
@@ -294,7 +294,30 @@ const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     ))}
   </div>
 )}
-        {(!searchResults.clients?.length && !searchResults.policies?.length && !searchResults.agents?.length) && (
+       
+       {/* MMF Accounts */}
+{searchResults.mmf?.length > 0 && (
+  <div style={{ backgroundColor: '#eef2f7', borderRadius: '4px', margin: '0 4px 4px 4px' }}>
+    <div style={{ padding: '4px 12px', fontWeight: '600', color: '#475569', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      💼 MMF Accounts
+    </div>
+    {searchResults.mmf.map((item: any) => (
+      <Link
+        key={item.id}
+        to={item.url}
+        className="dropdown-item"
+        style={{ padding: '4px 12px', display: 'flex', flexDirection: 'column', whiteSpace: 'normal', color: '#333' }}
+        onClick={() => setShowSearchDropdown(false)}
+      >
+        <span style={{ fontWeight: '500' }}>{item.label}</span>
+        <span style={{ fontSize: '11px', color: '#999' }}>{item.subtitle}</span>
+      </Link>
+    ))}
+  </div>
+)}
+       
+       
+        {(!searchResults.clients?.length && !searchResults.policies?.length && !searchResults.agents?.length && !searchResults.mmf?.length) &&(
           <div className="text-center p-2 text-muted">No results found</div>
         )}
 

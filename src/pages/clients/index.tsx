@@ -62,6 +62,7 @@ const AdminClients = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [includeMmfOnly, setIncludeMmfOnly] = useState(false);
 
   // --------------------------------------------------------------------------
   // State – filters
@@ -71,6 +72,7 @@ const AdminClients = () => {
     status: [] as string[],
     agent: [] as string[],
     dobFilter: { type: 'none' } as { type: string; month?: number; day?: number },
+    clientType: [] as string[],
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -196,12 +198,13 @@ const AdminClients = () => {
            filters.status.length > 0 ||
            filters.agent.length > 0 ||
            filters.dobFilter.type !== 'none' ||
+           filters.clientType.length > 0 ||
            searchTerm.trim().length > 0;
   };
 
   /** Reset all filters + search to defaults. */
   const resetFilters = () => {
-    setFilters({ policyCount: [], status: [], agent: [], dobFilter: { type: 'none' } });
+    setFilters({ policyCount: [], status: [], agent: [], dobFilter: { type: 'none' }, clientType: [] });
     setSearchTerm('');
   };
 
@@ -210,19 +213,18 @@ const AdminClients = () => {
   // ==========================================================================
 
   const loadClients = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await clientService.getClients();
-      if (response.success) setData(response.data);
-      else setError('Failed to load clients');
-    } catch (err: any) {
-      setError(err.error || 'Failed to load clients');
-      console.error('Error loading clients:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  setError('');
+  try {
+    const response = await clientService.getClients({ includeMmfOnly });
+    if (response.success) setData(response.data);
+    else setError('Failed to load clients');
+  } catch (err: any) {
+    setError(err.error || 'Failed to load clients');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const loadClientPolicies = async (clientId: string) => {
     setLoadingPolicies(true);
@@ -241,15 +243,17 @@ const AdminClients = () => {
 
   // Read `?search=` query param from the URL
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const searchQuery = params.get('search');
-    if (searchQuery) setSearchTerm(searchQuery);
-  }, [location.search]);
+  const params = new URLSearchParams(location.search);
+  const searchQuery = params.get('search');
+  if (searchQuery) {
+    setSearchTerm(searchQuery);
+    setIncludeMmfOnly(true); 
+  }
+}, [location.search]);
 
-  // Initial load
   useEffect(() => {
-    loadClients();
-  }, []);
+  loadClients();
+}, [includeMmfOnly]);
 
   // ==========================================================================
   // HANDLERS – Export
@@ -273,11 +277,13 @@ const AdminClients = () => {
     try {
       // Build filter params from current filter state
       const params: any = {};
-      if (searchTerm) params.search = searchTerm;
-      if (filters.policyCount.length > 0) params.policyCount = filters.policyCount;
-      if (filters.status.length > 0) params.status = filters.status;
-      if (filters.agent.length > 0) params.agent = filters.agent;
-      if (filters.dobFilter.type !== 'none') {
+if (searchTerm) params.search = searchTerm;
+if (filters.policyCount.length > 0) params.policyCount = filters.policyCount;
+if (filters.status.length > 0) params.status = filters.status;
+if (filters.agent.length > 0) params.agent = filters.agent;
+if (filters.clientType.length > 0) params.clientType = filters.clientType;   
+params.includeMmfOnly = includeMmfOnly;                                     
+if (filters.dobFilter.type !== 'none')  {
         params.dobType = filters.dobFilter.type;
         if (filters.dobFilter.type === 'custom') {
           params.dobMonth = filters.dobFilter.month;
@@ -380,6 +386,18 @@ const AdminClients = () => {
         });
       });
     }
+
+    if (filters.clientType.length > 0) {
+  filtered = filtered.filter(item => {
+    const hasPolicies = (item.policy_count || 0) > 0;
+    const hasMmf = ((item as any).mmf_count || 0) > 0;
+    return filters.clientType.some(t => {
+      if (t === 'Insurance') return hasPolicies;
+      if (t === 'MMF') return hasMmf;
+      return false;
+    });
+  });
+}
 
     // Agent
     if (filters.agent.length > 0) {
@@ -837,6 +855,30 @@ const AdminClients = () => {
                 ))}
               </div>
             )}
+            {((selectedClient as any).mmf_count || 0) > 0 && (
+  <>
+    <hr />
+    <h6 className="mt-3" style={{ color: '#475569' }}>
+      💼 MMF Accounts ({((selectedClient as any).mmf_count)})
+    </h6>
+    <div style={{ fontSize: '13px', color: '#555' }}>
+      <p className="text-muted" style={{ fontSize: '12px' }}>
+        This client also holds an MMF account. Click below to see the account.
+      </p>
+      <Link
+        to={`/mmf?search=${encodeURIComponent(
+          selectedClient.phone_no ||
+          selectedClient.email ||
+          selectedClient.client_name
+        )}`}
+        className="btn btn-sm"
+        style={{ backgroundColor: '#475569', color: '#fff', border: 'none' }}
+      >
+        View MMF Account
+      </Link>
+    </div>
+  </>
+)}
           </div>
         ),
         footer: (
@@ -927,6 +969,36 @@ const AdminClients = () => {
                     </div>
                     <div className="col-auto">
                       <div className="d-flex align-items-center gap-2">
+
+<div className="btn-group btn-group-sm" role="group">
+      <button
+        type="button"
+        className="btn"
+        onClick={() => setIncludeMmfOnly(false)}
+        style={{
+          fontSize: '12px',
+          backgroundColor: !includeMmfOnly ? '#2a9d36' : '#f8f9fa',
+          color: !includeMmfOnly ? '#fff' : '#333',
+          border: '1px solid #d1d5db',
+        }}
+      >
+        Edwn/Edukn
+      </button>
+      <button
+        type="button"
+        className="btn"
+        onClick={() => setIncludeMmfOnly(true)}
+        style={{
+          fontSize: '12px',
+          backgroundColor: includeMmfOnly ? '#2a9d36' : '#f8f9fa',
+          color: includeMmfOnly ? '#fff' : '#333',
+          border: '1px solid #d1d5db',
+        }}
+      >
+        +Mmf
+      </button>
+    </div>
+
                         {/* Search */}
                         <div className="input-group input-group-sm" style={{ width: '200px' }}>
                           <span className="input-group-text bg-white">
@@ -1182,6 +1254,35 @@ const AdminClients = () => {
                               </div>
                             </div>
                           </div>
+
+                          <div className="dropdown">
+  <button className="btn btn-sm dropdown-toggle"
+          data-bs-toggle="dropdown"
+          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
+    Type {filters.clientType.length > 0 && (
+      <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>
+        {filters.clientType.length}
+      </span>
+    )}
+  </button>
+  <div className="dropdown-menu p-2" style={{ minWidth: '160px' }}>
+    {['Insurance', 'MMF'].map(option => (
+      <div className="form-check" key={option}>
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id={`type-${option}`}
+          checked={filters.clientType.includes(option)}
+          onChange={(e) => {
+            if (e.target.checked) setFilters({ ...filters, clientType: [...filters.clientType, option] });
+            else setFilters({ ...filters, clientType: filters.clientType.filter(t => t !== option) });
+          }}
+        />
+        <label className="form-check-label" htmlFor={`type-${option}`}>{option}</label>
+      </div>
+    ))}
+  </div>
+</div>
 
                           {/* Export */}
                           <button

@@ -20,5 +20,8 @@ adminRegister: "/register",
 adminForgotPassword: "/forgotpassword",
 adminResetPassword: "/reset-password",
 adminLockscreen: "/lockscreen",
+adminMmf: "/mmf",
+searchResults: "/search",
+adminOutlook: "/outlook",
 
 };

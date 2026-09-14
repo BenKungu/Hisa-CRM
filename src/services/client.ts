@@ -12,14 +12,14 @@ export const clientService = {
   },
 
   // Get all clients
-  getClients: async (): Promise<any> => {
-    try {
-      const response = await apiClient.get('/clients');
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || { error: 'Failed to get clients' };
-    }
-  },
+  getClients: async (params?: any): Promise<any> => {
+  try {
+    const response = await apiClient.get('/clients', { params });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || { error: 'Failed to get clients' };
+  }
+},
 
   exportClients: async (filters: any): Promise<Blob> => {
     try {

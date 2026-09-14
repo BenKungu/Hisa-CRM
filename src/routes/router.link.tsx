@@ -14,7 +14,7 @@ const AdminForgotPassword = lazy(() => import("../pages/forgotpassword"));
 const AdminLockscreen = lazy(() => import("../pages/lockscreen"));
 const AdminOutlook = lazy(() => import('../pages/outlook'));
 const SearchResults = lazy(() => import('../pages/search'));
-
+const AdminMmf = lazy(() => import('../pages/mmf/AdminMmf'));
 
 const AdminOTP = lazy(() => import("../pages/otp"));
 const AdminWhitelist = lazy(() => import("../pages/whitelist"));
@@ -188,6 +188,16 @@ export const authRoutes = [
   ),
   route: Route,
   meta_title: "Outlook",
+},
+{
+  path: "/mmf",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminMmf />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "MMF Management",
 },
 {
   path: "/search",

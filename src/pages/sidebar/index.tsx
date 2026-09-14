@@ -13,7 +13,8 @@ import {
   UserCheck,     
   Lock, 
   CheckCircle,
-  RefreshCw,      
+  RefreshCw,
+  DollarSign,      
 } from "react-feather";
 
 import { all_routes } from "../../routes/all_routes";
@@ -115,6 +116,12 @@ const SidebarNav = () => {
                   <Link to="/agents">
                     <UserPlus size={16} />
                     <span>Agents</span>
+                  </Link>
+                </li>
+                <li className={pathname?.includes("mmf") ? "active" : ""}>
+                  <Link to="/mmf">
+                    <DollarSign size={16} />
+                    <span>Mmf Clients</span>
                   </Link>
                 </li>
                 <li className={pathname?.includes("policies") ? "active" : ""}>
