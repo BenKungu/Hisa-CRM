@@ -122,7 +122,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed', 'Surrendered'];
+  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed', 'Surrendered', 'Unsuccessful'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -132,16 +132,17 @@ const AdminBusinesses = () => {
 
   /** Clean/normalise a raw policy status into one of the defined buckets. */
   const cleanPolicyStatus = (status: string) => {
-    if (!status) return 'Not Given';
-    const lower = status.toLowerCase();
+  if (!status) return 'Not Given';
+  const lower = status.toLowerCase();
 
-    if (lower.includes('auto')) return 'Auto';
-    if (lower.includes('unfinalised')) return 'Unfinalised';
-    if (lower.includes('finalised')) return 'Finalised';
-    if (lower.includes('paid') || lower.includes('active')) return 'Paid';
-    if (lower.includes('surrendered')) return 'Surrendered';
-    if (lower.includes('cancelled')) return 'Cancelled';
-    if (lower.includes('lapsed')) return 'Lapsed';
+  if (lower.includes('unsuccessful')) return 'Unsuccessful';
+  if (lower.includes('auto')) return 'Auto';
+  if (lower.includes('unfinalised')) return 'Unfinalised';
+  if (lower.includes('finalised')) return 'Finalised';
+  if (lower.includes('paid') || lower.includes('active')) return 'Paid';
+  if (lower.includes('surrendered')) return 'Surrendered';
+  if (lower.includes('cancelled')) return 'Cancelled';
+  if (lower.includes('lapsed')) return 'Lapsed';
 
     let cleaned = status.replace(/\bPolicy\b/g, '').trim();
     cleaned = cleaned.replace(/[–-]/g, ' ').trim();
@@ -664,6 +665,7 @@ const AdminBusinesses = () => {
         else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
         else if (cleaned === 'Lapsed') {badgeClass = 'bg-danger';icon = '⚠';}
         else if (cleaned === 'Surrendered') {badgeClass = 'bg-secondary';icon = '⇦';}
+        else if (cleaned === 'Unsuccessful') { badgeClass = 'bg-secondary'; icon = '⊘'; }
 
         return (
           <span
@@ -676,7 +678,8 @@ const AdminBusinesses = () => {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     ...(cleaned === 'Lapsed' ? { backgroundColor: '#7f1d1d', color: '#fff' } : {}),
-    ...(cleaned === 'Surrendered' ? { backgroundColor: '#475569', color: '#fff' } : {})
+    ...(cleaned === 'Surrendered' ? { backgroundColor: '#475569', color: '#fff' } : {}),
+    ...(cleaned === 'Unsuccessful' ? { backgroundColor: '#6c757d', color: '#fff' } : {})
   }}
   title={status || 'N/A'}
 >
@@ -1296,11 +1299,14 @@ const AdminBusinesses = () => {
                         </div>
                         <div style={{ width: '1px', height: '20px', backgroundColor: '#dee2e6' }} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
-                            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('active') || p.policy_status?.toLowerCase().includes('finalised')).length}
-                          </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
-                        </div>
+  <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
+    {filteredData.filter(p =>
+      cleanPolicyStatus(p.policy_status) === 'Finalised' ||
+      cleanPolicyStatus(p.policy_status) === 'Paid'
+    ).length}
+  </span>
+  <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
+</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
   <span style={{ fontSize: '14px', fontWeight: '600', color: '#7f1d1d' }}>
     {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Lapsed').length}
