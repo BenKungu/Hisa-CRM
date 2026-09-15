@@ -270,11 +270,15 @@ const AdminOutlook = () => {
                           </div>
                         </div>
                       </div>
+                      <p className="text-muted" style={{ fontSize: '12px', marginBottom: '8px' }}>
+  💡 Click any policy number to open it in a new tab
+</p>
 
                       {/* Main Table – only show non‑Match anomalies */}
                       { (() => {
                         const nonMatchDetails = report.details.filter(item => item.anomaly !== 'Match');
                         return nonMatchDetails.length > 0 ? (
+                          
                           <div className="table-responsive">
                             <table className="table table-hover" style={{ fontSize: '13px' }}>
                               <thead style={{ backgroundColor: '#f1f3f5' }}>
@@ -291,7 +295,21 @@ const AdminOutlook = () => {
                               <tbody>
                                 {nonMatchDetails.map((item, idx) => (
                                   <tr key={idx}>
-                                    <td><strong>{item.policyNumber}</strong></td>
+                                    <td>
+  <a
+    href={`/businesses?search=${encodeURIComponent(item.policyNumber)}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      color: '#0d6efd',
+      fontWeight: '600',
+      textDecoration: 'underline',
+      cursor: 'pointer',
+    }}
+  >
+    {item.policyNumber}
+  </a>
+</td>
                                     <td>{item.clientName}</td>
                                     <td>{item.frequency}</td>
                                     <td>{item.agentName || '—'}</td>
@@ -319,6 +337,9 @@ const AdminOutlook = () => {
                             ⚠️ <strong>Note:</strong> Inception date was used to estimate the strike date for these non-monthly policies. 
                             Please verify manually.
                           </p>
+                          <p className="text-muted" style={{ fontSize: '12px', marginBottom: '8px' }}>
+  💡 Click any policy number to open it in a new tab
+</p>
                           <div className="table-responsive">
                             <table className="table table-sm" style={{ fontSize: '12px' }}>
                               <thead style={{ backgroundColor: '#f8f9fa' }}>
@@ -334,7 +355,21 @@ const AdminOutlook = () => {
                               <tbody>
                                 {report.subjectToReviewItems.map((item, idx) => (
                                   <tr key={idx}>
-                                    <td><strong>{item.policyNumber}</strong></td>
+                                    <td>
+  <a
+    href={`/businesses?search=${encodeURIComponent(item.policyNumber)}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      color: '#0d6efd',
+      fontWeight: '600',
+      textDecoration: 'underline',
+      cursor: 'pointer',
+    }}
+  >
+    {item.policyNumber}
+  </a>
+</td>
                                     <td>{item.clientName}</td>
                                     <td>{item.frequency}</td>
                                     <td>{item.agentName || '—'}</td>
