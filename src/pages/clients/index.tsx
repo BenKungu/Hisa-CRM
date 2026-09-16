@@ -103,9 +103,22 @@ const AdminClients = () => {
   const statusOptions = ['Active', 'Inactive'];
 
   // Unique agent names derived from the loaded client list
-  const agentOptions = Array.from(
-    new Set(data.map(c => c.agent_name).filter(a => a && a !== 'N/A'))
-  );
+  const agentOptions: string[] = (() => {
+  const names = new Set<string>();
+  let hasNoAgent = false;
+
+  data.forEach(c => {
+    if (!c.agent_name || c.agent_name === 'N/A' || c.agent_name === '--') {
+      hasNoAgent = true;
+    } else {
+      names.add(c.agent_name);
+    }
+  });
+
+  const list = Array.from(names).sort();
+  if (hasNoAgent) list.unshift('No Agent');
+  return list;
+})();
 
   // ==========================================================================
   // HELPERS
@@ -401,8 +414,13 @@ if (filters.dobFilter.type !== 'none')  {
 
     // Agent
     if (filters.agent.length > 0) {
-      filtered = filtered.filter(item => filters.agent.includes(item.agent_name));
-    }
+  filtered = filtered.filter(item => {
+    const displayAgent = (!item.agent_name || item.agent_name === 'N/A' || item.agent_name === '--')
+      ? 'No Agent'
+      : item.agent_name;
+    return filters.agent.includes(displayAgent);
+  });
+}
 
     // Birthday filter – compares only month/day, ignores year
     if (filters.dobFilter.type !== 'none') {
@@ -583,12 +601,15 @@ if (filters.dobFilter.type !== 'none')  {
       title: "Agent",
       dataIndex: "agent_name",
       width: 140,
-      render: (text: string) => (
-        <span style={{ fontSize: '13px', color: '#555' }}>
-          <Users size={13} className="me-1" style={{ color: '#999' }} />
-          {text || '—'}
-        </span>
-      ),
+      render: (text: string) => {
+  const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
+  return (
+    <span style={{ fontSize: '13px', color: display === 'No Agent' ? '#999' : '#555' }}>
+      <Users size={13} className="me-1" style={{ color: '#999' }} />
+      {display}
+    </span>
+  );
+},
       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
     {
@@ -704,8 +725,12 @@ if (filters.dobFilter.type !== 'none')  {
     // ---- View details ----
     if (modalAction === 'view' && selectedClient) {
       const hasPolicies = clientPolicies.length > 0;
-      const agentName = selectedClient.agent_name || 'N/A';
-      const agentCode = selectedClient.agent_code || 'N/A';
+      const agentName = (!selectedClient.agent_name || selectedClient.agent_name === 'N/A' || selectedClient.agent_name === '--')
+  ? 'No Agent'
+  : selectedClient.agent_name;
+const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/A'
+  ? selectedClient.agent_code
+  : '';
       const displayName = selectedClient.client_name || 'N/A';
       const fullNameWithTitle = selectedClient.title
         ? `${selectedClient.title} ${displayName}`
@@ -737,8 +762,8 @@ if (filters.dobFilter.type !== 'none')  {
                   ID: {selectedClient.id_no || 'N/A'} · {selectedClient.policy_count || 0} Total · {selectedClient.finalised_count || 0} Finalised
                 </div>
                 <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
-                  Agent: {agentName} {agentCode !== 'N/A' ? `(${agentCode})` : ''}
-                </div>
+  Agent: {agentName} {agentCode ? `(${agentCode})` : ''}
+</div>
               </div>
             </div>
 
