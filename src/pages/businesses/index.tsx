@@ -43,6 +43,10 @@ interface Policy {
   strike_date: number;
   agent_name: string;
   agent_code: string;
+  bank_name: string | null;
+  bank_branch_code: string | null;
+  bank_branch_name: string | null;
+  bank_account_number: string | null;
   sales_branch: string;
   updated_at: string;
   endorsement_date: string | null;
@@ -1171,6 +1175,43 @@ const AdminBusinesses = () => {
               </div>
             </div>
 
+                        {/* Payment Method — only when the policy has bank data */}
+            {(selectedPolicy.bank_name || selectedPolicy.bank_account_number) && (
+              <div style={{
+                backgroundColor: '#fef3e8', padding: '12px 15px',
+                borderRadius: '8px', marginTop: '10px', marginBottom: '15px',
+                borderLeft: '4px solid #F15A29'
+              }}>
+                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
+                  🏦 Payment Method
+                </div>
+                <div className="row">
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Bank Name</span>
+                    <div style={{ fontWeight: '500' }}>{selectedPolicy.bank_name || 'N/A'}</div>
+                  </div>
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Account Number</span>
+                    <div style={{ fontWeight: '500', fontFamily: 'monospace' }}>
+                      {selectedPolicy.bank_account_number || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                {(selectedPolicy.bank_branch_name || selectedPolicy.bank_branch_code) && (
+                  <div style={{ marginTop: '10px' }}>
+                    <span style={{ color: '#999', fontSize: '12px' }}>Branch</span>
+                    <div style={{ fontWeight: '500' }}>
+                      {selectedPolicy.bank_branch_name || 'N/A'}
+                      {selectedPolicy.bank_branch_code ? ` (${selectedPolicy.bank_branch_code})` : ''}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Change history */}
+            <hr />
+
             {/* Change history */}
             <hr />
             <h6 className="mt-3" style={{ color: '#c70e2a' }}>📋 Change History</h6>
@@ -1189,10 +1230,11 @@ const AdminBusinesses = () => {
     }}>
       <span style={{ fontWeight: '500' }}>{change.field}:</span>
       {(() => {
-        const dateFields = ['Endorsement Date', 'Inception Date', 'Last Updated'];
+                const dateFields = ['Endorsement Date', 'Inception Date', 'Last Updated'];
         const currencyFields = ['Total Sum Insured', 'Annual Premium', 'New Gross Premium',
                                 'Initial Gross Premium', 'Expected Premium', 'Total Premium Paid',
                                 'Arrears Due'];
+        const monospaceFields = ['Bank Account Number', 'Bank Name', 'Bank Branch Code', 'Bank Branch Name'];
 
         const formatValue = (val: string) => {
           if (!val || val === 'N/A') return val;
@@ -1210,11 +1252,16 @@ const AdminBusinesses = () => {
           return val;
         };
 
-        return (
+        const isMonospace = monospaceFields.includes(change.field);
+                return (
           <>
-            <span style={{ color: '#c70e2a' }}>{formatValue(change.old_value)}</span>
+            <span style={{ color: '#c70e2a', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
+              {formatValue(change.old_value)}
+            </span>
             <span style={{ margin: '0 5px', color: '#999' }}>→</span>
-            <span style={{ color: '#2a9d36' }}>{formatValue(change.new_value)}</span>
+            <span style={{ color: '#2a9d36', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
+              {formatValue(change.new_value)}
+            </span>
           </>
         );
       })()}

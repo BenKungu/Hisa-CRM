@@ -39,8 +39,6 @@ interface Client {
   occupation?: string | null;
   residential_address?: string | null;
   postal_address?: string | null;
-  bank_name?: string | null;
-  bank_account_number?: string | null;
 }
 
 interface Policy {
@@ -54,6 +52,10 @@ interface Policy {
   agent_name: string;
   agent_code: string;
   client_id: string;
+  bank_name: string | null;
+  bank_branch_code: string | null;
+  bank_branch_name: string | null;
+  bank_account_number: string | null;
 }
 
 // ============================================================================
@@ -90,8 +92,8 @@ const AdminClients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientPolicies, setClientPolicies] = useState<Policy[]>([]);
   const [loadingPolicies, setLoadingPolicies] = useState(false);
-  const [clientAudit, setClientAudit] = useState<any[]>([]);
-  const [loadingAudit, setLoadingAudit] = useState(false);
+  const [bankHistory, setBankHistory] = useState<any[]>([]);
+  const [loadingBankHistory, setLoadingBankHistory] = useState(false);
 
   // --------------------------------------------------------------------------
   // State – export
@@ -262,15 +264,15 @@ const AdminClients = () => {
     }
   };
 
-    const loadClientAudit = async (clientId: string) => {
-    setLoadingAudit(true);
+      const loadBankHistory = async (clientId: string) => {
+    setLoadingBankHistory(true);
     try {
-      const response = await clientService.getClientHistory(clientId);
-      if (response.success) setClientAudit(response.data);
+      const response = await clientService.getClientBankHistory(clientId);
+      if (response.success) setBankHistory(response.data);
     } catch (err) {
-      console.error('Error loading client audit:', err);
+      console.error('Error loading bank history:', err);
     } finally {
-      setLoadingAudit(false);
+      setLoadingBankHistory(false);
     }
   };
 
@@ -358,13 +360,13 @@ if (filters.dobFilter.type !== 'none')  {
   // HANDLERS – View / Delete modal
   // ==========================================================================
 
-    const openModal = async (action: 'view' | 'delete', client: Client) => {
+      const openModal = async (action: 'view' | 'delete', client: Client) => {
     setModalAction(action);
     setSelectedClient(client);
     setModalOpen(true);
     if (action === 'view') {
       await loadClientPolicies(client.id);
-      await loadClientAudit(client.id);
+      await loadBankHistory(client.id);
     }
   };
 
@@ -373,7 +375,7 @@ if (filters.dobFilter.type !== 'none')  {
     setModalAction(null);
     setSelectedClient(null);
     setClientPolicies([]);
-    setClientAudit([]);
+    setBankHistory([]);
   };
 
   const confirmDelete = async () => {
@@ -864,7 +866,7 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
 
                         {/* Employment */}
             {(selectedClient.employer || selectedClient.occupation) && (
-                            <div style={{ backgroundColor: '#eaf7ed', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+              <div style={{ backgroundColor: '#eaf7ed', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
                   🏢 Employment
                 </div>
@@ -895,25 +897,6 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                   <div className="col-6">
                     <span style={{ color: '#999', fontSize: '12px' }}>Postal</span>
                     <div style={{ fontWeight: '500' }}>{selectedClient.postal_address || 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Bank Details */}
-            {(selectedClient.bank_name || selectedClient.bank_account_number) && (
-                            <div style={{ backgroundColor: '#fef3e8', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
-                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
-                  🏦 Bank Details
-                </div>
-                <div className="row">
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Bank Name</span>
-                    <div style={{ fontWeight: '500' }}>{selectedClient.bank_name || 'N/A'}</div>
-                  </div>
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Account Number</span>
-                    <div style={{ fontWeight: '500', fontFamily: 'monospace' }}>{selectedClient.bank_account_number || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -955,6 +938,12 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                       <span className="text-muted" style={{ fontSize: '11px', marginLeft: '10px' }}>
                         {policy.product_type || 'N/A'}
                       </span>
+                                            {(policy.bank_name || policy.bank_account_number) && (
+                        <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                          🏦 {policy.bank_name || 'N/A'}
+                          {policy.bank_account_number ? ` · ${policy.bank_account_number}` : ''}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <span className={`badge ${
@@ -997,36 +986,135 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
   </>
 )}
 
-            {/* Bank amendment history */}
-            {clientAudit.length > 0 && (
+                        {/* Bank Details — grouped by account */}
+            {(() => {
+              const bankGroups: Array<{
+                bank_name: string;
+                bank_branch_name: string;
+                bank_branch_code: string;
+                bank_account_number: string;
+                policies: string[];
+              }> = [];
+
+              clientPolicies.forEach((p) => {
+                if (!p.bank_name && !p.bank_account_number) return;
+                const key = `${p.bank_name || ''}||${p.bank_account_number || ''}`;
+                let group = bankGroups.find(
+                  (g) => `${g.bank_name}||${g.bank_account_number}` === key
+                );
+                if (!group) {
+                  group = {
+                    bank_name: p.bank_name || '',
+                    bank_branch_name: p.bank_branch_name || '',
+                    bank_branch_code: p.bank_branch_code || '',
+                    bank_account_number: p.bank_account_number || '',
+                    policies: [],
+                  };
+                  bankGroups.push(group);
+                }
+                if (p.policy_number) group.policies.push(p.policy_number);
+              });
+
+              if (bankGroups.length === 0) return null;
+
+              return (
+                <>
+                  <hr />
+                  <h6 className="mt-3" style={{ color: '#c70e2a' }}>
+                    🏦 Bank Details
+                  </h6>
+                  {bankGroups.map((g, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        backgroundColor: '#fef3e8',
+                        padding: '12px 15px',
+                        borderRadius: '8px',
+                        marginBottom: '10px',
+                      }}
+                    >
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#c70e2a' }}>
+                        {g.bank_name || 'N/A'}
+                      </div>
+                      {g.bank_branch_name && (
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                          Branch: {g.bank_branch_name}
+                          {g.bank_branch_code ? ` (${g.bank_branch_code})` : ''}
+                        </div>
+                      )}
+                      {g.bank_account_number && (
+                        <div style={{ fontSize: '13px', fontFamily: 'monospace', marginTop: '4px' }}>
+                          {g.bank_account_number}
+                        </div>
+                      )}
+                      {g.policies.length > 0 && (
+                        <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
+                          Policies:{' '}
+                          {g.policies.map((pn, i) => (
+                            <span key={i}>
+                              {i > 0 && ', '}
+                              <span
+                                style={{ color: '#0d6efd', cursor: 'pointer', textDecoration: 'underline' }}
+                                onClick={() => navigate(`/businesses?search=${pn}`)}
+                              >
+                                {pn}
+                              </span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
+
+            {/* Bank Amendment History */}
+            {bankHistory.length > 0 && (
               <>
                 <hr />
                 <h6 className="mt-3" style={{ color: '#c70e2a' }}>
                   📋 Bank Amendment History
                 </h6>
-                {loadingAudit ? (
-                  <p className="text-muted" style={{ fontSize: '13px' }}>Loading history...</p>
+                {loadingBankHistory ? (
+                  <p className="text-muted" style={{ fontSize: '13px' }}>Loading...</p>
                 ) : (
-                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    {clientAudit.map((change: any, idx: number) => (
-                      <div key={idx} style={{
-                        padding: '8px 12px', marginBottom: '5px',
-                        backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '13px',
-                        borderLeft: '3px solid #2a9d36'
-                      }}>
-                        <span style={{ fontWeight: '500' }}>{change.field}:</span>
-                        <span style={{ color: '#c70e2a', fontFamily: 'monospace' }}>{change.old_value}</span>
-                        <span style={{ margin: '0 5px', color: '#999' }}>→</span>
-                        <span style={{ color: '#2a9d36', fontFamily: 'monospace' }}>{change.new_value}</span>
-                        <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
+                  <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                    {bankHistory.map((change: any, idx: number) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: '8px 12px',
+                          marginBottom: '5px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                          borderLeft: '3px solid #2a9d36',
+                        }}
+                      >
+                        <div style={{ fontSize: '11px', color: '#c70e2a', fontWeight: '600' }}>
+                          {change.policy_number}
+                        </div>
+                        <div>
+                          <span style={{ fontWeight: '500' }}>{change.field}:</span>
+                          <span style={{ color: '#c70e2a', fontFamily: 'monospace', marginLeft: '6px' }}>
+                            {change.old_value}
+                          </span>
+                          <span style={{ margin: '0 5px', color: '#999' }}>→</span>
+                          <span style={{ color: '#2a9d36', fontFamily: 'monospace' }}>
+                            {change.new_value}
+                          </span>
+                        </div>
+                        <div style={{ color: '#999', fontSize: '11px', marginTop: '2px' }}>
                           {new Date(change.changed_at).toLocaleString()}
-                        </span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </>
             )}
+
           </div>
         ),
         footer: (
