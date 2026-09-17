@@ -1300,10 +1300,7 @@ const AdminBusinesses = () => {
                         <div style={{ width: '1px', height: '20px', backgroundColor: '#dee2e6' }} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
   <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
-    {filteredData.filter(p =>
-      cleanPolicyStatus(p.policy_status) === 'Finalised' ||
-      cleanPolicyStatus(p.policy_status) === 'Paid'
-    ).length}
+    {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Finalised').length}
   </span>
   <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
 </div>
