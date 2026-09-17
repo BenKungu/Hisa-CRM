@@ -126,7 +126,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-  const statusOptions = ['Paid', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed', 'Surrendered', 'Unsuccessful'];
+    const statusOptions = ['Paid', 'Finalised', 'Lapsed', 'Surrendered', 'Cancelled', 'Unsuccessful','Unverified'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -139,8 +139,9 @@ const AdminBusinesses = () => {
     if (!status) return 'Not Given';
     const lower = status.toLowerCase();
 
-        if (lower.includes('unsuccessful')) return 'Unsuccessful';
-    if (lower.includes('unfinalised')) return 'Unfinalised';
+            if (lower.includes('unsuccessful')) return 'Unsuccessful';
+    if (lower.includes('unverified')) return 'Unverified';
+    if (lower.includes('unfinalised')) return 'Unverified';
     if (lower.includes('finalised')) return 'Finalised';
     if (lower.includes('paid') || lower.includes('active')) return 'Paid';
     if (lower.includes('surrender')) return 'Surrendered';
@@ -662,9 +663,9 @@ const AdminBusinesses = () => {
         let badgeClass = 'bg-secondary';
         let icon = '';
 
-                if (cleaned === 'Paid')             { badgeClass = 'bg-success'; icon = '●'; }
+        if (cleaned === 'Paid')             { badgeClass = 'bg-success'; icon = '●'; }
         else if (cleaned === 'Finalised')   { badgeClass = 'bg-success'; icon = '✓'; }
-        else if (cleaned === 'Unfinalised') { badgeClass = 'bg-warning text-dark'; icon = '⏳'; }
+        else if (cleaned === 'Unverified')  { badgeClass = 'bg-secondary'; icon = '?'; }
         else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
         else if (cleaned === 'Lapsed') {badgeClass = 'bg-danger';icon = '⚠';}
         else if (cleaned === 'Surrendered') {badgeClass = 'bg-secondary';icon = '⇦';}
@@ -682,7 +683,8 @@ const AdminBusinesses = () => {
     textOverflow: 'ellipsis',
     ...(cleaned === 'Lapsed' ? { backgroundColor: '#7f1d1d', color: '#fff' } : {}),
     ...(cleaned === 'Surrendered' ? { backgroundColor: '#475569', color: '#fff' } : {}),
-    ...(cleaned === 'Unsuccessful' ? { backgroundColor: '#6c757d', color: '#fff' } : {})
+    ...(cleaned === 'Unsuccessful' ? { backgroundColor: '#6c757d', color: '#fff' } : {}),
+    ...(cleaned === 'Unverified' ? { backgroundColor: '#94a3b8', color: '#fff' } : {})
   }}
   title={status || 'N/A'}
 >
@@ -1210,9 +1212,6 @@ const AdminBusinesses = () => {
 
             {/* Change history */}
             <hr />
-
-            {/* Change history */}
-            <hr />
             <h6 className="mt-3" style={{ color: '#c70e2a' }}>📋 Change History</h6>
             {loadingHistory ? (
               <p className="text-muted" style={{ fontSize: '13px' }}>Loading history...</p>
@@ -1362,9 +1361,9 @@ const AdminBusinesses = () => {
   </span>
   <span style={{ color: '#999', fontSize: '12px' }}>Surrendered</span>
 </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span style={{ fontSize: '14px', fontWeight: '600', color: '#c70e2a' }}>
-                            {filteredData.filter(p => p.policy_status?.toLowerCase().includes('cancelled')).length}
+                            {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Cancelled').length}
                           </span>
                           <span style={{ color: '#999', fontSize: '12px' }}>Cancelled</span>
                         </div>
