@@ -35,6 +35,12 @@ interface Client {
   agent_code: string;
   created_at: string;
   updated_at: string;
+  employer?: string | null;
+  occupation?: string | null;
+  residential_address?: string | null;
+  postal_address?: string | null;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
 }
 
 interface Policy {
@@ -84,6 +90,8 @@ const AdminClients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientPolicies, setClientPolicies] = useState<Policy[]>([]);
   const [loadingPolicies, setLoadingPolicies] = useState(false);
+  const [clientAudit, setClientAudit] = useState<any[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
 
   // --------------------------------------------------------------------------
   // State – export
@@ -254,6 +262,18 @@ const AdminClients = () => {
     }
   };
 
+    const loadClientAudit = async (clientId: string) => {
+    setLoadingAudit(true);
+    try {
+      const response = await clientService.getClientHistory(clientId);
+      if (response.success) setClientAudit(response.data);
+    } catch (err) {
+      console.error('Error loading client audit:', err);
+    } finally {
+      setLoadingAudit(false);
+    }
+  };
+
   // Read `?search=` query param from the URL
   useEffect(() => {
   const params = new URLSearchParams(location.search);
@@ -338,11 +358,14 @@ if (filters.dobFilter.type !== 'none')  {
   // HANDLERS – View / Delete modal
   // ==========================================================================
 
-  const openModal = async (action: 'view' | 'delete', client: Client) => {
+    const openModal = async (action: 'view' | 'delete', client: Client) => {
     setModalAction(action);
     setSelectedClient(client);
     setModalOpen(true);
-    if (action === 'view') await loadClientPolicies(client.id);
+    if (action === 'view') {
+      await loadClientPolicies(client.id);
+      await loadClientAudit(client.id);
+    }
   };
 
   const closeModal = () => {
@@ -350,6 +373,7 @@ if (filters.dobFilter.type !== 'none')  {
     setModalAction(null);
     setSelectedClient(null);
     setClientPolicies([]);
+    setClientAudit([]);
   };
 
   const confirmDelete = async () => {
@@ -612,6 +636,17 @@ if (filters.dobFilter.type !== 'none')  {
 },
       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
+
+    {
+      title: "Occupation",
+      dataIndex: "occupation",
+      width: 160,
+      render: (text: string) => (
+        <span style={{ fontSize: '13px', color: '#555' }}>{text || '—'}</span>
+      ),
+      sorter: (a: any, b: any) => (a.occupation || '').localeCompare(b.occupation || ''),
+    },
+
     {
       title: "Last Updated",
       dataIndex: "updated_at",
@@ -827,6 +862,63 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
               </div>
             )}
 
+                        {/* Employment */}
+            {(selectedClient.employer || selectedClient.occupation) && (
+                            <div style={{ backgroundColor: '#eaf7ed', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
+                  🏢 Employment
+                </div>
+                <div className="row">
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Employer</span>
+                    <div style={{ fontWeight: '500' }}>{selectedClient.employer || 'N/A'}</div>
+                  </div>
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Occupation</span>
+                    <div style={{ fontWeight: '500' }}>{selectedClient.occupation || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Addresses */}
+            {(selectedClient.residential_address || selectedClient.postal_address) && (
+              <div style={{ backgroundColor: '#f8f9fa', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
+                  📍 Addresses
+                </div>
+                <div className="row">
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Residential</span>
+                    <div style={{ fontWeight: '500' }}>{selectedClient.residential_address || 'N/A'}</div>
+                  </div>
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Postal</span>
+                    <div style={{ fontWeight: '500' }}>{selectedClient.postal_address || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bank Details */}
+            {(selectedClient.bank_name || selectedClient.bank_account_number) && (
+                            <div style={{ backgroundColor: '#fef3e8', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
+                  🏦 Bank Details
+                </div>
+                <div className="row">
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Bank Name</span>
+                    <div style={{ fontWeight: '500' }}>{selectedClient.bank_name || 'N/A'}</div>
+                  </div>
+                  <div className="col-6">
+                    <span style={{ color: '#999', fontSize: '12px' }}>Account Number</span>
+                    <div style={{ fontWeight: '500', fontFamily: 'monospace' }}>{selectedClient.bank_account_number || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Policies section */}
             <hr />
             <h6 className="mt-3" style={{ color: '#c70e2a' }}>
@@ -904,6 +996,37 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
     </div>
   </>
 )}
+
+            {/* Bank amendment history */}
+            {clientAudit.length > 0 && (
+              <>
+                <hr />
+                <h6 className="mt-3" style={{ color: '#c70e2a' }}>
+                  📋 Bank Amendment History
+                </h6>
+                {loadingAudit ? (
+                  <p className="text-muted" style={{ fontSize: '13px' }}>Loading history...</p>
+                ) : (
+                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {clientAudit.map((change: any, idx: number) => (
+                      <div key={idx} style={{
+                        padding: '8px 12px', marginBottom: '5px',
+                        backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '13px',
+                        borderLeft: '3px solid #2a9d36'
+                      }}>
+                        <span style={{ fontWeight: '500' }}>{change.field}:</span>
+                        <span style={{ color: '#c70e2a', fontFamily: 'monospace' }}>{change.old_value}</span>
+                        <span style={{ margin: '0 5px', color: '#999' }}>→</span>
+                        <span style={{ color: '#2a9d36', fontFamily: 'monospace' }}>{change.new_value}</span>
+                        <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
+                          {new Date(change.changed_at).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         ),
         footer: (

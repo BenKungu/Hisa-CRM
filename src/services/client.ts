@@ -21,6 +21,16 @@ export const clientService = {
   }
 },
 
+  // Get client change history
+  getClientHistory: async (id: string): Promise<any> => {
+    try {
+      const response = await apiClient.get(`/clients/${id}/history`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to get client history' };
+    }
+  },
+
   exportClients: async (filters: any): Promise<Blob> => {
     try {
       const response = await apiClient.get('/clients/export', {
