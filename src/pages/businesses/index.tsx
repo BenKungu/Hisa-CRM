@@ -126,7 +126,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-  const statusOptions = ['Paid', 'Auto', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed', 'Surrendered', 'Unsuccessful'];
+  const statusOptions = ['Paid', 'Finalised', 'Unfinalised', 'Cancelled', 'Lapsed', 'Surrendered', 'Unsuccessful'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -135,18 +135,17 @@ const AdminBusinesses = () => {
   // ==========================================================================
 
   /** Clean/normalise a raw policy status into one of the defined buckets. */
-  const cleanPolicyStatus = (status: string) => {
-  if (!status) return 'Not Given';
-  const lower = status.toLowerCase();
+    const cleanPolicyStatus = (status: string) => {
+    if (!status) return 'Not Given';
+    const lower = status.toLowerCase();
 
-  if (lower.includes('unsuccessful')) return 'Unsuccessful';
-  if (lower.includes('auto')) return 'Auto';
-  if (lower.includes('unfinalised')) return 'Unfinalised';
-  if (lower.includes('finalised')) return 'Finalised';
-  if (lower.includes('paid') || lower.includes('active')) return 'Paid';
-  if (lower.includes('surrendered')) return 'Surrendered';
-  if (lower.includes('cancelled')) return 'Cancelled';
-  if (lower.includes('lapsed')) return 'Lapsed';
+        if (lower.includes('unsuccessful')) return 'Unsuccessful';
+    if (lower.includes('unfinalised')) return 'Unfinalised';
+    if (lower.includes('finalised')) return 'Finalised';
+    if (lower.includes('paid') || lower.includes('active')) return 'Paid';
+    if (lower.includes('surrender')) return 'Surrendered';
+    if (lower.includes('lapsed')) return 'Lapsed';
+    if (lower.includes('cancel')) return 'Cancelled';
 
     let cleaned = status.replace(/\bPolicy\b/g, '').trim();
     cleaned = cleaned.replace(/[–-]/g, ' ').trim();
@@ -663,7 +662,7 @@ const AdminBusinesses = () => {
         let badgeClass = 'bg-secondary';
         let icon = '';
 
-        if (cleaned === 'Paid' || cleaned === 'Auto') { badgeClass = 'bg-success'; icon = '●'; }
+                if (cleaned === 'Paid')             { badgeClass = 'bg-success'; icon = '●'; }
         else if (cleaned === 'Finalised')   { badgeClass = 'bg-success'; icon = '✓'; }
         else if (cleaned === 'Unfinalised') { badgeClass = 'bg-warning text-dark'; icon = '⏳'; }
         else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
