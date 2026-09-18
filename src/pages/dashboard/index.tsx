@@ -16,6 +16,7 @@ import { clientService } from '../../services/client';
 import { authService } from '../../services/auth';
 import Header from '../header';
 import SidebarNav from '../sidebar';
+import { dashboardService } from '../../services/dashboard';
 
 // ============================================================================
 // TYPES
@@ -79,6 +80,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState<any>(null);
+  const [performance, setPerformance] = useState<{ years: number[]; actual: number[]; potential: number[] } | null>(null);
 
   useEffect(() => {
     const userData = authService.getCurrentUser();
@@ -86,6 +88,18 @@ const AdminDashboard = () => {
       setUser(userData);
     }
   }, []);
+
+  useEffect(() => {
+  const loadPerformance = async () => {
+    try {
+      const res = await dashboardService.getPerformance();
+      if (res.success) setPerformance(res.data);
+    } catch (err) {
+      console.error('Performance fetch failed:', err);
+    }
+  };
+  loadPerformance();
+}, []);
 
   // ==========================================================================
   // HELPERS
@@ -350,48 +364,45 @@ const AdminDashboard = () => {
   // CHART OPTIONS
   // ==========================================================================
 
-  const lineChartOptions = {
-    chart: {
-      type: 'area' as const,
-      height: 280,
-      toolbar: { show: false },
-      zoom: { enabled: false },
-      fontFamily: 'inherit',
+  const performanceChartOptions = {
+  chart: {
+    type: 'line' as const,
+    height: 320,
+    toolbar: { show: false },
+    zoom: { enabled: false },
+    fontFamily: 'inherit',
+  },
+  dataLabels: { enabled: false },
+  stroke: { curve: 'smooth' as const, width: 3 },
+  colors: ['#c70e2a', '#2a9d36'],
+  markers: { size: 5, strokeWidth: 0 },
+  xaxis: {
+    categories: performance?.years || [],
+    labels: { style: { fontSize: '11px', colors: '#999' } },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => `KES ${formatCompact(val)}`,
+      style: { fontSize: '11px', colors: '#999' },
     },
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth' as const, width: 2.5 },
-    colors: ['#c70e2a'],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.35,
-        opacityTo: 0.02,
-      },
-    },
-    xaxis: {
-      categories: stats?.monthlyTrend.map(d => d.month) || [],
-      labels: { style: { fontSize: '11px', colors: '#999' } },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: {
-      labels: {
-        formatter: (val: number) => `KES ${formatCompact(val)}`,
-        style: { fontSize: '11px', colors: '#999' },
-      },
-    },
-    tooltip: {
-      y: {
-        formatter: (val: number) => `KES ${formatCurrency(val)}`,
-      },
-    },
-    grid: {
-      borderColor: '#f0f0f0',
-      strokeDashArray: 4,
-      padding: { left: 8, right: 8 },
-    },
-  };
+  },
+  legend: {
+    position: 'top' as const,
+    horizontalAlign: 'right' as const,
+    fontSize: '12px',
+    labels: { colors: '#666' },
+  },
+  tooltip: {
+    y: { formatter: (val: number) => `KES ${formatCurrency(val)}` },
+  },
+  grid: {
+    borderColor: '#f0f0f0',
+    strokeDashArray: 4,
+    padding: { left: 8, right: 8 },
+  },
+};
 
   const pieChartOptions = {
     chart: {
@@ -778,27 +789,33 @@ const AdminDashboard = () => {
           {/* ===== CHARTS ROW ===== */}
           <div className="row" style={{ marginBottom: '20px' }}>
 
-            {/* Monthly Trend Chart */}
             <div className="col-md-12 col-lg-7" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
-                <div className="card-header kpi-card-header">
-                  <h4 className="card-title">Monthly Premium Trend</h4>
-                  <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
-                    Last 6 months (by inception)
-                  </p>
-                </div>
-                <div className="card-body" style={{ padding: '20px', height: 'calc(100% - 60px)' }}>
-                  <ReactApexChart
-                    options={lineChartOptions}
-                    series={[{ name: 'Premium (KES)', data: stats.monthlyTrend.map(d => d.premium) }]}
-                    type="area"
-                    height={280}
-                  />
-                </div>
-              </div>
-            </div>
+  <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
+    <div className="card-header kpi-card-header">
+      <h4 className="card-title">Annual Performance</h4>
+      <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
+        Actual collected vs expected (no lapse / no surrender)
+      </p>
+    </div>
+    <div className="card-body" style={{ padding: '20px', height: 'calc(100% - 60px)' }}>
+      {performance && performance.years.length > 0 ? (
+        <ReactApexChart
+          options={performanceChartOptions}
+          series={[
+            { name: 'Actual Collected', data: performance.actual },
+            { name: 'If No Lapse/Surrender', data: performance.potential },
+          ]}
+          type="line"
+          height={320}
+        />
+      ) : (
+        <div className="text-center text-muted py-4">No performance data</div>
+      )}
+    </div>
+  </div>
+</div>
 
-            {/* Portfolio Distribution */}
+            {/* Business Distribution */}
             <div className="col-md-12 col-lg-5" style={{ marginBottom: '15px' }}>
               <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
                 <div className="card-header kpi-card-header">
