@@ -63,6 +63,7 @@ interface DashboardStats {
   productTypeDistribution: { name: string; value: number }[];
   monthlyTrend: { month: string; policies: number; premium: number }[];
   recentPolicies: Policy[];
+  monthlyNewPolicies: { month: string; count: number }[];
 }
 
 // ============================================================================
@@ -245,9 +246,33 @@ const AdminDashboard = () => {
         // Monthly trend (uses inception_date)
         // ────────────────────────────────────────────────────────────
         const monthlyTrend = getMonthlyTrend(policies);
+        /** Count policies started per month for the last 12 months (by inception_date). */
+        const getMonthlyNewPolicies = (policies: any[]) => {
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const result: { month: string; count: number }[] = [];
+
+          const now = new Date();
+          for (let i = 11; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const year = date.getFullYear();
+            const monthIdx = date.getMonth();
+            const label = `${months[monthIdx]} '${String(year).slice(-2)}`;
+
+            const count = policies.filter((p: any) => {
+              if (!p.inception_date) return false;
+              const d = new Date(p.inception_date);
+              return d.getFullYear() === year && d.getMonth() === monthIdx;
+            }).length;
+
+            result.push({ month: label, count });
+          }
+          return result;
+        };
+
+        const monthlyNewPolicies = getMonthlyNewPolicies(policies);
 
         // ────────────────────────────────────────────────────────────
-        // Portfolio distribution (policies + MMF as a segment)
+        // business distribution (policies + MMF as a segment)
         // ────────────────────────────────────────────────────────────
         const productTypeMap = new Map();
         policies.forEach((p: any) => {
@@ -316,6 +341,7 @@ const AdminDashboard = () => {
           productTypeDistribution,
           monthlyTrend,
           recentPolicies,
+          monthlyNewPolicies,
         });
       }
     } catch (err: any) {
@@ -452,51 +478,50 @@ const AdminDashboard = () => {
   };
 
   const barChartOptions = {
-    chart: {
-      type: 'bar' as const,
-      height: 350,
-      toolbar: { show: false },
-      fontFamily: 'inherit',
+  chart: {
+    type: 'bar' as const,
+    height: 350,
+    toolbar: { show: false },
+    fontFamily: 'inherit',
+  },
+  plotOptions: {
+    bar: {
+      borderRadius: 4,
+      horizontal: false,
+      columnWidth: '35%',
+      distributed: false,
     },
-    plotOptions: {
-      bar: {
-        borderRadius: 6,
-        horizontal: false,
-        columnWidth: '45%',
-        distributed: false,
-      },
+  },
+  dataLabels: { enabled: false },
+  colors: ['#2a9d36'],
+  xaxis: {
+    categories: stats?.monthlyNewPolicies.map(d => d.month) || [],
+    labels: {
+      style: { fontSize: '10px', colors: '#999' },
+      rotate: 0,
+      trim: true,
     },
-    dataLabels: { enabled: false },
-    colors: ['#2a9d36'],
-    xaxis: {
-      categories: stats?.topAgents.map(d => d.name) || [],
-      labels: {
-        style: { fontSize: '11px', colors: '#999' },
-        rotate: -45,
-        trim: true,
-        maxHeight: 80,
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  },
+  yaxis: {
+    labels: {
+      formatter: (val: number) => `${val}`,
+      style: { fontSize: '11px', colors: '#999' },
     },
-    yaxis: {
-      labels: {
-        formatter: (val: number) => `${val}`,
-        style: { fontSize: '11px', colors: '#999' },
-      },
-      tickAmount: 5,
+    tickAmount: 5,
+  },
+  tooltip: {
+    y: {
+      formatter: (val: number) => `${val} policies`,
     },
-    tooltip: {
-      y: {
-        formatter: (val: number) => `${val} policies`,
-      },
-    },
-    grid: {
-      borderColor: '#f0f0f0',
-      strokeDashArray: 4,
-      position: 'back' as const,
-    },
-  };
+  },
+  grid: {
+    borderColor: '#f0f0f0',
+    strokeDashArray: 4,
+    position: 'back' as const,
+  },
+};
 
   // ==========================================================================
   // LOADING / ERROR STATES
@@ -848,21 +873,21 @@ const AdminDashboard = () => {
             <div className="col-md-12 col-lg-7" style={{ marginBottom: '15px' }}>
               <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
                 <div className="card-header kpi-card-header">
-                  <h4 className="card-title">Top Agents</h4>
-                  <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
-                    By policies generated
-                  </p>
+                  <h4 className="card-title">New Business Momentum</h4>
+                    <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
+                      Policies started per month (last 12 months)
+                    </p>
                 </div>
                 <div className="card-body" style={{ padding: '15px 15px 5px 15px', height: 'calc(100% - 60px)' }}>
-                  {stats.topAgents.length > 0 ? (
+                  {stats.monthlyNewPolicies.length > 0 ? (
                     <ReactApexChart
                       options={barChartOptions}
-                      series={[{ name: 'Policies', data: stats.topAgents.map(d => d.count) }]}
+                      series={[{ name: 'New Policies', data: stats.monthlyNewPolicies.map(d => d.count) }]}
                       type="bar"
                       height={320}
                     />
                   ) : (
-                    <div className="text-center text-muted py-4">No agent data available</div>
+                    <div className="text-center text-muted py-4">No data available</div>
                   )}
                 </div>
               </div>
