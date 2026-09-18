@@ -67,6 +67,18 @@ interface UploadResult {
   errors: string[];
 }
 
+const STATUS_STYLES: Record<string, { bg: string; icon: string }> = {
+  'Paid':         { bg: '#0284c7', icon: '✓' },
+  'Finalised':    { bg: '#2a9d36', icon: '●' },
+  'Unverified':   { bg: '#94a3b8', icon: '?' },
+  'Lapsed':       { bg: '#d97706', icon: '⚠' },
+  'Surrendered':  { bg: '#6f42c1', icon: '↩' },
+  'Unsuccessful': { bg: '#475569', icon: '⊘' },
+  'Cancelled':    { bg: '#c70e2a', icon: '✕' },
+};
+
+const DEFAULT_STATUS_STYLE = { bg: '#6c757d', icon: '' };
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -126,7 +138,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-    const statusOptions = ['Paid', 'Finalised', 'Lapsed', 'Surrendered', 'Cancelled', 'Unsuccessful','Unverified'];
+  const statusOptions = ['Paid', 'Finalised', 'Lapsed', 'Surrendered', 'Cancelled', 'Unsuccessful','Unverified'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -139,7 +151,7 @@ const AdminBusinesses = () => {
     if (!status) return 'Not Given';
     const lower = status.toLowerCase();
 
-            if (lower.includes('unsuccessful')) return 'Unsuccessful';
+    if (lower.includes('unsuccessful')) return 'Unsuccessful';
     if (lower.includes('unverified')) return 'Unverified';
     if (lower.includes('unfinalised')) return 'Unverified';
     if (lower.includes('finalised')) return 'Finalised';
@@ -655,46 +667,35 @@ const AdminBusinesses = () => {
       sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
     {
-      title: "Status",
-      dataIndex: "policy_status",
-      width: 150,
-      render: (status: string) => {
-        const cleaned = cleanPolicyStatus(status);
-        let badgeClass = 'bg-secondary';
-        let icon = '';
+  title: "Status",
+  dataIndex: "policy_status",
+  width: 150,
+  render: (status: string) => {
+    const cleaned = cleanPolicyStatus(status);
+    const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
 
-        if (cleaned === 'Paid')             { badgeClass = 'bg-success'; icon = '●'; }
-        else if (cleaned === 'Finalised')   { badgeClass = 'bg-success'; icon = '✓'; }
-        else if (cleaned === 'Unverified')  { badgeClass = 'bg-secondary'; icon = '?'; }
-        else if (cleaned === 'Cancelled')   { badgeClass = 'bg-danger'; icon = '✕'; }
-        else if (cleaned === 'Lapsed') {badgeClass = 'bg-danger';icon = '⚠';}
-        else if (cleaned === 'Surrendered') {badgeClass = 'bg-secondary';icon = '⇦';}
-        else if (cleaned === 'Unsuccessful') { badgeClass = 'bg-secondary'; icon = '⊘'; }
-
-        return (
-          <span
-  className={`badge ${badgeClass} px-2 py-1 d-inline-block text-truncate`}
-  style={{
-    fontSize: '11px',
-    maxWidth: '130px',
-    fontWeight: '500',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    ...(cleaned === 'Lapsed' ? { backgroundColor: '#7f1d1d', color: '#fff' } : {}),
-    ...(cleaned === 'Surrendered' ? { backgroundColor: '#475569', color: '#fff' } : {}),
-    ...(cleaned === 'Unsuccessful' ? { backgroundColor: '#6c757d', color: '#fff' } : {}),
-    ...(cleaned === 'Unverified' ? { backgroundColor: '#94a3b8', color: '#fff' } : {})
-  }}
-  title={status || 'N/A'}
->
-  {icon} {cleaned}
-</span>
-        );
-      },
-      sorter: (a: any, b: any) =>
-        cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
-    },
+    return (
+      <span
+        className="badge px-2 py-1 d-inline-block text-truncate"
+        style={{
+          fontSize: '11px',
+          maxWidth: '130px',
+          fontWeight: '500',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          backgroundColor: style.bg,
+          color: '#fff',
+        }}
+        title={status || 'N/A'}
+      >
+        {style.icon} {cleaned}
+      </span>
+    );
+  },
+  sorter: (a: any, b: any) =>
+    cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
+},
     {
       title: "Frequency",
       dataIndex: "premium_frequency",
@@ -902,19 +903,24 @@ const AdminBusinesses = () => {
                 <div className="col-6 text-end">
                   <span style={{ color: '#999', fontSize: '12px' }}>Status</span>
                   <div>
-                    {(() => {
-                      let badgeClass = 'bg-secondary';
-                      if (selectedPolicy.policy_status?.toLowerCase().includes('finalised')) badgeClass = 'bg-success';
-                      else if (selectedPolicy.policy_status?.toLowerCase().includes('unfinalised')) badgeClass = 'bg-warning text-dark';
-                      else if (selectedPolicy.policy_status?.toLowerCase().includes('cancelled')) badgeClass = 'bg-danger';
-                      else if (selectedPolicy.policy_status?.toLowerCase().includes('active')) badgeClass = 'bg-success';
-                      return (
-                        <span className={`badge ${badgeClass}`} style={{ fontSize: '14px', padding: '5px 15px' }}>
-                          {selectedPolicy.policy_status || 'N/A'}
-                        </span>
-                      );
-                    })()}
-                  </div>
+  {(() => {
+    const cleaned = cleanPolicyStatus(selectedPolicy.policy_status);
+    const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
+    return (
+      <span
+        className="badge"
+        style={{
+          fontSize: '14px',
+          padding: '5px 15px',
+          backgroundColor: style.bg,
+          color: '#fff',
+        }}
+      >
+        {style.icon} {cleaned}
+      </span>
+    );
+  })()}
+</div>
                 </div>
               </div>
             </div>
