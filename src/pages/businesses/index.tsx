@@ -50,12 +50,12 @@ interface Policy {
   sales_branch: string;
   updated_at: string;
   endorsement_date: string | null;
-surrender_amount: number | null;
-cancellation_request_date: string | null;
-surrender_date: string | null;
-surrender_reason: string;
-months_paid: number | null;
-duration_in_force: number | null;
+  surrender_amount: number | null;
+  cancellation_request_date: string | null;
+  surrender_date: string | null;
+  surrender_reason: string;
+  months_paid: number | null;
+  duration_in_force: number | null;
 }
 
 interface UploadResult {
@@ -67,14 +67,22 @@ interface UploadResult {
   errors: string[];
 }
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/**
+ * Palette of status badges. Each bucket has a colour that reads the meaning
+ * of the status at a glance.
+ */
 const STATUS_STYLES: Record<string, { bg: string; icon: string }> = {
-  'Paid':         { bg: '#0284c7', icon: '✓' },
-  'Finalised':    { bg: '#2a9d36', icon: '●' },
-  'Unverified':   { bg: '#94a3b8', icon: '?' },
-  'Lapsed':       { bg: '#d97706', icon: '⚠' },
-  'Surrendered':  { bg: '#6f42c1', icon: '↩' },
-  'Unsuccessful': { bg: '#475569', icon: '⊘' },
-  'Cancelled':    { bg: '#c70e2a', icon: '✕' },
+  'Paid':         { bg: '#0284c7', icon: '✓' },   // Blue — completed, settled
+  'Finalised':    { bg: '#2a9d36', icon: '●' },   // Green — active, ongoing
+  'Unverified':   { bg: '#94a3b8', icon: '?' },   // Light slate — unknown
+  'Lapsed':       { bg: '#d97706', icon: '⚠' },   // Amber — at-risk, recoverable
+  'Surrendered':  { bg: '#6f42c1', icon: '↩' },   // Purple — client chose to exit
+  'Unsuccessful': { bg: '#475569', icon: '⊘' },   // Dark slate — dead-end
+  'Cancelled':    { bg: '#c70e2a', icon: '✕' },   // Red — terminated
 };
 
 const DEFAULT_STATUS_STYLE = { bg: '#6c757d', icon: '' };
@@ -138,7 +146,7 @@ const AdminBusinesses = () => {
   // --------------------------------------------------------------------------
   // Static filter options
   // --------------------------------------------------------------------------
-  const statusOptions = ['Paid', 'Finalised', 'Lapsed', 'Surrendered', 'Cancelled', 'Unsuccessful','Unverified'];
+  const statusOptions = ['Paid', 'Finalised', 'Lapsed', 'Surrendered', 'Cancelled', 'Unsuccessful', 'Unverified'];
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
@@ -146,8 +154,8 @@ const AdminBusinesses = () => {
   // HELPERS
   // ==========================================================================
 
-  /** Clean/normalise a raw policy status into one of the defined buckets. */
-    const cleanPolicyStatus = (status: string) => {
+  /** Map any raw policy status into one of the defined buckets. */
+  const cleanPolicyStatus = (status: string) => {
     if (!status) return 'Not Given';
     const lower = status.toLowerCase();
 
@@ -174,7 +182,7 @@ const AdminBusinesses = () => {
     return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   };
 
-  /** Add correct ordinal suffix to a day number (1 → 1st, 2 → 2nd, 11 → 11th). */
+  /** Add correct ordinal suffix (1 → st, 2 → nd, 3 → rd, everything else → th). */
   const getOrdinalSuffix = (day: number): string => {
     const lastTwo = day % 100;
     if (lastTwo >= 11 && lastTwo <= 13) return 'th';
@@ -667,35 +675,35 @@ const AdminBusinesses = () => {
       sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
     {
-  title: "Status",
-  dataIndex: "policy_status",
-  width: 150,
-  render: (status: string) => {
-    const cleaned = cleanPolicyStatus(status);
-    const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
+      title: "Status",
+      dataIndex: "policy_status",
+      width: 150,
+      render: (status: string) => {
+        const cleaned = cleanPolicyStatus(status);
+        const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
 
-    return (
-      <span
-        className="badge px-2 py-1 d-inline-block text-truncate"
-        style={{
-          fontSize: '11px',
-          maxWidth: '130px',
-          fontWeight: '500',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          backgroundColor: style.bg,
-          color: '#fff',
-        }}
-        title={status || 'N/A'}
-      >
-        {style.icon} {cleaned}
-      </span>
-    );
-  },
-  sorter: (a: any, b: any) =>
-    cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
-},
+        return (
+          <span
+            className="badge px-2 py-1 d-inline-block text-truncate"
+            style={{
+              fontSize: '11px',
+              maxWidth: '130px',
+              fontWeight: '500',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              backgroundColor: style.bg,
+              color: '#fff',
+            }}
+            title={status || 'N/A'}
+          >
+            {style.icon} {cleaned}
+          </span>
+        );
+      },
+      sorter: (a: any, b: any) =>
+        cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
+    },
     {
       title: "Frequency",
       dataIndex: "premium_frequency",
@@ -903,24 +911,24 @@ const AdminBusinesses = () => {
                 <div className="col-6 text-end">
                   <span style={{ color: '#999', fontSize: '12px' }}>Status</span>
                   <div>
-  {(() => {
-    const cleaned = cleanPolicyStatus(selectedPolicy.policy_status);
-    const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
-    return (
-      <span
-        className="badge"
-        style={{
-          fontSize: '14px',
-          padding: '5px 15px',
-          backgroundColor: style.bg,
-          color: '#fff',
-        }}
-      >
-        {style.icon} {cleaned}
-      </span>
-    );
-  })()}
-</div>
+                    {(() => {
+                      const cleaned = cleanPolicyStatus(selectedPolicy.policy_status);
+                      const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
+                      return (
+                        <span
+                          className="badge"
+                          style={{
+                            fontSize: '14px',
+                            padding: '5px 15px',
+                            backgroundColor: style.bg,
+                            color: '#fff',
+                          }}
+                        >
+                          {style.icon} {cleaned}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1021,143 +1029,140 @@ const AdminBusinesses = () => {
                     </div>
                   );
                 })()}
-
-
-
               </div>
             </div>
 
             {/* Lapsed & Arrears — full width, only for Lapsed policies with values */}
-{cleanPolicyStatus(selectedPolicy.policy_status) === 'Lapsed' &&
- (selectedPolicy.expected_premium !== null ||
-  selectedPolicy.total_premium_paid !== null ||
-  selectedPolicy.arrears_due !== null ||
-  selectedPolicy.new_gross_premium_at_lapse !== null) && (
-  <div style={{
-    backgroundColor: '#fef2f2',
-    padding: '15px',
-    borderRadius: '8px',
-    marginTop: '10px',
-    marginBottom: '15px',
-    borderLeft: '4px solid #7f1d1d'
-  }}>
-    <div style={{ fontSize: '12px', color: '#7f1d1d', fontWeight: '600', marginBottom: '12px' }}>
-      ⚠ Lapse &amp; Arrears
-    </div>
+            {cleanPolicyStatus(selectedPolicy.policy_status) === 'Lapsed' &&
+             (selectedPolicy.expected_premium !== null ||
+              selectedPolicy.total_premium_paid !== null ||
+              selectedPolicy.arrears_due !== null ||
+              selectedPolicy.new_gross_premium_at_lapse !== null) && (
+              <div style={{
+                backgroundColor: '#fef2f2',
+                padding: '15px',
+                borderRadius: '8px',
+                marginTop: '10px',
+                marginBottom: '15px',
+                borderLeft: '4px solid #7f1d1d'
+              }}>
+                <div style={{ fontSize: '12px', color: '#7f1d1d', fontWeight: '600', marginBottom: '12px' }}>
+                  ⚠ Lapse &amp; Arrears
+                </div>
 
-    <div className="row">
-      {/* Left column – lapse premium + expected */}
-      <div className="col-6">
-        {selectedPolicy.new_gross_premium_at_lapse !== null && (
-          <div style={{ marginBottom: '12px' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Premium at Lapse</span>
-            <div style={{ fontWeight: '500', color: '#7f1d1d' }}>
-              KES {formatCurrency(selectedPolicy.new_gross_premium_at_lapse)}
-            </div>
-          </div>
-        )}
+                <div className="row">
+                  {/* Left column – lapse premium + expected */}
+                  <div className="col-6">
+                    {selectedPolicy.new_gross_premium_at_lapse !== null && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Premium at Lapse</span>
+                        <div style={{ fontWeight: '500', color: '#7f1d1d' }}>
+                          KES {formatCurrency(selectedPolicy.new_gross_premium_at_lapse)}
+                        </div>
+                      </div>
+                    )}
 
-        {selectedPolicy.expected_premium !== null && (
-          <div style={{ marginBottom: '0' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Expected Premium</span>
-            <div style={{ fontWeight: '500' }}>
-              KES {formatCurrency(selectedPolicy.expected_premium)}
-            </div>
-          </div>
-        )}
-      </div>
+                    {selectedPolicy.expected_premium !== null && (
+                      <div style={{ marginBottom: '0' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Expected Premium</span>
+                        <div style={{ fontWeight: '500' }}>
+                          KES {formatCurrency(selectedPolicy.expected_premium)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-      {/* Right column – paid + arrears */}
-      <div className="col-6">
-        {selectedPolicy.total_premium_paid !== null && (
-          <div style={{ marginBottom: '12px' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Total Premium Paid</span>
-            <div style={{ fontWeight: '500', color: '#2a9d36' }}>
-              KES {formatCurrency(selectedPolicy.total_premium_paid)}
-            </div>
-          </div>
-        )}
+                  {/* Right column – paid + arrears */}
+                  <div className="col-6">
+                    {selectedPolicy.total_premium_paid !== null && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Total Premium Paid</span>
+                        <div style={{ fontWeight: '500', color: '#2a9d36' }}>
+                          KES {formatCurrency(selectedPolicy.total_premium_paid)}
+                        </div>
+                      </div>
+                    )}
 
-        {selectedPolicy.arrears_due !== null && (
-          <div style={{ marginBottom: '0' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Arrears Due</span>
-            <div style={{ fontWeight: '700', color: '#c70e2a', fontSize: '15px' }}>
-              KES {formatCurrency(selectedPolicy.arrears_due)}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+                    {selectedPolicy.arrears_due !== null && (
+                      <div style={{ marginBottom: '0' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Arrears Due</span>
+                        <div style={{ fontWeight: '700', color: '#c70e2a', fontSize: '15px' }}>
+                          KES {formatCurrency(selectedPolicy.arrears_due)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
-{/* Surrender details — only for Surrendered policies */}
-{cleanPolicyStatus(selectedPolicy.policy_status) === 'Surrendered' && (
-  <div style={{
-    backgroundColor: '#f1f5f9',
-    padding: '15px',
-    borderRadius: '8px',
-    marginTop: '10px',
-    marginBottom: '15px',
-    borderLeft: '4px solid #475569'
-  }}>
-    <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600', marginBottom: '12px' }}>
-      ⇦ Surrender Details
-    </div>
+            {/* Surrender details — only for Surrendered policies */}
+            {cleanPolicyStatus(selectedPolicy.policy_status) === 'Surrendered' && (
+              <div style={{
+                backgroundColor: '#f1f5f9',
+                padding: '15px',
+                borderRadius: '8px',
+                marginTop: '10px',
+                marginBottom: '15px',
+                borderLeft: '4px solid #475569'
+              }}>
+                <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600', marginBottom: '12px' }}>
+                  ⇦ Surrender Details
+                </div>
 
-    <div className="row">
-      <div className="col-6">
-        {selectedPolicy.surrender_amount !== null && (
-          <div style={{ marginBottom: '12px' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Surrender Amount</span>
-            <div style={{ fontWeight: '600', color: '#475569' }}>
-              KES {formatCurrency(selectedPolicy.surrender_amount)}
-            </div>
-          </div>
-        )}
+                <div className="row">
+                  <div className="col-6">
+                    {selectedPolicy.surrender_amount !== null && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Surrender Amount</span>
+                        <div style={{ fontWeight: '600', color: '#475569' }}>
+                          KES {formatCurrency(selectedPolicy.surrender_amount)}
+                        </div>
+                      </div>
+                    )}
 
-        {selectedPolicy.months_paid !== null && (
-          <div style={{ marginBottom: '0' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Months Paid</span>
-            <div style={{ fontWeight: '500' }}>
-              {selectedPolicy.months_paid}
-            </div>
-          </div>
-        )}
-      </div>
+                    {selectedPolicy.months_paid !== null && (
+                      <div style={{ marginBottom: '0' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Months Paid</span>
+                        <div style={{ fontWeight: '500' }}>
+                          {selectedPolicy.months_paid}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-      <div className="col-6">
-        {selectedPolicy.duration_in_force !== null && (
-          <div style={{ marginBottom: '12px' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Duration in Force</span>
-            <div style={{ fontWeight: '500' }}>
-              {selectedPolicy.duration_in_force} month{selectedPolicy.duration_in_force !== 1 ? 's' : ''}
-            </div>
-          </div>
-        )}
+                  <div className="col-6">
+                    {selectedPolicy.duration_in_force !== null && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Duration in Force</span>
+                        <div style={{ fontWeight: '500' }}>
+                          {selectedPolicy.duration_in_force} month{selectedPolicy.duration_in_force !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    )}
 
-        {selectedPolicy.surrender_reason && (
-          <div style={{ marginBottom: '0' }}>
-            <span style={{ color: '#999', fontSize: '12px' }}>Surrender Reason</span>
-            <div style={{ fontWeight: '500', color: '#475569' }}>
-              {selectedPolicy.surrender_reason}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+                    {selectedPolicy.surrender_reason && (
+                      <div style={{ marginBottom: '0' }}>
+                        <span style={{ color: '#999', fontSize: '12px' }}>Surrender Reason</span>
+                        <div style={{ fontWeight: '500', color: '#475569' }}>
+                          {selectedPolicy.surrender_reason}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-    {/* Endorsement date — shown only for Surrendered */}
-    {selectedPolicy.endorsement_date && (
-      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #cbd5e1' }}>
-        <span style={{ color: '#999', fontSize: '12px' }}>Endorsement Date</span>
-        <div style={{ fontWeight: '500' }}>
-          {formatDateCompact(selectedPolicy.endorsement_date)}
-        </div>
-      </div>
-    )}
-  </div>
-)}
+                {/* Endorsement date — shown only for Surrendered */}
+                {selectedPolicy.endorsement_date && (
+                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #cbd5e1' }}>
+                    <span style={{ color: '#999', fontSize: '12px' }}>Endorsement Date</span>
+                    <div style={{ fontWeight: '500' }}>
+                      {formatDateCompact(selectedPolicy.endorsement_date)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Agent + branch footer */}
             <div style={{
@@ -1182,7 +1187,7 @@ const AdminBusinesses = () => {
               </div>
             </div>
 
-                        {/* Payment Method — only when the policy has bank data */}
+            {/* Payment Method — only when the policy has bank data */}
             {(selectedPolicy.bank_name || selectedPolicy.bank_account_number) && (
               <div style={{
                 backgroundColor: '#fef3e8', padding: '12px 15px',
@@ -1225,56 +1230,57 @@ const AdminBusinesses = () => {
               <p className="text-muted" style={{ fontSize: '13px' }}>No changes recorded</p>
             ) : (
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-  {policyHistory.map((change: any, idx: number) => (
-    <div key={idx} style={{
-      padding: '8px 12px', marginBottom: '5px',
-      backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa',
-      borderRadius: '4px', fontSize: '13px',
-      borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
-    }}>
-      <span style={{ fontWeight: '500' }}>{change.field}:</span>
-      {(() => {
-                const dateFields = ['Endorsement Date', 'Inception Date', 'Last Updated'];
-        const currencyFields = ['Total Sum Insured', 'Annual Premium', 'New Gross Premium',
-                                'Initial Gross Premium', 'Expected Premium', 'Total Premium Paid',
-                                'Arrears Due'];
-        const monospaceFields = ['Bank Account Number', 'Bank Name', 'Bank Branch Code', 'Bank Branch Name'];
+                {policyHistory.map((change: any, idx: number) => (
+                  <div key={idx} style={{
+                    padding: '8px 12px', marginBottom: '5px',
+                    backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa',
+                    borderRadius: '4px', fontSize: '13px',
+                    borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
+                  }}>
+                    <span style={{ fontWeight: '500' }}>{change.field}:</span>
+                    {(() => {
+                      const dateFields = ['Endorsement Date', 'Inception Date', 'Last Updated'];
+                      const currencyFields = ['Total Sum Insured', 'Annual Premium', 'New Gross Premium',
+                                              'Initial Gross Premium', 'Expected Premium', 'Total Premium Paid',
+                                              'Arrears Due'];
+                      const monospaceFields = ['Bank Account Number', 'Bank Name', 'Bank Branch Code', 'Bank Branch Name'];
 
-        const formatValue = (val: string) => {
-          if (!val || val === 'N/A') return val;
+                      const formatValue = (val: string) => {
+                        if (!val || val === 'N/A') return val;
 
-          if (dateFields.includes(change.field)) {
-            const d = new Date(val);
-            if (!isNaN(d.getTime())) return formatDateCompact(val);
-          }
+                        if (dateFields.includes(change.field)) {
+                          const d = new Date(val);
+                          if (!isNaN(d.getTime())) return formatDateCompact(val);
+                        }
 
-          if (currencyFields.includes(change.field)) {
-            const n = parseFloat(val);
-            if (!isNaN(n)) return `KES ${formatCurrency(n)}`;
-          }
+                        if (currencyFields.includes(change.field)) {
+                          const n = parseFloat(val);
+                          if (!isNaN(n)) return `KES ${formatCurrency(n)}`;
+                        }
 
-          return val;
-        };
+                        return val;
+                      };
 
-        const isMonospace = monospaceFields.includes(change.field);
-                return (
-          <>
-            <span style={{ color: '#c70e2a', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
-              {formatValue(change.old_value)}
-            </span>
-            <span style={{ margin: '0 5px', color: '#999' }}>→</span>
-            <span style={{ color: '#2a9d36', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
-              {formatValue(change.new_value)}
-            </span>
-          </>
-        );
-      })()}
-      <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
-        {new Date(change.changed_at).toLocaleString()}
-      </span>
-    </div>
-  ))}
-</div>
+                      const isMonospace = monospaceFields.includes(change.field);
+
+                      return (
+                        <>
+                          <span style={{ color: '#c70e2a', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
+                            {formatValue(change.old_value)}
+                          </span>
+                          <span style={{ margin: '0 5px', color: '#999' }}>→</span>
+                          <span style={{ color: '#2a9d36', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
+                            {formatValue(change.new_value)}
+                          </span>
+                        </>
+                      );
+                    })()}
+                    <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
+                      {new Date(change.changed_at).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         ),
@@ -1342,39 +1348,47 @@ const AdminBusinesses = () => {
                     <div className="col">
                       <h5 className="card-title mb-0">All Policies</h5>
                       <div className="d-flex align-items-center gap-3 mt-1">
+                        {/* Total */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span style={{ fontSize: '20px', fontWeight: '700', color: '#2a9d36' }}>
                             {filteredData.length}
                           </span>
                           <span style={{ color: '#999', fontSize: '13px' }}>Total</span>
                         </div>
+
                         <div style={{ width: '1px', height: '20px', backgroundColor: '#dee2e6' }} />
+
+                        {/* Finalised */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-  <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
-    {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Finalised').length}
-  </span>
-  <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
-</div>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
+                            {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Finalised').length}
+                          </span>
+                          <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
+                        </div>
+
+                        {/* Lapsed */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-  <span style={{ fontSize: '14px', fontWeight: '600', color: '#7f1d1d' }}>
-    {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Lapsed').length}
-  </span>
-  <span style={{ color: '#999', fontSize: '12px' }}>Lapsed</span>
-</div>
-<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-  <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
-    {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Surrendered').length}
-  </span>
-  <span style={{ color: '#999', fontSize: '12px' }}>Surrendered</span>
-</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#7f1d1d' }}>
+                            {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Lapsed').length}
+                          </span>
+                          <span style={{ color: '#999', fontSize: '12px' }}>Lapsed</span>
+                        </div>
+
+                        {/* Surrendered */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+                            {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Surrendered').length}
+                          </span>
+                          <span style={{ color: '#999', fontSize: '12px' }}>Surrendered</span>
+                        </div>
+
+                        {/* Cancelled */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span style={{ fontSize: '14px', fontWeight: '600', color: '#c70e2a' }}>
                             {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Cancelled').length}
                           </span>
                           <span style={{ color: '#999', fontSize: '12px' }}>Cancelled</span>
                         </div>
-                        
-
                       </div>
                     </div>
                     <div className="col-auto">

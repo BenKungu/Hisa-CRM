@@ -628,8 +628,8 @@ if (filters.dobFilter.type !== 'none')  {
       dataIndex: "agent_name",
       width: 140,
       render: (text: string) => {
-  const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
-  return (
+       const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
+       return (
     <span style={{ fontSize: '13px', color: display === 'No Agent' ? '#999' : '#555' }}>
       <Users size={13} className="me-1" style={{ color: '#999' }} />
       {display}
@@ -799,8 +799,8 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                   ID: {selectedClient.id_no || 'N/A'} · {selectedClient.policy_count || 0} Total · {selectedClient.finalised_count || 0} Finalised
                 </div>
                 <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
-  Agent: {agentName} {agentCode ? `(${agentCode})` : ''}
-</div>
+                 Agent: {agentName} {agentCode ? `(${agentCode})` : ''}
+                 </div>
               </div>
             </div>
 
@@ -962,29 +962,29 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
               </div>
             )}
             {((selectedClient as any).mmf_count || 0) > 0 && (
-  <>
-    <hr />
-    <h6 className="mt-3" style={{ color: '#475569' }}>
-      💼 MMF Accounts ({((selectedClient as any).mmf_count)})
-    </h6>
-    <div style={{ fontSize: '13px', color: '#555' }}>
-      <p className="text-muted" style={{ fontSize: '12px' }}>
-        This client also holds an MMF account. Click below to see the account.
-      </p>
-      <Link
-        to={`/mmf?search=${encodeURIComponent(
-          selectedClient.phone_no ||
-          selectedClient.email ||
-          selectedClient.client_name
-        )}`}
-        className="btn btn-sm"
-        style={{ backgroundColor: '#475569', color: '#fff', border: 'none' }}
-      >
-        View MMF Account
-      </Link>
-    </div>
-  </>
-)}
+              <>
+                <hr />
+                <h6 className="mt-3" style={{ color: '#475569' }}>
+                  💼 MMF Accounts ({((selectedClient as any).mmf_count)})
+                </h6>
+                <div style={{ fontSize: '13px', color: '#555' }}>
+                  <p className="text-muted" style={{ fontSize: '12px' }}>
+                    This client also holds an MMF account. Click below to see the account.
+                  </p>
+                  <Link
+                    to={`/mmf?search=${encodeURIComponent(
+                      selectedClient.phone_no ||
+                      selectedClient.email ||
+                      selectedClient.client_name
+                    )}`}
+                    className="btn btn-sm"
+                    style={{ backgroundColor: '#475569', color: '#fff', border: 'none' }}
+                  >
+                    View MMF Account
+                  </Link>
+                </div>
+              </>
+            )}
 
                         {/* Bank Details — grouped by account */}
             {(() => {
@@ -1205,37 +1205,36 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                     </div>
                     <div className="col-auto">
                       <div className="d-flex align-items-center gap-2">
+                          <div className="btn-group btn-group-sm" role="group">
+                                <button
+                                  type="button"
+                                  className="btn"
+                                  onClick={() => setIncludeMmfOnly(false)}
+                                  style={{
+                                    fontSize: '12px',
+                                    backgroundColor: !includeMmfOnly ? '#2a9d36' : '#f8f9fa',
+                                    color: !includeMmfOnly ? '#fff' : '#333',
+                                    border: '1px solid #d1d5db',
+                                  }}
+                                >
+                                  Edwn/Edukn
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn"
+                                  onClick={() => setIncludeMmfOnly(true)}
+                                  style={{
+                                    fontSize: '12px',
+                                    backgroundColor: includeMmfOnly ? '#2a9d36' : '#f8f9fa',
+                                    color: includeMmfOnly ? '#fff' : '#333',
+                                    border: '1px solid #d1d5db',
+                                  }}
+                                >
+                                  +Mmf
+                                </button>
+                              </div>
 
-<div className="btn-group btn-group-sm" role="group">
-      <button
-        type="button"
-        className="btn"
-        onClick={() => setIncludeMmfOnly(false)}
-        style={{
-          fontSize: '12px',
-          backgroundColor: !includeMmfOnly ? '#2a9d36' : '#f8f9fa',
-          color: !includeMmfOnly ? '#fff' : '#333',
-          border: '1px solid #d1d5db',
-        }}
-      >
-        Edwn/Edukn
-      </button>
-      <button
-        type="button"
-        className="btn"
-        onClick={() => setIncludeMmfOnly(true)}
-        style={{
-          fontSize: '12px',
-          backgroundColor: includeMmfOnly ? '#2a9d36' : '#f8f9fa',
-          color: includeMmfOnly ? '#fff' : '#333',
-          border: '1px solid #d1d5db',
-        }}
-      >
-        +Mmf
-      </button>
-    </div>
-
-                        {/* Search */}
+                             {/* Search */}
                         <div className="input-group input-group-sm" style={{ width: '200px' }}>
                           <span className="input-group-text bg-white">
                             <Search size={14} className="text-muted" />
@@ -1492,33 +1491,33 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                           </div>
 
                           <div className="dropdown">
-  <button className="btn btn-sm dropdown-toggle"
-          data-bs-toggle="dropdown"
-          style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
-    Type {filters.clientType.length > 0 && (
-      <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>
-        {filters.clientType.length}
-      </span>
-    )}
-  </button>
-  <div className="dropdown-menu p-2" style={{ minWidth: '160px' }}>
-    {['Insurance', 'MMF'].map(option => (
-      <div className="form-check" key={option}>
-        <input
-          className="form-check-input"
-          type="checkbox"
-          id={`type-${option}`}
-          checked={filters.clientType.includes(option)}
-          onChange={(e) => {
-            if (e.target.checked) setFilters({ ...filters, clientType: [...filters.clientType, option] });
-            else setFilters({ ...filters, clientType: filters.clientType.filter(t => t !== option) });
-          }}
-        />
-        <label className="form-check-label" htmlFor={`type-${option}`}>{option}</label>
-      </div>
-    ))}
-  </div>
-</div>
+                            <button className="btn btn-sm dropdown-toggle"
+                                    data-bs-toggle="dropdown"
+                                    style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}>
+                              Type {filters.clientType.length > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>
+                                  {filters.clientType.length}
+                                </span>
+                              )}
+                            </button>
+                          <div className="dropdown-menu p-2" style={{ minWidth: '160px' }}>
+                            {['Insurance', 'MMF'].map(option => (
+                              <div className="form-check" key={option}>
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  id={`type-${option}`}
+                                  checked={filters.clientType.includes(option)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) setFilters({ ...filters, clientType: [...filters.clientType, option] });
+                                    else setFilters({ ...filters, clientType: filters.clientType.filter(t => t !== option) });
+                                  }}
+                                />
+                                <label className="form-check-label" htmlFor={`type-${option}`}>{option}</label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
 
                           {/* Export */}
                           <button
