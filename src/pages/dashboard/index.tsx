@@ -57,6 +57,7 @@ interface DashboardStats {
   newPolicies60Days: number;
   newClients60Days: number;
   crossSellOpportunity: number;
+  alfredClients: number;
 
   // ── Charts ──
   topAgents: { name: string; count: number; premium: number }[];
@@ -191,6 +192,22 @@ const AdminDashboard = () => {
         const crossSellOpportunity = clients.filter((c: any) =>
           (c.policy_count || 0) > 0 && ((c as any).mmf_count || 0) === 0
         ).length;
+
+        // Alfred's unique clients:
+          //   (a) clients with at least one policy under him, PLUS
+          //   (b) every client with an MMF account (MMF is always his)
+          const alfredClientIds = new Set<string>();
+          policies.forEach((p: any) => {
+            if ((p.agent_name || '').trim() === 'Alfred Mathu' && p.client_id) {
+              alfredClientIds.add(p.client_id);
+            }
+          });
+          clients.forEach((c: any) => {
+            if ((c.mmf_count || 0) > 0) {
+              alfredClientIds.add(c.id);
+            }
+          });
+          const alfredClients = alfredClientIds.size;
 
         // ────────────────────────────────────────────────────────────
         // 60-day window — inception_date for new business
@@ -335,6 +352,7 @@ const AdminDashboard = () => {
           newPolicies60Days,
           newClients60Days,
           crossSellOpportunity,
+          alfredClients,
 
           // Charts
           topAgents,
@@ -667,10 +685,13 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   <div className="mt-2">
-                    <span className="kpi-sub">
-                      {stats.insuranceClients} insurance · {stats.mmfClients} MMF
-                    </span>
-                  </div>
+                  <span className="kpi-sub">
+                    {stats.alfredClients} Alfred's clients ·{' '}
+                    {stats.totalClients > 0
+                      ? `${((stats.alfredClients / stats.totalClients) * 100).toFixed(1)}%`
+                      : '0%'} of book
+                  </span>
+                </div>
                 </div>
               </div>
             </div>
