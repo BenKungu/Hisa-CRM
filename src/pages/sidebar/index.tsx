@@ -94,7 +94,7 @@ const SidebarNav = () => {
             <div id="sidebar-menu" className="sidebar-menu">
               <ul>
                 <li className="menu-title">
-                  <span>Main</span>
+                  <span>MAIN</span>
                 </li>
                 <li className={pathname === all_routes.adminDashboard ? "active" : ""}>
                   <Link to="/admin-dashboard">
@@ -107,9 +107,17 @@ const SidebarNav = () => {
                     <Users size={16} /> <span>Clients</span>
                   </Link>
                 </li>
+                <li className="menu-title">
+                  <span>ABSA</span>
+                </li>
                 <li className={pathname?.includes("/businesses") ? "active" : ""}>
                   <Link to="/businesses">
-                    <Briefcase size={16} /> <span>Businesses</span>
+                    <Briefcase size={16} /> <span>Policies</span>
+                  </Link>
+                </li>
+                <li className={pathname?.includes("outlook") ? "active" : ""}>
+                  <Link to="/outlook">
+                    <RefreshCw size={16} /> <span>Outlook</span>
                   </Link>
                 </li>
                 <li className={pathname?.includes("agents") ? "active" : ""}>
@@ -118,22 +126,23 @@ const SidebarNav = () => {
                     <span>Agents</span>
                   </Link>
                 </li>
+                <li className={pathname?.includes("policies") ? "active" : ""}>
+                  <Link to="/policy-types">
+                    <FileText size={16} /> <span>Types</span>
+                  </Link>
+                </li>
+                <li className="menu-title">
+                  <span>OLD MUTUAL</span>
+                </li>
                 <li className={pathname?.includes("mmf") ? "active" : ""}>
                   <Link to="/mmf">
                     <DollarSign size={16} />
-                    <span>Mmf Clients</span>
+                    <span>Mmf</span>
                   </Link>
                 </li>
-                <li className={pathname?.includes("policies") ? "active" : ""}>
-                  <Link to="/policy-types">
-                    <FileText size={16} /> <span>Policy Types</span>
-                  </Link>
+                <li className="menu-title">
+                  <span>Auth</span>
                 </li>
-                <li className={pathname?.includes("outlook") ? "active" : ""}>
-  <Link to="/outlook">
-    <RefreshCw size={16} /> <span>Outlook</span>
-  </Link>
-</li>
                 <li className={pathname?.includes("whitelist") ? "active" : ""}>
                   <Link to="/whitelist">
                     <CheckCircle size={16} /> <span>Whitelist</span>
