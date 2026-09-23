@@ -25,6 +25,8 @@ interface Holder {
   phone: string;
   email: string;
   policy_count: number;
+  matched_by: string | null;
+  matched_existing: boolean;
 }
 
 interface MmfAccount {
@@ -128,6 +130,18 @@ const AdminMmf = () => {
     }
     return `${day}${suffix} ${month} ${year}`;
   };
+
+/** Returns a label + colours for a holder's match type. */
+const getMatchBadge = (holder: Holder | null) => {
+  if (!holder || !holder.matched_by) return null;
+  const map: Record<string, { label: string; bg: string }> = {
+    phone:        { label: 'matched by phone',      bg: '#2a9d36' },
+    phone_loose:  { label: 'loose phone match',     bg: '#d97706' },
+    name_email:   { label: 'matched by name+email', bg: '#0d6efd' },
+    new_client:   { label: 'new client',            bg: '#6c757d' },
+  };
+  return map[holder.matched_by] || { label: holder.matched_by, bg: '#6c757d' };
+};
 
   // ==========================================================================
   // DATA LOADING
@@ -310,25 +324,43 @@ const handleWipeConfirm = async () => {
       width: 260,
       fixed: 'left' as const,
       render: (h: Holder | null) => {
-        if (!h) return <span className="text-muted">—</span>;
-        const display = `${h.title ? h.title + ' ' : ''}${h.name}`.trim();
-        return (
-          <div className="d-flex align-items-center">
-            <span
-              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
-                backgroundColor: '#475569', color: '#fff',
-                fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
-                borderRadius: '50%', flexShrink: 0
-              }}
-            >
-              {getInitials(display)}
-            </span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>{display}</span>
-          </div>
-        );
-      },
+  if (!h) return <span className="text-muted">—</span>;
+  const display = `${h.title ? h.title + ' ' : ''}${h.name}`.trim();
+  const badge = getMatchBadge(h);
+  return (
+    <div className="d-flex align-items-center">
+      <span
+        className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+        style={{
+          width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
+          backgroundColor: '#475569', color: '#fff',
+          fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
+          borderRadius: '50%', flexShrink: 0
+        }}
+      >
+        {getInitials(display)}
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: '13px', fontWeight: '500' }}>{display}</div>
+        {badge && (
+          <span
+            className="badge"
+            style={{
+              backgroundColor: badge.bg,
+              color: '#fff',
+              fontSize: '9px',
+              fontWeight: '500',
+              padding: '1px 6px',
+              marginTop: '2px',
+            }}
+          >
+            {badge.label}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+},
       sorter: (a: any, b: any) =>
         (a.primary_holder?.name || '').localeCompare(b.primary_holder?.name || ''),
     },
@@ -456,30 +488,45 @@ const handleWipeConfirm = async () => {
               </div>
             </div>
           </div>
-
           {/* Primary holder */}
-          {primary && (
-            <div style={{ marginBottom: '15px' }}>
-              <span style={{ color: '#999', fontSize: '12px' }}>Primary Holder</span>
-              <div style={{ fontWeight: '600', fontSize: '15px' }}>
-                {primary.title ? `${primary.title} ` : ''}{primary.name}
+            {primary && (
+              <div style={{ marginBottom: '15px' }}>
+                <span style={{ color: '#999', fontSize: '12px' }}>Primary Holder</span>
+                <div style={{ fontWeight: '600', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>{primary.title ? `${primary.title} ` : ''}{primary.name}</span>
+                  {(() => {
+                    const badge = getMatchBadge(primary);
+                    return badge ? (
+                      <span className="badge" style={{ backgroundColor: badge.bg, color: '#fff', fontSize: '10px', fontWeight: '500' }}>
+                        {badge.label}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Other holders */}
-          {others.length > 0 && (
-            <div style={{ marginBottom: '15px' }}>
-              <span style={{ color: '#999', fontSize: '12px' }}>
-                Other Holder{others.length !== 1 ? 's' : ''}
-              </span>
-              {others.map((h, i) => (
-                <div key={i} style={{ fontWeight: '500' }}>
-                  {h.title ? `${h.title} ` : ''}{h.name}
+              {others.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  <span style={{ color: '#999', fontSize: '12px' }}>
+                    Other Holder{others.length !== 1 ? 's' : ''}
+                  </span>
+                  {others.map((h, i) => {
+                    const badge = getMatchBadge(h);
+                    return (
+                      <div key={i} style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                        <span>{h.title ? `${h.title} ` : ''}{h.name}</span>
+                        {badge && (
+                          <span className="badge" style={{ backgroundColor: badge.bg, color: '#fff', fontSize: '10px', fontWeight: '500' }}>
+                            {badge.label}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
           {/* Contact */}
           <div className="row" style={{ marginTop: '15px' }}>
@@ -532,30 +579,30 @@ const handleWipeConfirm = async () => {
             </div>
           </div>
           {/* Insurance policies link — shown when the primary holder has policies */}
-{primary && primary.policy_count > 0 && (
-  <div style={{
-    backgroundColor: '#eaf7ed',
-    padding: '12px 15px',
-    borderRadius: '8px',
-    marginTop: '15px',
-    borderLeft: '4px solid #2a9d36'
-  }}>
-    <div style={{ fontSize: '12px', color: '#2a9d36', fontWeight: '600', marginBottom: '8px' }}>
-      📄 Insurance Policies
-    </div>
-    <div style={{ fontSize: '13px', color: '#555', marginBottom: '10px' }}>
-      This client also holds <strong>{primary.policy_count}</strong> insurance
-      {primary.policy_count !== 1 ? ' policies' : ' policy'}.
-    </div>
-    <Link
-      to={`/clients?search=${encodeURIComponent(primary.phone || primary.email || primary.name)}`}
-      className="btn btn-sm"
-      style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none' }}
-    >
-      View Client on Clients Page
-    </Link>
-  </div>
-)}
+            {primary && primary.policy_count > 0 && (
+              <div style={{
+                backgroundColor: '#eaf7ed',
+                padding: '12px 15px',
+                borderRadius: '8px',
+                marginTop: '15px',
+                borderLeft: '4px solid #2a9d36'
+              }}>
+                <div style={{ fontSize: '12px', color: '#2a9d36', fontWeight: '600', marginBottom: '8px' }}>
+                  📄 Insurance Policies
+                </div>
+                <div style={{ fontSize: '13px', color: '#555', marginBottom: '10px' }}>
+                  This client also holds <strong>{primary.policy_count}</strong> insurance
+                  {primary.policy_count !== 1 ? ' policies' : ' policy'}.
+                </div>
+                <Link
+                  to={`/clients?search=${encodeURIComponent(primary.phone || primary.email || primary.name)}`}
+                  className="btn btn-sm"
+                  style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none' }}
+                >
+                  View Client on Clients Page
+                </Link>
+              </div>
+            )}
         </div>
       ),
       
