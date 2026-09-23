@@ -727,7 +727,7 @@ useEffect(() => {
                     </div>
                   </div>
                   <span className="kpi-sub">
-                    {mmfStats?.distinctClients ?? 0} clients · {mmfStats?.holderRows ?? 0} holder links
+                    {mmfStats?.accounts ?? 0} accounts held by {mmfStats?.distinctClients ?? 0} clients
                   </span>
                 </div>
               </div>

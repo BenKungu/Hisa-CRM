@@ -651,14 +651,14 @@ const handleWipeConfirm = async () => {
                 >
                   <Upload size={16} className="me-1" /> Update MMF Accounts
                 </button>
-                <button
+                {/* <button
                   className="btn btn-outline-danger"
                   onClick={() => setShowWipePanel(true)}
                   style={{ fontSize: '12px' }}
                   title="TEMPORARY — remove after MMF re-import"
                 >
                   ⚠ Wipe MMF Data
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
