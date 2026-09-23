@@ -217,10 +217,6 @@ useEffect(() => {
               alfredClientIds.add(p.client_id);
             }
           });
-          // MMF holders count as Alfred's clients (MMF is hardcoded to him).
-          // Pull the holder client_ids from the MMF side via a lightweight fetch:
-          // before mmfStats is fetched. So we fall back to the client-side enriched
-          // mmf_count, which is still accurate for the union.
           clients.forEach((c: any) => {
             if ((c.mmf_count || 0) > 0) {
               alfredClientIds.add(c.id);
