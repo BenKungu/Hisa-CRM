@@ -51,4 +51,15 @@ getWhitelist: async (): Promise<any> => {
       throw error.response?.data || { error: 'Failed to remove from whitelist' };
     }
   },
+
+  mmfWipe: async (confirm: boolean = false): Promise<any> => {
+    try {
+      const response = await apiClient.post(`/admin/mmf-wipe?confirm=${confirm}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to wipe MMF data' };
+    }
+  },
+
+  
 };

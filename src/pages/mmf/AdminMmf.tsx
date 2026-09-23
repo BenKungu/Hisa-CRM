@@ -12,6 +12,7 @@ import {
 } from 'react-feather';
 import { mmfService } from '../../services/mmf';
 import { policyService } from '../../services/policy';
+import { adminService } from '../../services/admin';
 
 // ============================================================================
 // TYPES
@@ -63,6 +64,15 @@ const AdminMmf = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+
+  //state - cleam mmf
+
+  const [wipeState, setWipeState] = useState<{
+  stage: 'idle' | 'preview' | 'confirm' | 'wiping' | 'done';
+  preview?: any;
+  error?: string;
+  }>({ stage: 'idle' });
+  const [showWipePanel, setShowWipePanel] = useState(false);
 
   // --------------------------------------------------------------------------
   // State – view modal
@@ -141,6 +151,32 @@ const AdminMmf = () => {
   useEffect(() => {
     loadMmfAccounts();
   }, []);
+
+  const handleWipePreview = async () => {
+  setWipeState({ stage: 'preview' });
+  try {
+    const res = await adminService.mmfWipe(false);
+    if (res.success) setWipeState({ stage: 'confirm', preview: res.preview });
+    else setWipeState({ stage: 'idle', error: res.error });
+  } catch (err: any) {
+    setWipeState({ stage: 'idle', error: err.error || 'Preview failed' });
+  }
+};
+
+const handleWipeConfirm = async () => {
+  setWipeState({ stage: 'wiping' });
+  try {
+    const res = await adminService.mmfWipe(true);
+    if (res.success) {
+      setWipeState({ stage: 'done', preview: res.deleted });
+      await loadMmfAccounts();
+    } else {
+      setWipeState({ stage: 'idle', error: res.error });
+    }
+  } catch (err: any) {
+    setWipeState({ stage: 'idle', error: err.error || 'Wipe failed' });
+  }
+};
 
   // ==========================================================================
   // HANDLERS – Upload / Import
@@ -562,11 +598,19 @@ const AdminMmf = () => {
               </div>
               <div className="col-sm-5 text-end">
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary me-2"
                   onClick={() => setUploadModalOpen(true)}
                   style={{ backgroundColor: '#2a9d36', borderColor: '#2a9d36' }}
                 >
                   <Upload size={16} className="me-1" /> Update MMF Accounts
+                </button>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => setShowWipePanel(true)}
+                  style={{ fontSize: '12px' }}
+                  title="TEMPORARY — remove after MMF re-import"
+                >
+                  ⚠ Wipe MMF Data
                 </button>
               </div>
             </div>
@@ -920,6 +964,103 @@ const AdminMmf = () => {
           </div>
         </div>
       )}
+
+{showWipePanel && (
+  <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '520px' }}>
+      <div className="modal-content">
+        <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
+          <h5 className="modal-title" style={{ color: '#fff' }}>⚠ Wipe All MMF Data</h5>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => { setShowWipePanel(false); setWipeState({ stage: 'idle' }); }}
+            style={{ filter: 'brightness(0) invert(1)' }}
+            disabled={wipeState.stage === 'wiping'}
+          />
+        </div>
+        <div className="modal-body" style={{ padding: '25px' }}>
+
+          {wipeState.stage === 'idle' && (
+            <>
+              <p>This will permanently delete:</p>
+              <ul>
+                <li>All MMF accounts</li>
+                <li>All MMF holder links</li>
+                <li>All clients with no insurance policies (MMF-only clients)</li>
+              </ul>
+              <p className="text-danger"><strong>Insurance clients and policies are not touched.</strong></p>
+              {wipeState.error && <div className="alert alert-danger">{wipeState.error}</div>}
+              <button
+                className="btn w-100"
+                onClick={handleWipePreview}
+                style={{ backgroundColor: '#c70e2a', color: '#fff' }}
+              >
+                Preview Counts
+              </button>
+            </>
+          )}
+
+          {wipeState.stage === 'preview' && (
+            <p className="text-center">Calculating...</p>
+          )}
+
+          {wipeState.stage === 'confirm' && wipeState.preview && (
+            <>
+              <p>About to delete:</p>
+              <ul>
+                <li><strong>{wipeState.preview.mmfHoldersToDelete}</strong> MMF holder links</li>
+                <li><strong>{wipeState.preview.mmfAccountsToDelete}</strong> MMF accounts</li>
+                <li><strong>{wipeState.preview.mmfOnlyClientsToDelete}</strong> MMF-only clients</li>
+              </ul>
+              <p className="text-danger"><strong>This cannot be undone.</strong></p>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-secondary flex-fill"
+                  onClick={() => setWipeState({ stage: 'idle' })}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn flex-fill"
+                  onClick={handleWipeConfirm}
+                  style={{ backgroundColor: '#c70e2a', color: '#fff' }}
+                >
+                  Yes, Wipe Now
+                </button>
+              </div>
+            </>
+          )}
+
+          {wipeState.stage === 'wiping' && (
+            <p className="text-center">Wiping... please wait.</p>
+          )}
+
+          {wipeState.stage === 'done' && wipeState.preview && (
+            <>
+              <p className="text-success"><strong>Wipe complete.</strong></p>
+              <ul>
+                <li>{wipeState.preview.deletedHolders} holder links deleted</li>
+                <li>{wipeState.preview.deletedAccounts} accounts deleted</li>
+                <li>{wipeState.preview.deletedClients} clients deleted</li>
+              </ul>
+              <p>You can now re-import the MMF file.</p>
+              <button
+                className="btn w-100"
+                onClick={() => { setShowWipePanel(false); setWipeState({ stage: 'idle' }); }}
+                style={{ backgroundColor: '#c70e2a', color: '#fff' }}
+              >
+                Close
+              </button>
+            </>
+          )}
+
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </>
   );
 };
