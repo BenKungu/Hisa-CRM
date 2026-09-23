@@ -17,6 +17,7 @@ import { authService } from '../../services/auth';
 import Header from '../header';
 import SidebarNav from '../sidebar';
 import { dashboardService } from '../../services/dashboard';
+import { mmfService } from '../../services/mmf';
 
 // ============================================================================
 // TYPES
@@ -84,6 +85,8 @@ const AdminDashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [performance, setPerformance] = useState<{ years: number[]; actual: number[]; potential: number[] } | null>(null);
 
+  const [mmfStats, setMmfStats] = useState<{ accounts: number; holderRows: number; distinctClients: number } | null>(null);
+
   useEffect(() => {
     const userData = authService.getCurrentUser();
     if (userData) {
@@ -101,6 +104,18 @@ const AdminDashboard = () => {
     }
   };
   loadPerformance();
+}, []);
+
+useEffect(() => {
+  const loadMmfStats = async () => {
+    try {
+      const res = await mmfService.getMmfStats();
+      if (res.success) setMmfStats(res.data);
+    } catch (err) {
+      console.error('MMF stats fetch failed:', err);
+    }
+  };
+  loadMmfStats();
 }, []);
 
   // ==========================================================================
@@ -202,6 +217,10 @@ const AdminDashboard = () => {
               alfredClientIds.add(p.client_id);
             }
           });
+          // MMF holders count as Alfred's clients (MMF is hardcoded to him).
+          // Pull the holder client_ids from the MMF side via a lightweight fetch:
+          // before mmfStats is fetched. So we fall back to the client-side enriched
+          // mmf_count, which is still accurate for the union.
           clients.forEach((c: any) => {
             if ((c.mmf_count || 0) > 0) {
               alfredClientIds.add(c.id);
@@ -704,16 +723,16 @@ const AdminDashboard = () => {
                     <div>
                       <span className="kpi-label">MMF Accounts</span>
                       <h3 className="kpi-value" style={{ color: '#6f42c1' }}>
-                        {stats.mmfAccounts}
+                        {mmfStats?.accounts ?? 0}
                       </h3>
                     </div>
                     <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #f3e8ff 0%, #d8b4fe 100%)' }}>
                       <DollarSign size={20} color="#6f42c1" />
                     </div>
                   </div>
-                  <div className="mt-2">
-                    <span className="kpi-sub">Money Market Fund</span>
-                  </div>
+                  <span className="kpi-sub">
+                    {mmfStats?.distinctClients ?? 0} clients · {mmfStats?.holderRows ?? 0} holder links
+                  </span>
                 </div>
               </div>
             </div>

@@ -21,4 +21,14 @@ export const mmfService = {
       throw error.response?.data || { error: 'Failed to export MMF' };
     }
   },
+
+  getMmfStats: async (): Promise<any> => {
+    try {
+      const response = await apiClient.get('/mmf/stats');
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Failed to get MMF stats' };
+    }
+  },
+
 };
