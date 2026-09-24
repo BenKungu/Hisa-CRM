@@ -1,3 +1,4 @@
+
 export const all_routes = {
  // Admin
 
@@ -23,5 +24,7 @@ adminLockscreen: "/lockscreen",
 adminMmf: "/mmf",
 searchResults: "/search",
 adminOutlook: "/outlook",
+adminPolicyTypes: "/policy-types",
+newApplication: "/new-application"
 
 };

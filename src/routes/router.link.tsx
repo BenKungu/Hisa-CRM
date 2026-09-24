@@ -19,6 +19,7 @@ const AdminMmf = lazy(() => import('../pages/mmf/AdminMmf'));
 const AdminOTP = lazy(() => import("../pages/otp"));
 const AdminWhitelist = lazy(() => import("../pages/whitelist"));
 const AdminResetPassword = lazy(() => import("../pages/reset-password"));
+const NewApplication = lazy(() => import("../pages/newapplication"));
 
 const route = all_routes;
 
@@ -209,5 +210,18 @@ export const authRoutes = [
   route: Route,
   meta_title: "Search Results",
 },
+
+{
+  path: "/new-application",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewApplication />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "New Application",
+},
+
+
 
 ];
