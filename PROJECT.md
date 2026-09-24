@@ -1,7 +1,6 @@
 # Hisa CRM — Project Reference
 
-> Keep this file updated as the project evolves. It exists so that any
-> new session (with any AI or any developer) can understand the project
+> Keep this file updated as the project evolves. It exists so that any developer can understand the project
 > without re-explaining it from scratch.
 
 ---

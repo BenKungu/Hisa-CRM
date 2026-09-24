@@ -1,6 +1,5 @@
 # Hisa CRM — Session Context
 
-> Paste this at the start of any new AI session. Keep it under a page.
 > Full detail lives in PROJECT.md.
 
 ---
