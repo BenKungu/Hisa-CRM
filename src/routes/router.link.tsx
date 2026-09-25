@@ -20,7 +20,9 @@ const AdminOTP = lazy(() => import("../pages/otp"));
 const AdminWhitelist = lazy(() => import("../pages/whitelist"));
 const AdminResetPassword = lazy(() => import("../pages/reset-password"));
 const NewApplication = lazy(() => import("../pages/newapplication"));
-
+const ApplicationDocuments = lazy(() => import("../pages/newapplication/ApplicationDocument"));
+const ApplicationPreview = lazy(() => import("../pages/newapplication/ApplicationPreview"));
+const ApplicationSuccess = lazy(() => import("../pages/newapplication/ApplicationSuccess"));
 const route = all_routes;
 
 const suspenseFallback = <div></div>;
@@ -222,6 +224,35 @@ export const authRoutes = [
   meta_title: "New Application",
 },
 
-
+{
+  path: "/applications/:id/documents",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApplicationDocuments />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Application Documents",
+},
+{
+  path: "/applications/:id/preview",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApplicationPreview />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Application Preview",
+},
+{
+  path: "/applications/:id/success",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApplicationSuccess />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Application Submitted",
+},
 
 ];
