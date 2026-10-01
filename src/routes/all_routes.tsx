@@ -25,6 +25,7 @@ adminMmf: "/mmf",
 searchResults: "/search",
 adminOutlook: "/outlook",
 adminPolicyTypes: "/policy-types",
-newApplication: "/new-application"
+newApplication: "/new-application",
+applications: "/applications",
 
 };

@@ -18,6 +18,7 @@ import {
 } from "react-feather";
 
 import { all_routes } from "../../routes/all_routes";
+import Applications from "../applications";
 
 const SidebarNav = () => {
 
@@ -129,6 +130,11 @@ const SidebarNav = () => {
                 <li className={pathname?.includes("policies") ? "active" : ""}>
                   <Link to="/policy-types">
                     <FileText size={16} /> <span>Types</span>
+                  </Link>
+                </li>
+                <li className={pathname?.includes("applications") ? "active" : ""}>
+                  <Link to="/applications">
+                    <FileText size={16} /> <span>Applications</span>
                   </Link>
                 </li>
                 <li className="menu-title">
