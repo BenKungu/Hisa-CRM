@@ -72,7 +72,6 @@ const ApplicationDocuments = () => {
   const [application, setApplication] = useState<any>(null);
   const [rows, setRows] = useState<DocRow[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [nextBusy, setNextBusy] = useState(false);
 
   // Keep a ref of rows so the file input onChange handler sees latest state
   const rowsRef = useRef<DocRow[]>([]);
@@ -384,7 +383,7 @@ const ApplicationDocuments = () => {
                       type="button"
                       className="btn btn-primary submit-btn"
                       onClick={handleNext}
-                      disabled={uploadedCount === 0 || nextBusy}
+                      disabled={uploadedCount === 0}
                     >
                       Next
                     </button>
