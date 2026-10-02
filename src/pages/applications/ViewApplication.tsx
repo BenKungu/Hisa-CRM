@@ -257,7 +257,7 @@ const ViewApplication = () => {
             </div>
           </div>
 
-          {/* Agent + Dates + Sales Branch */}
+                    {/* Agent + Dates */}
           <div className="row">
             <div className="col-lg-6">
               <div className="card">
@@ -307,35 +307,46 @@ const ViewApplication = () => {
                       </tr>
                       <tr>
                         <td>
-                          <strong>Direct Debit Date</strong>
+                          <strong>Direct Debit</strong>
                         </td>
                         <td>{formatDate(application.direct_debit_date)}</td>
                       </tr>
-                                            <tr>
-                        <td>
-                          <strong>Submitted At</strong>
-                        </td>
-                        <td>
-                          {application.submitted_at
-                            ? new Date(
-                                application.submitted_at
-                              ).toLocaleString("en-GB")
-                            : "—"}
-                        </td>
-                      </tr>
                       <tr>
                         <td>
-                          <strong>Submitted By</strong>
+                          <strong>Submitted</strong>
                         </td>
                         <td>
-                          {application.created_by_user
-                            ? `${
-                                application.created_by_user.first_name || ""
-                              } ${
-                                application.created_by_user.last_name || ""
-                              }`.trim() ||
-                              application.created_by_user.email
-                            : "—"}
+                          {application.submitted_at ? (
+                            <>
+                              {new Date(
+                                application.submitted_at
+                              ).toLocaleString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              })}
+                              {application.created_by_user && (
+                                <>
+                                  {" by "}
+                                  <strong>
+                                    {`${
+                                      application.created_by_user
+                                        .first_name || ""
+                                    } ${
+                                      application.created_by_user
+                                        .last_name || ""
+                                    }`.trim() ||
+                                      application.created_by_user.email}
+                                  </strong>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                       </tr>
                     </tbody>
@@ -368,11 +379,18 @@ const ViewApplication = () => {
                       className="mb-4 pb-4"
                       style={{ borderBottom: "1px solid #eee" }}
                     >
-                      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                            <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                         <div>
-                          <h5 className="mb-0" style={{ fontSize: "14px" }}>
+                          <h6
+                            className="mb-0"
+                            style={{
+                              fontSize: "16px",
+                              fontWeight: "600",
+                              color: "#1a1a1a",
+                            }}
+                          >
                             {doc.doc_type}
-                          </h5>
+                          </h6>
                           <div
                             style={{
                               fontSize: "12px",
