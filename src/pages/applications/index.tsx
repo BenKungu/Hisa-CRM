@@ -6,7 +6,7 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link } from "react-router-dom";
 import Header from "../header";
-import { Search, Eye, Edit3, FileText, CheckCircle } from "react-feather";
+import { Search, Eye, Edit3, FileText, CheckCircle, Trash2 } from "react-feather";
 import apiClient from "../../services/api";
 
 interface ApplicationRow {
@@ -90,6 +90,23 @@ const ApplicationsList = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loadApplications();
+  };
+
+  const handleDelete = async (app: ApplicationRow) => {
+    const confirmed = window.confirm(
+      `Delete draft application ${app.reference}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiClient.delete(`/applications/${app.id}`);
+      setApplications((prev) => prev.filter((a) => a.id !== app.id));
+    } catch (err: any) {
+      alert(
+        err.response?.data?.error ||
+          "Failed to delete. Only drafts can be deleted."
+      );
+    }
   };
 
   // ============ TABLE COLUMNS ============
@@ -252,13 +269,13 @@ const ApplicationsList = () => {
           </span>
         ),
     },
-    {
+        {
       title: "",
       dataIndex: "",
-      width: 80,
+      width: 110,
       className: "text-end",
       render: (_: any, record: ApplicationRow) => (
-        <div className="text-end">
+        <div className="text-end d-flex gap-1 justify-content-end">
           {record.status === "submitted" ? (
             <Link
               to={`/applications/${record.id}`}
@@ -277,22 +294,41 @@ const ApplicationsList = () => {
               <Eye size={13} />
             </Link>
           ) : (
-            <Link
-              to={`/applications/${record.id}/documents`}
-              title="Continue"
-              style={{
-                backgroundColor: "#fd7e14",
-                color: "#fff",
-                border: "none",
-                padding: "3px 7px",
-                borderRadius: "4px",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-              }}
-            >
-              <Edit3 size={13} />
-            </Link>
+            <>
+              <Link
+                to={`/applications/${record.id}/documents`}
+                title="Continue"
+                style={{
+                  backgroundColor: "#fd7e14",
+                  color: "#fff",
+                  border: "none",
+                  padding: "3px 7px",
+                  borderRadius: "4px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                <Edit3 size={13} />
+              </Link>
+              <button
+                type="button"
+                title="Delete draft"
+                onClick={() => handleDelete(record)}
+                style={{
+                  backgroundColor: "#c70e2a",
+                  color: "#fff",
+                  border: "none",
+                  padding: "3px 7px",
+                  borderRadius: "4px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <Trash2 size={13} />
+              </button>
+            </>
           )}
         </div>
       ),

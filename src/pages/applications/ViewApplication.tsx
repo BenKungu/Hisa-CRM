@@ -15,6 +15,12 @@ interface DocumentWithUrl {
   viewUrl: string | null;
 }
 
+interface CreatedByUser {
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+}
+
 const isImage = (mime: string | null) =>
   !!mime && mime.startsWith("image/");
 
@@ -311,7 +317,7 @@ const ViewApplication = () => {
                         </td>
                         <td>{formatDate(application.direct_debit_date)}</td>
                       </tr>
-                      <tr>
+                                            <tr>
                         <td>
                           <strong>Submitted At</strong>
                         </td>
@@ -320,6 +326,21 @@ const ViewApplication = () => {
                             ? new Date(
                                 application.submitted_at
                               ).toLocaleString("en-GB")
+                            : "—"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Submitted By</strong>
+                        </td>
+                        <td>
+                          {application.created_by_user
+                            ? `${
+                                application.created_by_user.first_name || ""
+                              } ${
+                                application.created_by_user.last_name || ""
+                              }`.trim() ||
+                              application.created_by_user.email
                             : "—"}
                         </td>
                       </tr>
@@ -355,9 +376,9 @@ const ViewApplication = () => {
                     >
                       <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                         <div>
-                          <h6 className="mb-0" style={{ fontSize: "14px" }}>
+                          <h5 className="mb-0" style={{ fontSize: "14px" }}>
                             {doc.doc_type}
-                          </h6>
+                          </h5>
                           <div
                             style={{
                               fontSize: "12px",
