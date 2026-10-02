@@ -25,6 +25,7 @@ const ApplicationPreview = lazy(() => import("../pages/newapplication/Applicatio
 const ApplicationSuccess = lazy(() => import("../pages/newapplication/ApplicationSuccess"));
 const ApplicationsList = lazy(() => import("../pages/applications"));
 const ViewApplication = lazy(() => import("../pages/applications/ViewApplication"));
+const VerifyPage = lazy(() => import("../pages/verify"));
 const route = all_routes;
 
 const suspenseFallback = <div></div>;
@@ -121,6 +122,19 @@ export const publicRoutes = [
 ];
 
 export const authRoutes = [
+
+  {
+    id: "verify",
+    path: "/verify/:token",
+    element: (
+      <Suspense fallback={<div></div>}>
+        <VerifyPage />
+      </Suspense>
+    ),
+    route: Route,
+    meta_title: "Verify Application",
+  },
+  
   {
     id: "1",
     path: route.adminLogin,
