@@ -6,7 +6,7 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link } from "react-router-dom";
 import Header from "../header";
-import { Search, FileText, CheckCircle, XCircle, } from 'react-feather';
+import { Search, FileText, CheckCircle, XCircle, Eye} from 'react-feather';
 import { policyService } from '../../services/policy';
 
 interface PolicyType {
@@ -332,7 +332,7 @@ const AdminPolicyTypes = () => {
             title="View Details"
             style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
           >
-            <FileText size={13} />
+            <Eye size={13} />
           </button>
         </div>
       ),

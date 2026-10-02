@@ -24,6 +24,7 @@ const ApplicationDocuments = lazy(() => import("../pages/newapplication/Applicat
 const ApplicationPreview = lazy(() => import("../pages/newapplication/ApplicationPreview"));
 const ApplicationSuccess = lazy(() => import("../pages/newapplication/ApplicationSuccess"));
 const ApplicationsList = lazy(() => import("../pages/applications"));
+const ViewApplication = lazy(() => import("../pages/applications/ViewApplication"));
 const route = all_routes;
 
 const suspenseFallback = <div></div>;
@@ -265,6 +266,17 @@ export const authRoutes = [
   ),
   route: Route,
   meta_title: "Application Submitted",
+},
+
+{
+  path: "/applications/:id",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ViewApplication />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "View Application",
 },
 
 ];

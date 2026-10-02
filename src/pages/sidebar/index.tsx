@@ -14,11 +14,11 @@ import {
   Lock, 
   CheckCircle,
   RefreshCw,
+  Box,
   DollarSign,      
 } from "react-feather";
 
 import { all_routes } from "../../routes/all_routes";
-import Applications from "../applications";
 
 const SidebarNav = () => {
 
@@ -129,7 +129,7 @@ const SidebarNav = () => {
                 </li>
                 <li className={pathname?.includes("policies") ? "active" : ""}>
                   <Link to="/policy-types">
-                    <FileText size={16} /> <span>Types</span>
+                    <Box size={16} /> <span>Products</span>
                   </Link>
                 </li>
                 <li className={pathname?.includes("applications") ? "active" : ""}>
