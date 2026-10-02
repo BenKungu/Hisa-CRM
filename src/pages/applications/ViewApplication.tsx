@@ -15,12 +15,6 @@ interface DocumentWithUrl {
   viewUrl: string | null;
 }
 
-interface CreatedByUser {
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-}
-
 const isImage = (mime: string | null) =>
   !!mime && mime.startsWith("image/");
 
