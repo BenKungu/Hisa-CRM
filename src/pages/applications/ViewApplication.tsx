@@ -330,24 +330,6 @@ const ViewApplication = () => {
             </div>
           </div>
 
-          {/* Notes */}
-          {application.notes && (
-            <div className="row">
-              <div className="col-12">
-                <div className="card">
-                  <div className="card-header">
-                    <h5 className="card-title mb-0">Notes</h5>
-                  </div>
-                  <div className="card-body">
-                    <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
-                      {application.notes}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Documents */}
           <div className="row">
             <div className="col-12">

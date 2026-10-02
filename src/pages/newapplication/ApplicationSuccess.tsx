@@ -76,10 +76,10 @@ const ApplicationSuccess = () => {
                       Start Another Application
                     </Link>
                     <Link
-                      to="/admin-dashboard"
+                      to="/applications"
                       className="btn btn-outline-secondary"
                     >
-                      Back to Dashboard
+                      View Applications
                     </Link>
                   </div>
                 </div>
