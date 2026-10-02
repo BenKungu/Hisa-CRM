@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import SidebarNav from "../sidebar";
 import Header from "../header";
 import apiClient from "../../services/api";
+import { Trash2 } from "react-feather";
 
 const DEFAULT_DOC_TYPES = [
   "Application Form",
@@ -193,6 +194,25 @@ const ApplicationDocuments = () => {
     updateRow(rowId, { doc_type: value });
   };
 
+    const handleDeleteDraft = async () => {
+    if (!id) return;
+
+    const confirmed = window.confirm(
+      `Delete this draft application (${application?.reference})? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiClient.delete(`/applications/${id}`);
+      navigate("/applications");
+    } catch (err: any) {
+      alert(
+        err.response?.data?.error ||
+          "Failed to delete. Only drafts can be deleted."
+      );
+    }
+  };
+
   const handleNext = () => {
     if (uploadedCount === 0) {
       setError("Upload at least one document before continuing.");
@@ -227,19 +247,29 @@ const ApplicationDocuments = () => {
       <SidebarNav />
       <div className="page-wrapper">
         <div className="content container-fluid">
-          <div className="page-header">
-            <div className="row">
-              <div className="col-sm-12">
+                    <div className="page-header">
+            <div className="row align-items-center">
+              <div className="col-sm-8">
                 <h3 className="page-title">Application Documents</h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
                   </li>
                   <li className="breadcrumb-item">
-                    <Link to="/new-application">New Application</Link>
+                    <Link to="/applications">Applications</Link>
                   </li>
                   <li className="breadcrumb-item active">Documents</li>
                 </ul>
+              </div>
+              <div className="col-sm-4 text-end">
+                <button
+                  type="button"
+                  className="btn btn-outline-danger btn-sm"
+                  onClick={handleDeleteDraft}
+                >
+                  <Trash2 size={13} className="me-1" />
+                  Delete Draft
+                </button>
               </div>
             </div>
           </div>
