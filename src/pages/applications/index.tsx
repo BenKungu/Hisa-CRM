@@ -143,6 +143,21 @@ const ApplicationsList = () => {
       ),
     },
     {
+      title: "Agent",
+      dataIndex: "agent_name",
+      width: 180,
+      render: (_: any, record: ApplicationRow) => (
+        <div>
+          <div style={{ fontSize: "13px" }}>{record.agent_name || "—"}</div>
+          {record.agent_code && (
+            <div style={{ fontSize: "11px", color: "#888" }}>
+              {record.agent_code}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       title: "Premium",
       dataIndex: "premium_amount",
       width: 160,
