@@ -281,9 +281,9 @@ const ViewApplication = () => {
                       </tr>
                       <tr>
                         <td>
-                          <strong>Sales Branch</strong>
+                          <strong>Company</strong>
                         </td>
-                        <td>{application.sales_branch || "—"}</td>
+                        <td>Hisa Africa</td>
                       </tr>
                     </tbody>
                   </table>
