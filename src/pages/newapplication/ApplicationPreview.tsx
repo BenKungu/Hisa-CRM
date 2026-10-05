@@ -173,10 +173,6 @@ const ApplicationPreview = () => {
                             ).toLocaleDateString()
                           : "—"}
                       </p>
-                      <p>
-                        <strong>Sales Branch:</strong>{" "}
-                        {application?.sales_branch || "—"}
-                      </p>
                     </div>
                   </div>
                   {application?.notes && (
