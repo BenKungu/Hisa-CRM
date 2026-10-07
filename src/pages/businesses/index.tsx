@@ -21,6 +21,8 @@ interface Policy {
   policy_number: string;
   client_name: string;
   full_name: string;
+  first_name: string;
+  last_name: string;
   client_id: string;
   client_id_no: string;
   title: string;
@@ -612,16 +614,29 @@ const AdminBusinesses = () => {
       });
     }
 
-    // Free-text search
+    // Free-text search (tokenized — all words must match somewhere)
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.policy_number?.toLowerCase().includes(search) ||
-        item.full_name?.toLowerCase().includes(search) ||
-        item.client_name?.toLowerCase().includes(search) ||
-        item.product_type?.toLowerCase().includes(search) ||
-        item.policy_status?.toLowerCase().includes(search) ||
-        item.agent_name?.toLowerCase().includes(search)
+      const tokens = searchTerm
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((t) => t.length > 0);
+
+      filtered = filtered.filter((item) =>
+        tokens.every((token) => {
+          return (
+            item.policy_number?.toLowerCase().includes(token) ||
+            item.full_name?.toLowerCase().includes(token) ||
+            item.client_name?.toLowerCase().includes(token) ||
+            item.first_name?.toLowerCase?.().includes(token) ||
+            item.last_name?.toLowerCase?.().includes(token) ||
+            item.client_id_no?.toLowerCase?.().includes(token) ||
+            item.product_type?.toLowerCase().includes(token) ||
+            item.policy_status?.toLowerCase().includes(token) ||
+            item.agent_name?.toLowerCase().includes(token) ||
+            item.agent_code?.toLowerCase?.().includes(token)
+          );
+        })
       );
     }
 

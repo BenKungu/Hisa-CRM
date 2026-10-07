@@ -511,16 +511,26 @@ if (filters.dobFilter.type !== 'none')  {
 
     // Free-text search (name / ID / email / phone)
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(item => {
-        const matchesText =
-          item.client_name?.toLowerCase().includes(search) ||
-          item.full_name?.toLowerCase().includes(search) ||
-          item.id_no?.toLowerCase().includes(search) ||
-          item.email?.toLowerCase().includes(search);
-        if (matchesText) return true;
-        if (item.phone_no && phoneMatches(item.phone_no, searchTerm)) return true;
-        return false;
+      const tokens = searchTerm
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((t) => t.length > 0);
+
+      filtered = filtered.filter((item) => {
+        return tokens.every((token) => {
+          const inName =
+            item.client_name?.toLowerCase().includes(token) ||
+            item.full_name?.toLowerCase().includes(token) ||
+            item.first_name?.toLowerCase().includes(token) ||
+            item.last_name?.toLowerCase().includes(token);
+          const inId = item.id_no?.toLowerCase().includes(token);
+          const inEmail = item.email?.toLowerCase().includes(token);
+          const inPhone = item.phone_no
+            ? phoneMatches(item.phone_no, token)
+            : false;
+          return inName || inId || inEmail || inPhone;
+        });
       });
     }
 
