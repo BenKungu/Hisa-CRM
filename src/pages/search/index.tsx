@@ -16,11 +16,12 @@ interface SearchResult {
 const SearchResults = () => {
   const location = useLocation();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{
+    const [results, setResults] = useState<{
     clients: SearchResult[];
     policies: SearchResult[];
     agents: SearchResult[];
-    mmf: SearchResult[]; 
+    mmf: SearchResult[];
+    applications: SearchResult[];
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,12 +52,13 @@ const SearchResults = () => {
     }
   };
 
-  const totalResults = () => {
+    const totalResults = () => {
     if (!results) return 0;
     return (results.clients?.length || 0) + 
            (results.policies?.length || 0) + 
            (results.agents?.length || 0) + 
-           (results.mmf?.length || 0);
+           (results.mmf?.length || 0) +
+           (results.applications?.length || 0);
   };
 
   return (
@@ -207,6 +209,34 @@ const SearchResults = () => {
               <div style={{ fontSize: '12px', color: '#999' }}>{item.subtitle}</div>
             </div>
             <Link to={item.url} className="btn btn-sm" style={{ backgroundColor: '#475569', color: '#fff', border: 'none' }}>
+              View
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+)}
+
+{/* Applications */}
+{results.applications && results.applications.length > 0 && (
+  <div className="card mb-3">
+    <div className="card-header" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #6f42c1' }}>
+      <h5 className="card-title mb-0">
+        📝 Applications ({results.applications.length})
+      </h5>
+    </div>
+    <div className="card-body">
+      <ul className="list-group list-group-flush">
+        {results.applications.map((item) => (
+          <li key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <Link to={item.url} style={{ fontWeight: '500', color: '#6f42c1' }}>
+                {item.label}
+              </Link>
+              <div style={{ fontSize: '12px', color: '#999' }}>{item.subtitle}</div>
+            </div>
+            <Link to={item.url} className="btn btn-sm" style={{ backgroundColor: '#6f42c1', color: '#fff', border: 'none' }}>
               View
             </Link>
           </li>
