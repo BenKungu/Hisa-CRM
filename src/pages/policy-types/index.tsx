@@ -170,15 +170,21 @@ const AdminPolicyTypes = () => {
     let filtered = data;
 
     if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.product_type?.toLowerCase().includes(search)
+      const tokens = searchTerm
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((t) => t.length > 0);
+
+      filtered = filtered.filter((item) =>
+        tokens.every((token) =>
+          item.product_type?.toLowerCase().includes(token)
+        )
       );
     }
 
     return filtered;
   };
-
   const filteredData = getFilteredData();
 
   // ============ TABLE COLUMNS ============
