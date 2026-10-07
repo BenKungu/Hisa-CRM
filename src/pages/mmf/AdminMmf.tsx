@@ -281,18 +281,33 @@ const handleWipeConfirm = async () => {
 
   const getFilteredData = () => {
     if (!searchTerm) return data;
-    const s = searchTerm.toLowerCase();
-    return data.filter(a =>
-      a.member_no?.toLowerCase().includes(s) ||
-      a.raw_full_name?.toLowerCase().includes(s) ||
-      a.primary_holder?.name?.toLowerCase().includes(s) ||
-      a.primary_holder?.phone?.toLowerCase().includes(s) ||
-      a.primary_holder?.email?.toLowerCase().includes(s) ||
-      a.other_holders.some(h =>
-        h.name?.toLowerCase().includes(s) ||
-        h.phone?.toLowerCase().includes(s) ||
-        h.email?.toLowerCase().includes(s)
-      )
+
+    const tokens = searchTerm
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 0);
+
+    return data.filter((a) =>
+      tokens.every((token) => {
+        return (
+          a.member_no?.toLowerCase().includes(token) ||
+          a.raw_full_name?.toLowerCase().includes(token) ||
+          a.agent_name?.toLowerCase().includes(token) ||
+          a.agent_code?.toLowerCase().includes(token) ||
+          a.mobile_no?.toLowerCase().includes(token) ||
+          a.email?.toLowerCase().includes(token) ||
+          a.primary_holder?.name?.toLowerCase().includes(token) ||
+          a.primary_holder?.phone?.toLowerCase().includes(token) ||
+          a.primary_holder?.email?.toLowerCase().includes(token) ||
+          a.other_holders.some(
+            (h) =>
+              h.name?.toLowerCase().includes(token) ||
+              h.phone?.toLowerCase().includes(token) ||
+              h.email?.toLowerCase().includes(token)
+          )
+        );
+      })
     );
   };
 
