@@ -146,6 +146,11 @@ const SidebarNav = () => {
                     <span>Mmf</span>
                   </Link>
                 </li>
+                <li className={pathname?.includes("/om-applications") ? "active" : ""}>
+                  <Link to="/om-applications">
+                    <FileText size={16} /> <span>Applications</span>
+                  </Link>
+                </li>
                 <li className="menu-title">
                   <span>Auth</span>
                 </li>
