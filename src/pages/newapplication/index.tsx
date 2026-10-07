@@ -3,8 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import SidebarNav from "../sidebar";
 import Header from "../header";
 import apiClient from "../../services/api";
+import absaLogo from "../../assets/logos/absa-logo.png";
+import omLogo from "../../assets/logos/om-logo.png";
 
-const NewApplication = () => {
+interface NewApplicationProps {
+  provider?: "absa" | "old_mutual";
+}
+
+const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
+  const isOm = provider === "old_mutual";
+  const accent = isOm ? "#2a9d36" : "#c70e2a";
+  const providerLabel = isOm ? "Old Mutual" : "Absa";
+  const logo = isOm ? omLogo : absaLogo;
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +22,10 @@ const NewApplication = () => {
   const [agents, setAgents] = useState<{ agent_code: string; agent_name: string }[]>([]);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
-  useEffect(() => {
+    useEffect(() => {
+    // Old Mutual: agent + product are hardcoded server-side; skip loading.
+    if (isOm) return;
+
     apiClient
       .get("/policies/agents")
       .then((res) => {
@@ -33,7 +46,7 @@ const NewApplication = () => {
         setProductTypes(Array.from(types).sort());
       })
       .catch(() => setProductTypes([]));
-  }, []);
+  }, [isOm]);
 
   const [form, setForm] = useState({
     agent_name: "",
@@ -57,8 +70,11 @@ const NewApplication = () => {
     setError(null);
     setSaving(true);
 
-    try {
-      const res = await apiClient.post("/applications", form);
+        try {
+      const res = await apiClient.post("/applications", {
+        ...form,
+        provider,
+      });
       navigate(`/applications/${res.data.id}/documents`);
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to create application");
@@ -72,15 +88,40 @@ const NewApplication = () => {
       <SidebarNav />
       <div className="page-wrapper">
         <div className="content container-fluid">
-          <div className="page-header">
-            <div className="row">
-              <div className="col-sm-12">
-                <h3 className="page-title">New Application</h3>
+                    <div className="page-header">
+            <div className="row align-items-center">
+              <div className="col-sm-8">
+                <div
+                  className="d-flex align-items-center gap-3 mb-2"
+                  style={{
+                    background: "#fff",
+                    padding: "10px 16px",
+                    borderLeft: `4px solid ${accent}`,
+                    display: "inline-flex",
+                  }}
+                >
+                  <img
+                    src={logo}
+                    alt={providerLabel}
+                    style={{ maxHeight: 34, maxWidth: 90, objectFit: "contain" }}
+                  />
+                  <div>
+                    <h5
+                      className="mb-0"
+                      style={{ color: accent, fontWeight: 700 }}
+                    >
+                      {providerLabel} Application
+                    </h5>
+                  </div>
+                </div>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
                   </li>
-                  <li className="breadcrumb-item active">New Application</li>
+                  <li className="breadcrumb-item">
+                    <Link to="/new-application">New Application</Link>
+                  </li>
+                  <li className="breadcrumb-item active">{providerLabel}</li>
                 </ul>
               </div>
             </div>
@@ -93,7 +134,10 @@ const NewApplication = () => {
                   {error && <div className="alert alert-danger">{error}</div>}
 
                   <form autoComplete="off" onSubmit={handleSubmit}>
+
+                    
                     {/* Agent */}
+                    {!isOm && (
                     <div className="service-fields mb-3">
                       <div className="row">
                                                 <div className="col-lg-6">
@@ -138,6 +182,7 @@ const NewApplication = () => {
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* Client */}
                     <div className="service-fields mb-3">
@@ -225,6 +270,7 @@ const NewApplication = () => {
                     </div>
 
                     {/* Policy */}
+                    {!isOm && (
                     <div className="service-fields mb-3">
                       <div className="row">
                         <div className="col-lg-6">
@@ -268,8 +314,10 @@ const NewApplication = () => {
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* Premium */}
+                    {!isOm && (
                     <div className="service-fields mb-3">
                       <div className="row">
                         <div className="col-lg-6">
@@ -289,11 +337,18 @@ const NewApplication = () => {
                         </div>
                       </div>
                     </div>
+                    )}
+
                     <div className="submit-section">
                       <button
-                        className="btn btn-primary submit-btn"
+                        className="btn submit-btn"
                         type="submit"
                         disabled={saving}
+                        style={{
+                          backgroundColor: accent,
+                          borderColor: accent,
+                          color: "#fff",
+                        }}
                       >
                         {saving ? "Creating..." : "Next"}
                       </button>

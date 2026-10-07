@@ -26,6 +26,11 @@ const ApplicationSuccess = lazy(() => import("../pages/newapplication/Applicatio
 const ApplicationsList = lazy(() => import("../pages/applications"));
 const ViewApplication = lazy(() => import("../pages/applications/ViewApplication"));
 const VerifyPage = lazy(() => import("../pages/verify"));
+
+const ProviderChooser = lazy(() => import("../pages/newapplication/ProviderChooser"));
+const AbsaNewApplication = lazy(() => import("../pages/newapplication/AbsaNewApplication"));
+const OmNewApplication = lazy(() => import("../pages/newapplication/OmNewApplication"));
+
 const route = all_routes;
 
 const suspenseFallback = <div></div>;
@@ -233,11 +238,31 @@ export const authRoutes = [
   path: "/new-application",
   element: (
     <Suspense fallback={<div>Loading...</div>}>
-      <NewApplication />
+      <ProviderChooser />
     </Suspense>
   ),
   route: Route,
   meta_title: "New Application",
+},
+{
+  path: "/applications/absa/new",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AbsaNewApplication />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "New Absa Application",
+},
+{
+  path: "/om-applications/new",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OmNewApplication />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "New Old Mutual Application",
 },
 
 {
