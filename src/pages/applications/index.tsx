@@ -34,7 +34,6 @@ interface ApplicationsListProps {
 const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
   const isOm = provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
-  const providerLabel = isOm ? "Old Mutual" : "Absa";
   const listTitle = isOm ? "Old Mutual Applications" : "Absa Applications";
 
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
