@@ -132,7 +132,7 @@ const SidebarNav = () => {
                     <Box size={16} /> <span>Products</span>
                   </Link>
                 </li>
-                <li className={pathname?.includes("applications") ? "active" : ""}>
+                 <li className={pathname?.startsWith("/applications") ? "active" : ""}>
                   <Link to="/applications">
                     <FileText size={16} /> <span>Applications</span>
                   </Link>

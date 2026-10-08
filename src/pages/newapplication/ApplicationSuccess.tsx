@@ -6,7 +6,9 @@ import apiClient from "../../services/api";
 
 const ApplicationSuccess = () => {
   const { id } = useParams<{ id: string }>();
-  const [application, setApplication] = useState<any>(null);
+    const [application, setApplication] = useState<any>(null);
+  const isOm = application?.provider === "old_mutual";
+  const accent = isOm ? "#2a9d36" : "#c70e2a";
 
   useEffect(() => {
     if (!id) return;
@@ -26,7 +28,7 @@ const ApplicationSuccess = () => {
             <div className="col-md-8 offset-md-2">
               <div className="card">
                 <div className="card-body text-center py-5">
-                  <div
+                                    <div
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -34,7 +36,7 @@ const ApplicationSuccess = () => {
                       width: 80,
                       height: 80,
                       borderRadius: "50%",
-                      background: "#2a9d36",
+                      background: accent,
                       marginBottom: 20,
                     }}
                   >
@@ -45,8 +47,9 @@ const ApplicationSuccess = () => {
                   </div>
 
                   <h3 className="mb-2">Application Submitted</h3>
-                  <p className="text-muted mb-4">
-                    The application has been sent to Absa onboarding.
+                                    <p className="text-muted mb-4">
+                    The application has been sent to{" "}
+                    {isOm ? "Old Mutual" : "Absa"} onboarding.
                   </p>
 
                   {application && (

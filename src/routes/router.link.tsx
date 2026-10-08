@@ -19,11 +19,12 @@ const AdminMmf = lazy(() => import('../pages/mmf/AdminMmf'));
 const AdminOTP = lazy(() => import("../pages/otp"));
 const AdminWhitelist = lazy(() => import("../pages/whitelist"));
 const AdminResetPassword = lazy(() => import("../pages/reset-password"));
-const NewApplication = lazy(() => import("../pages/newapplication"));
+// const NewApplication = lazy(() => import("../pages/newapplication"));
 const ApplicationDocuments = lazy(() => import("../pages/newapplication/ApplicationDocument"));
 const ApplicationPreview = lazy(() => import("../pages/newapplication/ApplicationPreview"));
 const ApplicationSuccess = lazy(() => import("../pages/newapplication/ApplicationSuccess"));
 const ApplicationsList = lazy(() => import("../pages/applications"));
+const OmApplicationsList = lazy(() => import("../pages/applications/OmApplicationsList"));
 const ViewApplication = lazy(() => import("../pages/applications/ViewApplication"));
 const VerifyPage = lazy(() => import("../pages/verify"));
 
@@ -274,6 +275,17 @@ export const authRoutes = [
   ),
   route: Route,
   meta_title: "Applications",
+},
+
+{
+  path: "/om-applications",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OmApplicationsList />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Old Mutual Applications",
 },
 
 {

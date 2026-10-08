@@ -106,13 +106,15 @@ const ViewApplication = () => {
     );
   }
 
-  const uploadedDocs = documents.filter((d) => d.uploaded);
+    const uploadedDocs = documents.filter((d) => d.uploaded);
   const applicantName = `${application.applicant_first_name || ""} ${
     application.applicant_surname || ""
   }`.trim();
 
   const isSubmitted = application.status === "submitted";
-
+  const isOm = application.provider === "old_mutual";
+  const accent = isOm ? "#2a9d36" : "#c70e2a";
+  const providerLabel = isOm ? "Old Mutual" : "Absa";
   return (
     <>
       <Header />
@@ -124,6 +126,9 @@ const ViewApplication = () => {
             <div className="row align-items-center">
               <div className="col-sm-8">
                 <h3 className="page-title">
+                  <span style={{ color: accent, fontWeight: 600, marginRight: "12px" }}>
+                    {providerLabel}
+                  </span>
                   {application.reference}
                   <span
                     className="ms-3"

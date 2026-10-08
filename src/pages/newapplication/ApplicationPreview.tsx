@@ -79,10 +79,14 @@ const ApplicationPreview = () => {
     );
   }
 
-  const uploadedDocs = documents.filter((d) => d.uploaded);
+    const uploadedDocs = documents.filter((d) => d.uploaded);
   const applicantName = application
     ? `${application.applicant_first_name || ""} ${application.applicant_surname || ""}`.trim()
     : "";
+
+  const isOm = application?.provider === "old_mutual";
+  const accent = isOm ? "#2a9d36" : "#c70e2a";
+  const providerLabel = isOm ? "Old Mutual" : "Absa";
 
   return (
     <>
@@ -115,10 +119,16 @@ const ApplicationPreview = () => {
           <div className="row">
             <div className="col-sm-12">
               <div className="card">
-                <div className="card-header">
-                  <h5 className="card-title">
-                    Application Summary — {application?.reference}
+                                <div
+                  className="card-header"
+                  style={{ borderLeft: `4px solid ${accent}` }}
+                >
+                  <h5 className="card-title" style={{ color: accent }}>
+                    {providerLabel} Application Summary — {application?.reference}
                   </h5>
+                  <p className="card-text mb-0" style={{ fontSize: "12px", color: "#888" }}>
+                    This application will be sent to {providerLabel} onboarding on submit.
+                  </p>
                 </div>
                 <div className="card-body">
                   <div className="row">
@@ -333,13 +343,18 @@ const ApplicationPreview = () => {
                   </div>
 
                   <div className="submit-section">
-                    <button
+                                        <button
                       type="button"
-                      className="btn btn-primary submit-btn"
+                      className="btn submit-btn"
                       onClick={handleSubmit}
                       disabled={!confirmed || submitting || uploadedDocs.length === 0}
+                      style={{
+                        backgroundColor: accent,
+                        borderColor: accent,
+                        color: "#fff",
+                      }}
                     >
-                      {submitting ? "Submitting…" : "Submit to Absa"}
+                      {submitting ? "Submitting…" : `Submit to ${providerLabel}`}
                     </button>
                     <Link
                       to={`/applications/${id}/documents`}

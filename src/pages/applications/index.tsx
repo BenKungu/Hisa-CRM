@@ -27,7 +27,16 @@ interface ApplicationRow {
   uploaded_count: number;
 }
 
-const ApplicationsList = () => {
+interface ApplicationsListProps {
+  provider?: "absa" | "old_mutual";
+}
+
+const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
+  const isOm = provider === "old_mutual";
+  const accent = isOm ? "#2a9d36" : "#c70e2a";
+  const providerLabel = isOm ? "Old Mutual" : "Absa";
+  const listTitle = isOm ? "Old Mutual Applications" : "Absa Applications";
+
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -63,13 +72,13 @@ const ApplicationsList = () => {
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (statusFilter && statusFilter !== "all")
-        params.append("status", statusFilter);
+          const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    if (statusFilter && statusFilter !== "all")
+      params.append("status", statusFilter);
+    params.append("provider", provider);
 
-      const res = await apiClient.get(
-        `/applications?${params.toString()}`
+    const res = await apiClient.get(`/applications?${params.toString()}`
       );
       setApplications(res.data?.data || []);
     } catch (err: any) {
@@ -82,10 +91,10 @@ const ApplicationsList = () => {
     }
   };
 
-  useEffect(() => {
+    useEffect(() => {
     loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, provider]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -349,19 +358,19 @@ const ApplicationsList = () => {
           <div className="page-header">
             <div className="row">
               <div className="col-sm-7">
-                <h3 className="page-title">Applications</h3>
+                                <h3 className="page-title">{listTitle}</h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
                   </li>
-                  <li className="breadcrumb-item active">Applications</li>
+                   <li className="breadcrumb-item active">{listTitle}</li>
                 </ul>
               </div>
               <div className="col-sm-5 text-end">
-                <Link
+                                                <Link
                   to="/new-application"
                   className="btn btn-primary"
-                  style={{ backgroundColor: "#2a9d36", borderColor: "#2a9d36" }}
+                  style={{ backgroundColor: accent, borderColor: accent }}
                 >
                   + New Application
                 </Link>
@@ -377,7 +386,7 @@ const ApplicationsList = () => {
                 <div className="card-header">
                   <div className="row align-items-center">
                     <div className="col">
-                      <h5 className="card-title mb-0">All Applications</h5>
+                      <h5 className="card-title mb-0">{listTitle}</h5>
                       <p className="text-muted mb-0">
                         Total:{" "}
                         <strong className="text-dark">

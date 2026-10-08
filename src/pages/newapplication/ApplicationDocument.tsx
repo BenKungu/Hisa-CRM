@@ -5,15 +5,28 @@ import Header from "../header";
 import apiClient from "../../services/api";
 import { Trash2 } from "react-feather";
 
-const DEFAULT_DOC_TYPES = [
-  "Application Form",
-  "Direct Debit Form",
-  "PIN Certificate",
-  "Identification",
-  "Bank Proof",
-  "Proof of Payment",
-  "Premium Illustrator",
-];
+const DOC_TYPES_BY_PROVIDER: Record<string, string[]> = {
+  absa: [
+    "Application Form",
+    "Direct Debit Form",
+    "PIN Certificate",
+    "Identification",
+    "Bank Proof",
+    "Proof of Payment",
+    "Premium Illustrator",
+  ],
+  old_mutual: [
+    "Direct Debit",
+    "Customer Declaration",
+    "Free Cover Limit",
+    "Financial Questionnaire",
+    "Id",
+    "Pin (Kra)",
+    "Payment",
+  ],
+};
+
+const DEFAULT_DOC_TYPES = DOC_TYPES_BY_PROVIDER.absa;
 
 interface DocRow {
   rowId: string;
@@ -24,11 +37,15 @@ interface DocRow {
   error?: string;
 }
 
-const buildInitialRows = (existingDocs: any[]): DocRow[] => {
+const buildInitialRows = (
+  existingDocs: any[],
+  provider: "absa" | "old_mutual" = "absa"
+): DocRow[] => {
+  const seedTypes = DOC_TYPES_BY_PROVIDER[provider] || DOC_TYPES_BY_PROVIDER.absa;
   const rows: DocRow[] = [];
   const usedIds = new Set<string>();
 
-  DEFAULT_DOC_TYPES.forEach((type) => {
+  seedTypes.forEach((type) => {
     const match = existingDocs.find(
       (d) => d.doc_type === type && !usedIds.has(d.id)
     );
@@ -71,6 +88,7 @@ const ApplicationDocuments = () => {
 
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<any>(null);
+  const [provider, setProvider] = useState<"absa" | "old_mutual">("absa");
   const [rows, setRows] = useState<DocRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,11 +98,16 @@ const ApplicationDocuments = () => {
 
   useEffect(() => {
     if (!id) return;
-    apiClient
+        apiClient
       .get(`/applications/${id}`)
       .then((res) => {
+        const appProvider: "absa" | "old_mutual" =
+          res.data.provider === "old_mutual" ? "old_mutual" : "absa";
         setApplication(res.data);
-        setRows(buildInitialRows(res.data.documents || []));
+        setProvider(appProvider);
+        setRows(
+          buildInitialRows(res.data.documents || [], appProvider)
+        );
       })
       .catch((err) => {
         setError(err.response?.data?.error || "Failed to load application");
@@ -175,12 +198,13 @@ const ApplicationDocuments = () => {
     }
   };
 
-  const addRow = () => {
+    const addRow = () => {
+    const seedTypes = DOC_TYPES_BY_PROVIDER[provider] || DOC_TYPES_BY_PROVIDER.absa;
     setRows((prev) => [
       ...prev,
       {
         rowId: `row-${crypto.randomUUID()}`,
-        doc_type: DEFAULT_DOC_TYPES[0],
+        doc_type: seedTypes[0],
         status: "idle",
       },
     ]);
@@ -250,7 +274,15 @@ const ApplicationDocuments = () => {
                     <div className="page-header">
             <div className="row align-items-center">
               <div className="col-sm-8">
-                <h3 className="page-title">Application Documents</h3>
+                <h3
+                  className="page-title"
+                  style={{
+                    borderLeft: `4px solid ${provider === "old_mutual" ? "#2a9d36" : "#c70e2a"}`,
+                    paddingLeft: "12px",
+                  }}
+                >
+                  {provider === "old_mutual" ? "Old Mutual" : "Absa"} Application Documents
+                </h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
@@ -303,7 +335,7 @@ const ApplicationDocuments = () => {
                             <label>
                               {idx + 1}. Document Type
                             </label>
-                            <select
+                              <select
                               className="form-select"
                               value={row.doc_type}
                               onChange={(e) =>
@@ -311,7 +343,7 @@ const ApplicationDocuments = () => {
                               }
                               disabled={row.status === "uploaded"}
                             >
-                              {DEFAULT_DOC_TYPES.map((t) => (
+                              {(DOC_TYPES_BY_PROVIDER[provider] || DOC_TYPES_BY_PROVIDER.absa).map((t) => (
                                 <option key={t} value={t}>
                                   {t}
                                 </option>
@@ -409,11 +441,18 @@ const ApplicationDocuments = () => {
                   </div>
 
                   <div className="submit-section mt-4">
-                    <button
+                                        <button
                       type="button"
-                      className="btn btn-primary submit-btn"
+                      className="btn submit-btn"
                       onClick={handleNext}
                       disabled={uploadedCount === 0}
+                      style={{
+                        backgroundColor:
+                          provider === "old_mutual" ? "#2a9d36" : "#c70e2a",
+                        borderColor:
+                          provider === "old_mutual" ? "#2a9d36" : "#c70e2a",
+                        color: "#fff",
+                      }}
                     >
                       Next
                     </button>
