@@ -235,11 +235,105 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
                             />
                           </div>
                         </div>
-                      </div>
+                    {/* Premium */}
+                        <div className="col-lg-6">
+                          <div className="form-group">
+                            <label>
+                              Premium Amount <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              className="form-control"
+                              type="number"
+                              step="0.01"
+                              value={form.premium_amount}
+                              onChange={(e) => handle("premium_amount", e.target.value)}
+                              required
+                            />
+                          </div>
+                          </div>
+                          </div>
                     </div>
+                    {/* Policy / Frequency / Payment Term */}
+                    <div className="service-fields mb-3">
+                      <div className="row">
+                        {/* Policy Type — Absa only */}
+                        {!isOm && (
+                          <div className="col-lg-6">
+                            <div className="form-group">
+                              <label>
+                                Policy Type <span className="text-danger">*</span>
+                              </label>
+                              <select
+                                className="form-select"
+                                value={form.product_type}
+                                onChange={(e) => handle("product_type", e.target.value)}
+                                required
+                              >
+                                <option value="">-- Select Policy Type --</option>
+                                {productTypes.map((t) => (
+                                  <option key={t} value={t}>
+                                    {t}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        )}
 
+                        {/* Frequency — both providers */}
+                        <div className="col-lg-6">
+                          <div className="form-group">
+                            <label>
+                              Frequency <span className="text-danger">*</span>
+                            </label>
+                            <select
+                              className="form-select"
+                              value={form.premium_frequency}
+                              onChange={(e) => handle("premium_frequency", e.target.value)}
+                              required
+                            >
+                              <option value="">-- Select --</option>
+                              <option value="Monthly">Monthly</option>
+                              <option value="Quarterly">Quarterly</option>
+                              <option value="Semi-Annual">Semi-Annual</option>
+                              <option value="Annual">Annual</option>
+                            </select>
+                          </div>
+                        </div>
 
-                    {/* Dates */}
+                        {/* Payment Term — OM only, sits next to Frequency */}
+                        {isOm && (
+                          <div className="col-lg-6">
+                            <div className="form-group">
+                              <label>
+                                Payment Term <span className="text-danger">*</span>
+                              </label>
+                                                            <select
+                                className="form-select"
+                                value={form.payment_term}
+                                onChange={(e) => handle("payment_term", e.target.value)}
+                                required
+                              >
+                                <option value="">-- Select --</option>
+                                <option value="5 Years">5 Years</option>
+                                <option value="10 Years">10 Years</option>
+                                <option value="11 Years">11 Years</option>
+                                <option value="12 Years">12 Years</option>
+                                <option value="13 Years">13 Years</option>
+                                <option value="14 Years">14 Years</option>
+                                <option value="15 Years">15 Years</option>
+                                <option value="16 Years">16 Years</option>
+                                <option value="17 Years">17 Years</option>
+                                <option value="18 Years">18 Years</option>
+                                <option value="19 Years">19 Years</option>
+                                <option value="20 Years">20 Years</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>                    
+                                {/* Dates */}
                     <div className="service-fields mb-3">
                       <div className="row">
                         <div className="col-lg-6">
@@ -270,101 +364,7 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
                       </div>
                     </div>
 
-                    {/* Policy + Frequency */}
-                        <div className="service-fields mb-3">
-                          <div className="row">
-                            {!isOm && (
-                              <div className="col-lg-6">
-                                <div className="form-group">
-                                  <label>
-                                    Policy Type <span className="text-danger">*</span>
-                                  </label>
-                                  <select
-                                    className="form-select"
-                                    value={form.product_type}
-                                    onChange={(e) => handle("product_type", e.target.value)}
-                                    required
-                                  >
-                                    <option value="">-- Select Policy Type --</option>
-                                    {productTypes.map((t) => (
-                                      <option key={t} value={t}>
-                                        {t}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-                            )}
-
-                                <div className="col-lg-6">
-                                  <div className="form-group">
-                                    <label>
-                                      Frequency <span className="text-danger">*</span>
-                                    </label>
-                                    <select
-                                      className="form-select"
-                                      value={form.premium_frequency}
-                                      onChange={(e) => handle("premium_frequency", e.target.value)}
-                                      required
-                                    >
-                                      <option value="">-- Select --</option>
-                                      <option value="Monthly">Monthly</option>
-                                      <option value="Quarterly">Quarterly</option>
-                                      <option value="Semi-Annual">Semi-Annual</option>
-                                      <option value="Annual">Annual</option>
-                                    </select>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                                {/* Payment Term — OM only */}
-                                {isOm && (
-                                  <div className="service-fields mb-3">
-                                    <div className="row">
-                                      <div className="col-lg-6">
-                                        <div className="form-group">
-                                          <label>
-                                            Payment Term <span className="text-danger">*</span>
-                                          </label>
-                                          <select
-                                            className="form-select"
-                                            value={form.payment_term}
-                                            onChange={(e) => handle("payment_term", e.target.value)}
-                                            required
-                                          >
-                                            <option value="">-- Select --</option>
-                                            <option value="5 Years">5 Years</option>
-                                            <option value="10 Years">10 Years</option>
-                                            <option value="15 Years">15 Years</option>
-                                            <option value="20 Years">20 Years</option>
-                                          </select>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                    {/* Premium */}
-                    <div className="service-fields mb-3">
-                      <div className="row">
-                        <div className="col-lg-6">
-                          <div className="form-group">
-                            <label>
-                              Premium Amount <span className="text-danger">*</span>
-                            </label>
-                            <input
-                              className="form-control"
-                              type="number"
-                              step="0.01"
-                              value={form.premium_amount}
-                              onChange={(e) => handle("premium_amount", e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    
 
                     <div className="submit-section">
                       <button
