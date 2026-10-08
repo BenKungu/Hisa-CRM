@@ -48,7 +48,7 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
       .catch(() => setProductTypes([]));
   }, [isOm]);
 
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     agent_name: "",
     agent_code: "",
     first_name: "",
@@ -59,6 +59,7 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
     premium_frequency: "",
     direct_debit_date: "",
     premium_amount: "",
+    payment_term: "",
     notes: "",
   });
 
@@ -269,55 +270,82 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
                       </div>
                     </div>
 
-                    {/* Policy */}
-                    {!isOm && (
-                    <div className="service-fields mb-3">
-                      <div className="row">
-                        <div className="col-lg-6">
-                          <div className="form-group">
-                                                        <label>
-                              Policy Type <span className="text-danger">*</span>
-                            </label>
-                            <select
-                              className="form-select"
-                              value={form.product_type}
-                              onChange={(e) => handle("product_type", e.target.value)}
-                              required
-                            >
-                              <option value="">-- Select Policy Type --</option>
-                              {productTypes.map((t) => (
-                                <option key={t} value={t}>
-                                  {t}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="form-group">
-                            <label>
-                              Frequency <span className="text-danger">*</span>
-                            </label>
-                            <select
-                              className="form-select"
-                              value={form.premium_frequency}
-                              onChange={(e) => handle("premium_frequency", e.target.value)}
-                              required
-                            >
-                              <option value="">-- Select --</option>
-                              <option value="Monthly">Monthly</option>
-                              <option value="Quarterly">Quarterly</option>
-                              <option value="Semi-Annual">Semi-Annual</option>
-                              <option value="Annual">Annual</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    )}
+                    {/* Policy + Frequency */}
+                        <div className="service-fields mb-3">
+                          <div className="row">
+                            {!isOm && (
+                              <div className="col-lg-6">
+                                <div className="form-group">
+                                  <label>
+                                    Policy Type <span className="text-danger">*</span>
+                                  </label>
+                                  <select
+                                    className="form-select"
+                                    value={form.product_type}
+                                    onChange={(e) => handle("product_type", e.target.value)}
+                                    required
+                                  >
+                                    <option value="">-- Select Policy Type --</option>
+                                    {productTypes.map((t) => (
+                                      <option key={t} value={t}>
+                                        {t}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            )}
+
+                                <div className="col-lg-6">
+                                  <div className="form-group">
+                                    <label>
+                                      Frequency <span className="text-danger">*</span>
+                                    </label>
+                                    <select
+                                      className="form-select"
+                                      value={form.premium_frequency}
+                                      onChange={(e) => handle("premium_frequency", e.target.value)}
+                                      required
+                                    >
+                                      <option value="">-- Select --</option>
+                                      <option value="Monthly">Monthly</option>
+                                      <option value="Quarterly">Quarterly</option>
+                                      <option value="Semi-Annual">Semi-Annual</option>
+                                      <option value="Annual">Annual</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                                {/* Payment Term — OM only */}
+                                {isOm && (
+                                  <div className="service-fields mb-3">
+                                    <div className="row">
+                                      <div className="col-lg-6">
+                                        <div className="form-group">
+                                          <label>
+                                            Payment Term <span className="text-danger">*</span>
+                                          </label>
+                                          <select
+                                            className="form-select"
+                                            value={form.payment_term}
+                                            onChange={(e) => handle("payment_term", e.target.value)}
+                                            required
+                                          >
+                                            <option value="">-- Select --</option>
+                                            <option value="5 Years">5 Years</option>
+                                            <option value="10 Years">10 Years</option>
+                                            <option value="15 Years">15 Years</option>
+                                            <option value="20 Years">20 Years</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
 
                     {/* Premium */}
-                    {!isOm && (
                     <div className="service-fields mb-3">
                       <div className="row">
                         <div className="col-lg-6">
@@ -337,7 +365,6 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
                         </div>
                       </div>
                     </div>
-                    )}
 
                     <div className="submit-section">
                       <button

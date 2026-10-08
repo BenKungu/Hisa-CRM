@@ -244,11 +244,17 @@ const ViewApplication = () => {
                             : ""}
                         </td>
                       </tr>
-                      <tr>
+                                            <tr>
                         <td>
                           <strong>Frequency</strong>
                         </td>
                         <td>{application.premium_frequency || "—"}</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Payment Term</strong>
+                        </td>
+                        <td>{application.payment_term || "—"}</td>
                       </tr>
                     </tbody>
                   </table>

@@ -151,10 +151,16 @@ const ApplicationPreview = () => {
                         <strong>Policy Type:</strong>{" "}
                         {application?.product_type || "—"}
                       </p>
-                      <p>
+                                           <p>
                         <strong>Frequency:</strong>{" "}
                         {application?.premium_frequency || "—"}
                       </p>
+                      {application?.payment_term && (
+                        <p>
+                          <strong>Payment Term:</strong>{" "}
+                          {application.payment_term}
+                        </p>
+                      )}
                     </div>
                     <div className="col-md-4">
                       <p>
