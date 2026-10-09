@@ -6,7 +6,7 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link } from "react-router-dom";
 import Header from "../header";
-import { Search, Eye, Edit3, FileText, CheckCircle, Trash2 } from "react-feather";
+import { Search, Eye, Edit3, CheckCircle, Trash2 } from "react-feather";
 import apiClient from "../../services/api";
 import absaLogo from "../../assets/logos/absa-logo.png";
 import omLogo from "../../assets/logos/om-logo.png";
@@ -22,6 +22,7 @@ interface ApplicationRow {
   premium_amount: string | number | null;
   premium_frequency: string | null;
   date_received: string | null;
+  direct_debit_date: string | null;
   status: "draft" | "submitted";
   submitted_at: string | null;
   created_at: string;
@@ -219,29 +220,17 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
         return at - bt;
       },
     },
-    {
-      title: "Docs",
-      dataIndex: "uploaded_count",
-      width: 80,
-      align: "center" as const,
-            render: (_: any, record: ApplicationRow) => {
-        const isComplete = record.uploaded_count > 0;
-        return (
-          <span
-            style={{
-              fontWeight: "500",
-              fontSize: "13px",
-              color: isComplete ? accent : "#999",
-              backgroundColor: isComplete ? "#f5f5f5" : "#f5f5f5",
-              padding: "2px 10px",
-              borderRadius: "12px",
-              display: "inline-block",
-            }}
-          >
-            <FileText size={12} className="me-1" />
-            {record.uploaded_count}/{record.document_count}
-          </span>
-        );
+        {
+      title: "Debit Date",
+      dataIndex: "direct_debit_date",
+      width: 120,
+      render: (d: string | null) => (
+        <span style={{ fontSize: "13px" }}>{formatDate(d)}</span>
+      ),
+      sorter: (a: any, b: any) => {
+        const at = a.direct_debit_date ? new Date(a.direct_debit_date).getTime() : 0;
+        const bt = b.direct_debit_date ? new Date(b.direct_debit_date).getTime() : 0;
+        return at - bt;
       },
     },
     {
