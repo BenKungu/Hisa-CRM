@@ -72,11 +72,14 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
     setSaving(true);
 
         try {
-      const res = await apiClient.post("/applications", {
+            const res = await apiClient.post("/applications", {
         ...form,
         provider,
       });
-      navigate(`/applications/${res.data.id}/documents`);
+      const savedProvider = res.data.provider || provider;
+      const basePath =
+        savedProvider === "old_mutual" ? "/om-applications" : "/applications";
+      navigate(`${basePath}/${res.data.id}/documents`);
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to create application");
       setSaving(false);

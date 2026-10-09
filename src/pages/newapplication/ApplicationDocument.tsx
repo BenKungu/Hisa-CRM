@@ -89,6 +89,8 @@ const ApplicationDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<any>(null);
   const [provider, setProvider] = useState<"absa" | "old_mutual">("absa");
+  const basePath =
+    provider === "old_mutual" ? "/om-applications" : "/applications";
   const [rows, setRows] = useState<DocRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -228,7 +230,7 @@ const ApplicationDocuments = () => {
 
     try {
       await apiClient.delete(`/applications/${id}`);
-      navigate("/applications");
+      navigate(basePath);
     } catch (err: any) {
       alert(
         err.response?.data?.error ||
@@ -237,12 +239,12 @@ const ApplicationDocuments = () => {
     }
   };
 
-  const handleNext = () => {
+    const handleNext = () => {
     if (uploadedCount === 0) {
       setError("Upload at least one document before continuing.");
       return;
     }
-    navigate(`/applications/${id}/preview`);
+    navigate(`${basePath}/${id}/preview`);
   };
 
   const uploadedCount = rows.filter((r) => r.status === "uploaded").length;
@@ -287,8 +289,8 @@ const ApplicationDocuments = () => {
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
                   </li>
-                  <li className="breadcrumb-item">
-                    <Link to="/applications">Applications</Link>
+                    <li className="breadcrumb-item">
+                    <Link to={basePath}>Applications</Link>
                   </li>
                   <li className="breadcrumb-item active">Documents</li>
                 </ul>

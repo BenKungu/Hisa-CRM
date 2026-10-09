@@ -4,6 +4,8 @@ import SidebarNav from "../sidebar";
 import Header from "../header";
 import apiClient from "../../services/api";
 import { ArrowLeft, FileText, Download, ExternalLink } from "react-feather";
+import absaLogo from "../../assets/logos/absa-logo.png";
+import omLogo from "../../assets/logos/om-logo.png";
 
 interface DocumentWithUrl {
   id: string;
@@ -115,6 +117,9 @@ const ViewApplication = () => {
   const isOm = application.provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
   const providerLabel = isOm ? "Old Mutual" : "Absa";
+const basePath = isOm ? "/om-applications" : "/applications";
+const logo = isOm ? omLogo : absaLogo;
+
   return (
     <>
       <Header />
@@ -125,22 +130,34 @@ const ViewApplication = () => {
           <div className="page-header">
             <div className="row align-items-center">
               <div className="col-sm-8">
-                <h3 className="page-title">
-                  <span style={{ color: accent, fontWeight: 600, marginRight: "12px" }}>
+                                <h3
+                  className="page-title d-flex align-items-center"
+                  style={{ gap: "12px", flexWrap: "wrap" }}
+                >
+                  <img
+                    src={logo}
+                    alt={providerLabel}
+                    style={{ height: 32, objectFit: "contain" }}
+                  />
+                  <span
+                    style={{
+                      color: accent,
+                      fontWeight: 600,
+                      marginRight: "4px",
+                    }}
+                  >
                     {providerLabel}
                   </span>
-                  {application.reference}
+                  <span>{application.reference}</span>
                   <span
-                    className="ms-3"
                     style={{
                       fontWeight: "500",
                       fontSize: "13px",
-                      color: isSubmitted ? "#2a9d36" : "#fd7e14",
-                      backgroundColor: isSubmitted ? "#e8f5e9" : "#fff3e0",
+                      color: isSubmitted ? accent : "#fd7e14",
+                      backgroundColor: "#f5f5f5",
                       padding: "4px 12px",
                       borderRadius: "12px",
                       display: "inline-block",
-                      verticalAlign: "middle",
                     }}
                   >
                     {isSubmitted ? "Submitted" : "Draft"}
@@ -150,8 +167,8 @@ const ViewApplication = () => {
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
                   </li>
-                  <li className="breadcrumb-item">
-                    <Link to="/applications">Applications</Link>
+                                    <li className="breadcrumb-item">
+                    <Link to={basePath}>Applications</Link>
                   </li>
                   <li className="breadcrumb-item active">
                     {application.reference}
@@ -159,8 +176,8 @@ const ViewApplication = () => {
                 </ul>
               </div>
               <div className="col-sm-4 text-end">
-                <Link
-                  to="/applications"
+                                <Link
+                  to={basePath}
                   className="btn btn-outline-secondary"
                 >
                   <ArrowLeft size={14} className="me-1" /> Back to List
@@ -196,12 +213,30 @@ const ViewApplication = () => {
                           <strong>Linked Client</strong>
                         </td>
                         <td>
-                          {application.client_id ? (
-                            <span className="badge bg-success">
+                                                    {application.client_id ? (
+                            <span
+                              style={{
+                                backgroundColor: accent,
+                                color: "#fff",
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                              }}
+                            >
                               Linked
                             </span>
                           ) : (
-                            <span className="badge bg-secondary">
+                            <span
+                              style={{
+                                backgroundColor: "#999",
+                                color: "#fff",
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                              }}
+                            >
                               Not linked yet
                             </span>
                           )}
@@ -232,11 +267,11 @@ const ViewApplication = () => {
                           <strong>Premium</strong>
                         </td>
                         <td>
-                          {application.premium_amount ? (
+                                                    {application.premium_amount ? (
                             <span
                               style={{
                                 fontWeight: "600",
-                                color: "#2a9d36",
+                                color: accent,
                               }}
                             >
                               KES {formatCurrency(application.premium_amount)}
@@ -417,15 +452,15 @@ const ViewApplication = () => {
                         </div>
                         {doc.viewUrl && (
                           <div className="d-flex gap-2">
-                            <a
+                                                        <a
                               href={doc.viewUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="btn btn-sm"
                               style={{
-                                backgroundColor: "#2a9d36",
+                                backgroundColor: accent,
                                 color: "#fff",
-                                borderColor: "#2a9d36",
+                                borderColor: accent,
                                 display: "inline-flex",
                                 alignItems: "center",
                               }}

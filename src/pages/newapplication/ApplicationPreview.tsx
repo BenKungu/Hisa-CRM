@@ -58,7 +58,7 @@ const ApplicationPreview = () => {
 
     try {
       await apiClient.post(`/applications/${id}/submit`, {});
-      navigate(`/applications/${id}/success`);
+      navigate(`${basePath}/${id}/success`);
     } catch (err: any) {
       setError(err.response?.data?.error || "Submission failed");
       setSubmitting(false);
@@ -87,6 +87,7 @@ const ApplicationPreview = () => {
   const isOm = application?.provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
   const providerLabel = isOm ? "Old Mutual" : "Absa";
+  const basePath = isOm ? "/om-applications" : "/applications";
 
   return (
     <>
@@ -356,8 +357,8 @@ const ApplicationPreview = () => {
                     >
                       {submitting ? "Submitting…" : `Submit to ${providerLabel}`}
                     </button>
-                    <Link
-                      to={`/applications/${id}/documents`}
+                                        <Link
+                      to={`${basePath}/${id}/documents`}
                       className="btn btn-outline-secondary ms-2"
                     >
                       Back to Documents

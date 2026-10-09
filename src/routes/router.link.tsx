@@ -330,4 +330,45 @@ export const authRoutes = [
   meta_title: "View Application",
 },
 
+{
+  path: "/om-applications/:id/documents",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApplicationDocuments />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Old Mutual Application Documents",
+},
+{
+  path: "/om-applications/:id/preview",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApplicationPreview />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Old Mutual Application Preview",
+},
+{
+  path: "/om-applications/:id/success",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApplicationSuccess />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "Old Mutual Application Submitted",
+},
+{
+  path: "/om-applications/:id",
+  element: (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ViewApplication />
+    </Suspense>
+  ),
+  route: Route,
+  meta_title: "View Old Mutual Application",
+},
+
 ];

@@ -8,6 +8,8 @@ import { Link } from "react-router-dom";
 import Header from "../header";
 import { Search, Eye, Edit3, FileText, CheckCircle, Trash2 } from "react-feather";
 import apiClient from "../../services/api";
+import absaLogo from "../../assets/logos/absa-logo.png";
+import omLogo from "../../assets/logos/om-logo.png";
 
 interface ApplicationRow {
   id: string;
@@ -35,6 +37,8 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
   const isOm = provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
   const listTitle = isOm ? "Old Mutual Applications" : "Absa Applications";
+  const basePath = isOm ? "/om-applications" : "/applications";
+  const logo = isOm ? omLogo : absaLogo;
 
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -187,9 +191,9 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
       dataIndex: "premium_amount",
       width: 160,
       align: "right" as const,
-      render: (value: any, record: ApplicationRow) => (
+            render: (value: any, record: ApplicationRow) => (
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontWeight: "600", color: "#2a9d36", fontSize: "13px" }}>
+          <div style={{ fontWeight: "600", color: accent, fontSize: "13px" }}>
             KES {formatCurrency(value)}
           </div>
           {record.premium_frequency && (
@@ -220,15 +224,15 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
       dataIndex: "uploaded_count",
       width: 80,
       align: "center" as const,
-      render: (_: any, record: ApplicationRow) => {
+            render: (_: any, record: ApplicationRow) => {
         const isComplete = record.uploaded_count > 0;
         return (
           <span
             style={{
               fontWeight: "500",
               fontSize: "13px",
-              color: isComplete ? "#2a9d36" : "#999",
-              backgroundColor: isComplete ? "#e8f5e9" : "#f5f5f5",
+              color: isComplete ? accent : "#999",
+              backgroundColor: isComplete ? "#f5f5f5" : "#f5f5f5",
               padding: "2px 10px",
               borderRadius: "12px",
               display: "inline-block",
@@ -245,14 +249,14 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
       dataIndex: "status",
       width: 110,
       align: "center" as const,
-      render: (status: string) =>
+            render: (status: string) =>
         status === "submitted" ? (
           <span
             style={{
               fontWeight: "500",
               fontSize: "12px",
-              color: "#2a9d36",
-              backgroundColor: "#e8f5e9",
+              color: accent,
+              backgroundColor: "#f5f5f5",
               padding: "3px 10px",
               borderRadius: "12px",
               display: "inline-block",
@@ -286,10 +290,10 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
         <div className="text-end d-flex gap-1 justify-content-end">
           {record.status === "submitted" ? (
             <Link
-              to={`/applications/${record.id}`}
+              to={`${basePath}/${record.id}`}
               title="View"
               style={{
-                backgroundColor: "#2a9d36",
+                backgroundColor: accent,
                 color: "#fff",
                 border: "none",
                 padding: "3px 7px",
@@ -304,7 +308,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
           ) : (
             <>
               <Link
-                to={`/applications/${record.id}/documents`}
+                to={`${basePath}/${record.id}/documents`}
                 title="Continue"
                 style={{
                   backgroundColor: "#fd7e14",
@@ -340,7 +344,8 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
           )}
         </div>
       ),
-    },
+    },    
+
   ];
 
   const rowClassName = (_record: any, index: number) => {
@@ -357,7 +362,17 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
           <div className="page-header">
             <div className="row">
               <div className="col-sm-7">
-                                <h3 className="page-title">{listTitle}</h3>
+                                                <h3
+                  className="page-title d-flex align-items-center"
+                  style={{ gap: "12px" }}
+                >
+                  <img
+                    src={logo}
+                    alt={isOm ? "Old Mutual" : "Absa"}
+                    style={{ height: 32, objectFit: "contain" }}
+                  />
+                  <span>{listTitle}</span>
+                </h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
                     <Link to="/admin-dashboard">Dashboard</Link>
@@ -420,13 +435,13 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                           />
-                          <button
+                                                    <button
                             type="submit"
                             className="btn btn-sm"
                             style={{
-                              backgroundColor: "#2a9d36",
+                              backgroundColor: accent,
                               color: "#fff",
-                              borderColor: "#2a9d36",
+                              borderColor: accent,
                             }}
                           >
                             Go

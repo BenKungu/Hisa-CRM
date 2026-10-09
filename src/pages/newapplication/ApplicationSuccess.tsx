@@ -9,6 +9,7 @@ const ApplicationSuccess = () => {
     const [application, setApplication] = useState<any>(null);
   const isOm = application?.provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
+  const basePath = isOm ? "/om-applications" : "/applications";
 
   useEffect(() => {
     if (!id) return;
@@ -78,8 +79,8 @@ const ApplicationSuccess = () => {
                     >
                       Start Another Application
                     </Link>
-                    <Link
-                      to="/applications"
+                                        <Link
+                      to={basePath}
                       className="btn btn-outline-secondary"
                     >
                       View Applications
