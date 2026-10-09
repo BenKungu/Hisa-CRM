@@ -15,7 +15,8 @@ import {
   CheckCircle,
   RefreshCw,
   Box,
-  DollarSign,      
+  DollarSign, 
+  Anchor
 } from "react-feather";
 
 import { all_routes } from "../../routes/all_routes";
@@ -148,7 +149,7 @@ const SidebarNav = () => {
                 </li>
                 <li className={pathname?.includes("/om-applications") ? "active" : ""}>
                   <Link to="/om-applications">
-                    <FileText size={16} /> <span>Applications</span>
+                    <Anchor size={16} /> <span>Applications</span>
                   </Link>
                 </li>
                 <li className="menu-title">
