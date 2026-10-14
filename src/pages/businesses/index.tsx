@@ -649,15 +649,14 @@ const AdminBusinesses = () => {
   // TABLE COLUMNS
   // ==========================================================================
 
-  const columns = [
+const columns = [
     {
       title: "Policy Number",
       dataIndex: "policy_number",
-      width: 140,
-      fixed: 'left' as const,
+      width: 150,
       render: (text: string) => (
-        <span style={{ color: '#2a9d36', fontWeight: '600', fontSize: '13px' }}>
-          <FileText size={12} className="me-1" style={{ color: '#2a9d36' }} />
+        <span className="cell-reference">
+          <FileText size={12} />
           {text || 'N/A'}
         </span>
       ),
@@ -667,23 +666,17 @@ const AdminBusinesses = () => {
       title: "Client",
       dataIndex: "client_name",
       width: 180,
-      fixed: 'left' as const,
       render: (text: string) => {
         const displayName = text || 'N/A';
         return (
-          <div className="d-flex align-items-center">
+          <div className="cell-client">
             <span
-              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
-                backgroundColor: getAvatarColor(displayName), color: '#fff',
-                fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
-                borderRadius: '50%', flexShrink: 0
-              }}
+              className="cell-avatar"
+              style={{ backgroundColor: getAvatarColor(displayName) }}
             >
               {getInitials(displayName)}
             </span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>{displayName}</span>
+            <span className="cell-client-name">{displayName}</span>
           </div>
         );
       },
@@ -693,23 +686,14 @@ const AdminBusinesses = () => {
       title: "Status",
       dataIndex: "policy_status",
       width: 150,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
       render: (status: string) => {
         const cleaned = cleanPolicyStatus(status);
         const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
-
         return (
           <span
-            className="badge px-2 py-1 d-inline-block text-truncate"
-            style={{
-              fontSize: '11px',
-              maxWidth: '130px',
-              fontWeight: '500',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              backgroundColor: style.bg,
-              color: '#fff',
-            }}
+            className="status-badge"
+            style={{ backgroundColor: style.bg }}
             title={status || 'N/A'}
           >
             {style.icon} {cleaned}
@@ -722,16 +706,19 @@ const AdminBusinesses = () => {
     {
       title: "Frequency",
       dataIndex: "premium_frequency",
-      width: 90,
+      width: 100,
+      responsive: ['lg', 'xl'],
       render: (text: string) => {
-        const color = getFrequencyColor(text);
+        if (!text) return <span className="cell-text-muted">—</span>;
         return (
-          <span style={{
-            color: color, fontWeight: '500', fontSize: '11px',
-            backgroundColor: color + '15', padding: '2px 8px',
-            borderRadius: '4px', display: 'inline-block'
-          }}>
-            {text || 'N/A'}
+          <span
+            className="chip"
+            style={{
+              color: getFrequencyColor(text),
+              backgroundColor: getFrequencyColor(text) + '15',
+            }}
+          >
+            {text}
           </span>
         );
       },
@@ -741,9 +728,10 @@ const AdminBusinesses = () => {
       dataIndex: "initial_gross_premium",
       width: 130,
       align: 'right' as const,
-      onCell: () => ({ style: { backgroundColor: '#f8fffa' } }),
+      responsive: ['xl'],
+      onCell: () => ({ className: 'cell-tint--soft' }),
       render: (value: number) => (
-        <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
+        <span className="cell-amount cell-amount--soft">
           KES {formatCurrency(value)}
         </span>
       ),
@@ -754,9 +742,10 @@ const AdminBusinesses = () => {
       dataIndex: "new_gross_premium",
       width: 130,
       align: 'right' as const,
-      onCell: () => ({ style: { backgroundColor: '#f0fdf4', fontWeight: 'bold' } }),
+      responsive: ['md', 'lg', 'xl'],
+      onCell: () => ({ className: 'cell-tint--strong' }),
       render: (value: number) => (
-        <span style={{ fontWeight: '700', color: '#2a9d36', fontSize: '13px' }}>
+        <span className="cell-amount cell-amount--success">
           KES {formatCurrency(value)}
         </span>
       ),
@@ -767,9 +756,10 @@ const AdminBusinesses = () => {
       dataIndex: "total_sum_insured",
       width: 130,
       align: 'right' as const,
-      onCell: () => ({ style: { backgroundColor: '#f8fffa' } }),
+      responsive: ['xl'],
+      onCell: () => ({ className: 'cell-tint--soft' }),
       render: (value: number) => (
-        <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
+        <span className="cell-amount cell-amount--soft">
           KES {formatCurrency(value)}
         </span>
       ),
@@ -778,30 +768,24 @@ const AdminBusinesses = () => {
     {
       title: "Strike Day",
       dataIndex: "strike_date",
-      width: 95,
-      onCell: () => ({ style: { backgroundColor: '#f0f7ff' } }),
+      width: 100,
+      responsive: ['lg', 'xl'],
+      onCell: () => ({ className: 'cell-tint--blue' }),
       render: (value: number) => {
-        if (!value && value !== 0) return <span style={{ color: '#999', fontSize: '12px' }}>—</span>;
+        if (!value && value !== 0) return <span className="cell-text-muted">—</span>;
         const display = getStrikeDayWithOrdinal(value);
         if (!display) return '—';
-        return (
-          <span style={{
-            color: '#0d6efd', fontWeight: '700', fontSize: '13px',
-            backgroundColor: '#dbeafe', padding: '2px 10px',
-            borderRadius: '4px', display: 'inline-block'
-          }}>
-            {display}
-          </span>
-        );
+        return <span className="strike-day">{display}</span>;
       },
       sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
     },
     {
       title: "Agent",
       dataIndex: "agent_name",
-      width: 130,
+      width: 140,
+      responsive: ['lg', 'xl'],
       render: (text: string) => (
-        <span className="text-muted" style={{ fontSize: '12px' }}>{text || '—'}</span>
+        <span className="cell-text-muted">{text || '—'}</span>
       ),
       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
@@ -809,6 +793,7 @@ const AdminBusinesses = () => {
       title: "Last Updated",
       dataIndex: "updated_at",
       width: 130,
+      responsive: ['xl'],
       render: (date: string) => {
         if (!date) return '—';
         const updated = new Date(date);
@@ -824,9 +809,9 @@ const AdminBusinesses = () => {
         else timeAgo = `${diffDays}d`;
 
         return (
-          <div style={{ fontSize: '11px' }}>
+          <div className="cell-time">
             <div>{formatDateCompact(date)}</div>
-            <div style={{ color: '#999', fontSize: '10px' }}>{timeAgo}</div>
+            <div className="cell-time-ago">{timeAgo}</div>
           </div>
         );
       },
@@ -838,33 +823,26 @@ const AdminBusinesses = () => {
       dataIndex: "",
       width: 110,
       className: "text-end",
-      fixed: 'right' as const,
       render: (_: any, record: Policy) => (
-        <div className="text-end" style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+        <div className="row-actions">
           <button
-            className="btn btn-sm"
+            className="btn-icon btn-icon--success"
             onClick={() => openModal('view', record)}
             title="View"
-            style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
           >
             <Eye size={13} />
           </button>
           <button
-            className="btn btn-sm"
+            className="btn-icon btn-icon--muted"
             disabled
             title="Edit (Coming soon)"
-            style={{
-              backgroundColor: '#6c757d', color: '#fff', border: 'none',
-              padding: '2px 6px', opacity: 0.4, cursor: 'not-allowed', borderRadius: '4px'
-            }}
           >
             <Edit size={13} />
           </button>
           <button
-            className="btn btn-sm"
+            className="btn-icon btn-icon--danger"
             onClick={() => openModal('delete', record)}
             title="Delete"
-            style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
           >
             <Trash2 size={13} />
           </button>
@@ -872,6 +850,230 @@ const AdminBusinesses = () => {
       ),
     },
   ];
+
+  // const columns = [
+  //   {
+  //     title: "Policy Number",
+  //     dataIndex: "policy_number",
+  //     width: 140,
+  //     fixed: 'left' as const,
+  //     render: (text: string) => (
+  //       <span style={{ color: '#2a9d36', fontWeight: '600', fontSize: '13px' }}>
+  //         <FileText size={12} className="me-1" style={{ color: '#2a9d36' }} />
+  //         {text || 'N/A'}
+  //       </span>
+  //     ),
+  //     sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
+  //   },
+  //   {
+  //     title: "Client",
+  //     dataIndex: "client_name",
+  //     width: 180,
+  //     fixed: 'left' as const,
+  //     render: (text: string) => {
+  //       const displayName = text || 'N/A';
+  //       return (
+  //         <div className="d-flex align-items-center">
+  //           <span
+  //             className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+  //             style={{
+  //               width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
+  //               backgroundColor: getAvatarColor(displayName), color: '#fff',
+  //               fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
+  //               borderRadius: '50%', flexShrink: 0
+  //             }}
+  //           >
+  //             {getInitials(displayName)}
+  //           </span>
+  //           <span style={{ fontSize: '13px', fontWeight: '500' }}>{displayName}</span>
+  //         </div>
+  //       );
+  //     },
+  //     sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
+  //   },
+  //   {
+  //     title: "Status",
+  //     dataIndex: "policy_status",
+  //     width: 150,
+  //     render: (status: string) => {
+  //       const cleaned = cleanPolicyStatus(status);
+  //       const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
+
+  //       return (
+  //         <span
+  //           className="badge px-2 py-1 d-inline-block text-truncate"
+  //           style={{
+  //             fontSize: '11px',
+  //             maxWidth: '130px',
+  //             fontWeight: '500',
+  //             whiteSpace: 'nowrap',
+  //             overflow: 'hidden',
+  //             textOverflow: 'ellipsis',
+  //             backgroundColor: style.bg,
+  //             color: '#fff',
+  //           }}
+  //           title={status || 'N/A'}
+  //         >
+  //           {style.icon} {cleaned}
+  //         </span>
+  //       );
+  //     },
+  //     sorter: (a: any, b: any) =>
+  //       cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
+  //   },
+  //   {
+  //     title: "Frequency",
+  //     dataIndex: "premium_frequency",
+  //     width: 90,
+  //     render: (text: string) => {
+  //       const color = getFrequencyColor(text);
+  //       return (
+  //         <span style={{
+  //           color: color, fontWeight: '500', fontSize: '11px',
+  //           backgroundColor: color + '15', padding: '2px 8px',
+  //           borderRadius: '4px', display: 'inline-block'
+  //         }}>
+  //           {text || 'N/A'}
+  //         </span>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     title: "Initial Premium",
+  //     dataIndex: "initial_gross_premium",
+  //     width: 130,
+  //     align: 'right' as const,
+  //     onCell: () => ({ style: { backgroundColor: '#f8fffa' } }),
+  //     render: (value: number) => (
+  //       <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
+  //         KES {formatCurrency(value)}
+  //       </span>
+  //     ),
+  //     sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
+  //   },
+  //   {
+  //     title: "Current Premium",
+  //     dataIndex: "new_gross_premium",
+  //     width: 130,
+  //     align: 'right' as const,
+  //     onCell: () => ({ style: { backgroundColor: '#f0fdf4', fontWeight: 'bold' } }),
+  //     render: (value: number) => (
+  //       <span style={{ fontWeight: '700', color: '#2a9d36', fontSize: '13px' }}>
+  //         KES {formatCurrency(value)}
+  //       </span>
+  //     ),
+  //     sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
+  //   },
+  //   {
+  //     title: "Total Sum Insured",
+  //     dataIndex: "total_sum_insured",
+  //     width: 130,
+  //     align: 'right' as const,
+  //     onCell: () => ({ style: { backgroundColor: '#f8fffa' } }),
+  //     render: (value: number) => (
+  //       <span style={{ fontSize: '13px', color: '#2d6a4f' }}>
+  //         KES {formatCurrency(value)}
+  //       </span>
+  //     ),
+  //     sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
+  //   },
+  //   {
+  //     title: "Strike Day",
+  //     dataIndex: "strike_date",
+  //     width: 95,
+  //     onCell: () => ({ style: { backgroundColor: '#f0f7ff' } }),
+  //     render: (value: number) => {
+  //       if (!value && value !== 0) return <span style={{ color: '#999', fontSize: '12px' }}>—</span>;
+  //       const display = getStrikeDayWithOrdinal(value);
+  //       if (!display) return '—';
+  //       return (
+  //         <span style={{
+  //           color: '#0d6efd', fontWeight: '700', fontSize: '13px',
+  //           backgroundColor: '#dbeafe', padding: '2px 10px',
+  //           borderRadius: '4px', display: 'inline-block'
+  //         }}>
+  //           {display}
+  //         </span>
+  //       );
+  //     },
+  //     sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
+  //   },
+  //   {
+  //     title: "Agent",
+  //     dataIndex: "agent_name",
+  //     width: 130,
+  //     render: (text: string) => (
+  //       <span className="text-muted" style={{ fontSize: '12px' }}>{text || '—'}</span>
+  //     ),
+  //     sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
+  //   },
+  //   {
+  //     title: "Last Updated",
+  //     dataIndex: "updated_at",
+  //     width: 130,
+  //     render: (date: string) => {
+  //       if (!date) return '—';
+  //       const updated = new Date(date);
+  //       const now = new Date();
+  //       const diffMs = now.getTime() - updated.getTime();
+  //       const diffMins = Math.floor(diffMs / 60000);
+  //       const diffHours = Math.floor(diffMs / 3600000);
+  //       const diffDays = Math.floor(diffMs / 86400000);
+  //       let timeAgo = '';
+  //       if (diffMins < 1) timeAgo = 'Now';
+  //       else if (diffMins < 60) timeAgo = `${diffMins}m`;
+  //       else if (diffHours < 24) timeAgo = `${diffHours}h`;
+  //       else timeAgo = `${diffDays}d`;
+
+  //       return (
+  //         <div style={{ fontSize: '11px' }}>
+  //           <div>{formatDateCompact(date)}</div>
+  //           <div style={{ color: '#999', fontSize: '10px' }}>{timeAgo}</div>
+  //         </div>
+  //       );
+  //     },
+  //     sorter: (a: any, b: any) =>
+  //       new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+  //   },
+  //   {
+  //     title: "",
+  //     dataIndex: "",
+  //     width: 110,
+  //     className: "text-end",
+  //     fixed: 'right' as const,
+  //     render: (_: any, record: Policy) => (
+  //       <div className="text-end" style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+  //         <button
+  //           className="btn btn-sm"
+  //           onClick={() => openModal('view', record)}
+  //           title="View"
+  //           style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
+  //         >
+  //           <Eye size={13} />
+  //         </button>
+  //         <button
+  //           className="btn btn-sm"
+  //           disabled
+  //           title="Edit (Coming soon)"
+  //           style={{
+  //             backgroundColor: '#6c757d', color: '#fff', border: 'none',
+  //             padding: '2px 6px', opacity: 0.4, cursor: 'not-allowed', borderRadius: '4px'
+  //           }}
+  //         >
+  //           <Edit size={13} />
+  //         </button>
+  //         <button
+  //           className="btn btn-sm"
+  //           onClick={() => openModal('delete', record)}
+  //           title="Delete"
+  //           style={{ backgroundColor: '#c70e2a', color: '#fff', border: 'none', padding: '2px 6px', borderRadius: '4px' }}
+  //         >
+  //           <Trash2 size={13} />
+  //         </button>
+  //       </div>
+  //     ),
+  //   },
+  // ];
 
   // ==========================================================================
   // MODAL CONTENT – View / Delete
@@ -1359,55 +1561,50 @@ const AdminBusinesses = () => {
 
                 {/* ---------- Card header: stats + search + filter toggle ---------- */}
                 <div className="card-header">
-                  <div className="row align-items-center mb-2">
-                    <div className="col">
+                  <div className="row align-items-center mb-2 g-2">
+                    <div className="col-12 col-md">
                       <h5 className="card-title mb-0">All Policies</h5>
-                      <div className="d-flex align-items-center gap-3 mt-1">
-                        {/* Total */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '20px', fontWeight: '700', color: '#2a9d36' }}>
+                        <div className="policy-stats">
+                          <div className="policy-stat">
+                          <span className="policy-stat__value policy-stat__value--primary">
                             {filteredData.length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '13px' }}>Total</span>
+                          <span className="policy-stat__label">Total</span>
                         </div>
 
-                        <div style={{ width: '1px', height: '20px', backgroundColor: '#dee2e6' }} />
+                        <div className="policy-stat__divider" />
 
-                        {/* Finalised */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
+                        <div className="policy-stat">
+                          <span className="policy-stat__value policy-stat__value--success">
                             {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Finalised').length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Finalised</span>
+                          <span className="policy-stat__label">Finalised</span>
                         </div>
 
-                        {/* Lapsed */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#7f1d1d' }}>
+                        <div className="policy-stat">
+                          <span className="policy-stat__value policy-stat__value--danger">
                             {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Lapsed').length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Lapsed</span>
+                          <span className="policy-stat__label">Lapsed</span>
                         </div>
 
-                        {/* Surrendered */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#475569' }}>
+                        <div className="policy-stat">
+                          <span className="policy-stat__value policy-stat__value--slate">
                             {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Surrendered').length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Surrendered</span>
+                          <span className="policy-stat__label">Surrendered</span>
                         </div>
 
-                        {/* Cancelled */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600', color: '#c70e2a' }}>
+                        <div className="policy-stat">
+                          <span className="policy-stat__value policy-stat__value--red">
                             {filteredData.filter(p => cleanPolicyStatus(p.policy_status) === 'Cancelled').length}
                           </span>
-                          <span style={{ color: '#999', fontSize: '12px' }}>Cancelled</span>
+                          <span className="policy-stat__label">Cancelled</span>
                         </div>
                       </div>
                     </div>
-                    <div className="col-auto">
-                      <div className="d-flex align-items-center gap-2">
+                    <div className="col-12 col-md-auto">
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
                         {/* Search */}
                         <div className="input-group input-group-sm" style={{ width: '200px' }}>
                           <span className="input-group-text bg-white">
@@ -1723,7 +1920,7 @@ const AdminBusinesses = () => {
 
                 {/* ---------- Table ---------- */}
                 <div className="card-body">
-                  <div className="table-responsive">
+                  <div className="table-responsive app-table-wrap">
                     <Table
                       loading={loading}
                       rowClassName={rowClassName}
@@ -1736,12 +1933,12 @@ const AdminBusinesses = () => {
                         itemRender: itemRender,
                         defaultPageSize: 25,
                       }}
-                      style={{ overflowX: "auto" }}
                       columns={columns}
                       dataSource={filteredData}
                       rowKey={(record) => record.id}
                       locale={{ emptyText: 'No policies found' }}
-                      scroll={{ x: 1800 }}
+                      size="small"
+                      scroll={{ x: 'max-content' }}
                     />
                   </div>
                 </div>
