@@ -14,6 +14,7 @@ interface DocumentWithUrl {
   mime_type: string | null;
   size_bytes: number | null;
   uploaded: boolean;
+  notified_at: string | null;
   viewUrl: string | null;
 }
 
@@ -54,11 +55,26 @@ const formatDate = (d: string | null) => {
 const ViewApplication = () => {
   const { id } = useParams<{ id: string }>();
 
+  const DOC_TYPES_BY_PROVIDER: Record<string, string[]> = {
+  absa: [
+    "Application Form", "Direct Debit Form", "PIN Certificate",
+    "Identification", "Bank Proof", "Proof of Payment", "Premium Illustrator",
+  ],
+  old_mutual: [
+    "Direct Debit", "Customer Declaration", "Free Cover Limit",
+    "Financial Questionnaire", "Id", "Pin (Kra)", "Payment",
+  ],
+};
+
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<any>(null);
   const [documents, setDocuments] = useState<DocumentWithUrl[]>([]);
   const [error, setError] = useState("");
-
+  const [addDocOpen, setAddDocOpen] = useState(false);
+  const [addDocType, setAddDocType] = useState("");
+  const [addDocFile, setAddDocFile] = useState<File | null>(null);
+  const [addDocBusy, setAddDocBusy] = useState(false);
+  const [notifyBusy, setNotifyBusy] = useState(false);
   useEffect(() => {
     if (!id) return;
     apiClient
@@ -74,6 +90,64 @@ const ViewApplication = () => {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+    const reloadApplication = async () => {
+    if (!id) return;
+    const res = await apiClient.get(`/applications/${id}`);
+    setApplication(res.data);
+    setDocuments(res.data.documents || []);
+  };
+
+  const unnotifiedCount = documents.filter(
+    (d) => d.uploaded && !(d as any).notified_at
+  ).length;
+
+  const handleAddDoc = async () => {
+    if (!addDocFile || !addDocType || !id) return;
+    setAddDocBusy(true);
+    try {
+      const reqRes = await apiClient.post(`/applications/${id}/documents`, {
+        doc_type: addDocType,
+        file_name: addDocFile.name,
+        mime_type: addDocFile.type || "application/octet-stream",
+        size_bytes: addDocFile.size,
+      });
+      const { documentId, uploadUrl } = reqRes.data;
+
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": addDocFile.type || "application/octet-stream" },
+        body: addDocFile,
+      });
+      if (!putRes.ok) throw new Error(`Storage upload failed (${putRes.status})`);
+
+      await apiClient.patch(`/applications/${id}/documents/${documentId}`, {});
+
+      setAddDocOpen(false);
+      setAddDocFile(null);
+      setAddDocType("");
+      await reloadApplication();
+    } catch (err: any) {
+      alert(err.response?.data?.error || err.message || "Upload failed");
+    } finally {
+      setAddDocBusy(false);
+    }
+  };
+
+  const handleNotifyUpdate = async () => {
+    if (!id) return;
+    if (!confirm("Send a follow-up email to the onboarding team about the new document(s)?")) return;
+    setNotifyBusy(true);
+    try {
+      const res = await apiClient.post(`/applications/${id}/notify-update`, {});
+      alert(`Sent. ${res.data.notifiedCount} document(s) announced.`);
+      await reloadApplication();
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to send follow-up");
+    } finally {
+      setNotifyBusy(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -550,13 +624,121 @@ const logo = isOm ? omLogo : absaLogo;
                           </div>
                         )}
                     </div>
-                  ))}
+                                    ))}
+
+                  {/* Post-submit actions */}
+                  {isSubmitted && (
+                    <div className="mt-3 pt-3" style={{ borderTop: "1px solid #eee" }}>
+                      <div className="d-flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => setAddDocOpen(true)}
+                          style={{
+                            backgroundColor: accent,
+                            borderColor: accent,
+                            color: "#fff",
+                          }}
+                        >
+                          + Add Document
+                        </button>
+                        {unnotifiedCount > 0 && (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={handleNotifyUpdate}
+                            disabled={notifyBusy}
+                          >
+                            {notifyBusy
+                              ? "Sending…"
+                              : `Notify Onboarding (${unnotifiedCount} new)`}
+                          </button>
+                        )}
+                      </div>
+                      {unnotifiedCount > 0 && (
+                        <p className="text-muted mt-2 mb-0" style={{ fontSize: "12px" }}>
+                          {unnotifiedCount} document(s) uploaded but not yet announced.
+                          Click "Notify Onboarding" to send a follow-up in the original thread.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Add Document Modal */}
+      {addDocOpen && (
+        <div
+          className="modal show d-block"
+          tabIndex={-1}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div
+                className="modal-header"
+                style={{ backgroundColor: accent, color: "#fff" }}
+              >
+                <h5 className="modal-title" style={{ color: "#fff" }}>
+                  Add Document
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setAddDocOpen(false)}
+                  style={{ filter: "brightness(0) invert(1)" }}
+                />
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Document Type</label>
+                  <select
+                    className="form-select"
+                    value={addDocType}
+                    onChange={(e) => setAddDocType(e.target.value)}
+                  >
+                    <option value="">-- Select --</option>
+                    {(DOC_TYPES_BY_PROVIDER[application?.provider] || []).map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">File</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    onChange={(e) => setAddDocFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setAddDocOpen(false)}
+                  disabled={addDocBusy}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleAddDoc}
+                  disabled={!addDocType || !addDocFile || addDocBusy}
+                  style={{ backgroundColor: accent, borderColor: accent, color: "#fff" }}
+                >
+                  {addDocBusy ? "Uploading…" : "Upload"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
