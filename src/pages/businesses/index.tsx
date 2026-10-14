@@ -11,6 +11,7 @@ import {
   CheckCircle, XCircle, AlertCircle, Filter, X
 } from 'react-feather';
 import { policyService } from '../../services/policy';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 // ============================================================================
 // TYPES
@@ -94,6 +95,8 @@ const DEFAULT_STATUS_STYLE = { bg: '#6c757d', icon: '' };
 // ============================================================================
 
 const AdminBusinesses = () => {
+
+  const isMobile = useIsMobile();
   // --------------------------------------------------------------------------
   // State – data
   // --------------------------------------------------------------------------
@@ -1919,28 +1922,145 @@ const columns = [
                 </div>
 
                 {/* ---------- Table ---------- */}
-                <div className="card-body">
-                  <div className="table-responsive app-table-wrap">
-                    <Table
-                      loading={loading}
-                      rowClassName={rowClassName}
-                      pagination={{
-                        total: filteredData.length,
-                        showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} policies`,
-                        showSizeChanger: true,
-                        onShowSizeChange: onShowSizeChange,
-                        itemRender: itemRender,
-                        defaultPageSize: 25,
-                      }}
-                      columns={columns}
-                      dataSource={filteredData}
-                      rowKey={(record) => record.id}
-                      locale={{ emptyText: 'No policies found' }}
-                      size="small"
-                      scroll={{ x: 'max-content' }}
-                    />
-                  </div>
+                                <div className="card-body">
+                  {isMobile ? (
+                    <div className="m-card-list">
+                      {loading && (
+                        <div className="m-card__empty">Loading…</div>
+                      )}
+
+                      {!loading && filteredData.length === 0 && (
+                        <div className="m-card__empty">No policies found</div>
+                      )}
+
+                      {!loading &&
+                        filteredData.map((policy) => {
+                          const cleaned = cleanPolicyStatus(policy.policy_status);
+                          const style =
+                            STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
+                          const displayName = policy.client_name || 'N/A';
+
+                          return (
+                            <div
+                              key={policy.id}
+                              className="m-card"
+                              onClick={() => openModal('view', policy)}
+                            >
+                              {/* Row 1: reference + status */}
+                              <div className="m-card__top">
+                                <span className="m-card__ref">
+                                  <FileText size={12} />
+                                  {policy.policy_number || 'N/A'}
+                                </span>
+                                <span
+                                  className="status-badge"
+                                  style={{ backgroundColor: style.bg }}
+                                >
+                                  {style.icon} {cleaned}
+                                </span>
+                              </div>
+
+                              {/* Row 2: client */}
+                              <div className="m-card__client">
+                                <span
+                                  className="cell-avatar"
+                                  style={{
+                                    backgroundColor: getAvatarColor(displayName),
+                                  }}
+                                >
+                                  {getInitials(displayName)}
+                                </span>
+                                <span className="m-card__client-name">
+                                  {displayName}
+                                </span>
+                              </div>
+
+                              {/* Row 3: frequency + premium */}
+                              <div className="m-card__meta">
+                                {policy.premium_frequency ? (
+                                  <span
+                                    className="chip"
+                                    style={{
+                                      color: getFrequencyColor(
+                                        policy.premium_frequency
+                                      ),
+                                      backgroundColor:
+                                        getFrequencyColor(
+                                          policy.premium_frequency
+                                        ) + '15',
+                                    }}
+                                  >
+                                    {policy.premium_frequency}
+                                  </span>
+                                ) : (
+                                  <span />
+                                )}
+                                <span className="m-card__premium">
+                                  KES{' '}
+                                  {formatCurrency(policy.new_gross_premium)}
+                                </span>
+                              </div>
+
+                              {/* Row 4: actions */}
+                              <div
+                                className="m-card__actions"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  className="btn-icon btn-icon--success"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openModal('view', policy);
+                                  }}
+                                  title="View"
+                                >
+                                  <Eye size={13} />
+                                </button>
+                                <button
+                                  className="btn-icon btn-icon--muted"
+                                  disabled
+                                  title="Edit (Coming soon)"
+                                >
+                                  <Edit size={13} />
+                                </button>
+                                <button
+                                  className="btn-icon btn-icon--danger"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openModal('delete', policy);
+                                  }}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="table-responsive app-table-wrap">
+                      <Table
+                        loading={loading}
+                        rowClassName={rowClassName}
+                        pagination={{
+                          total: filteredData.length,
+                          showTotal: (total, range) =>
+                            `Showing ${range[0]} to ${range[1]} of ${total} policies`,
+                          showSizeChanger: true,
+                          onShowSizeChange: onShowSizeChange,
+                          itemRender: itemRender,
+                          defaultPageSize: 25,
+                        }}
+                        columns={columns}
+                        dataSource={filteredData}
+                        rowKey={(record) => record.id}
+                        locale={{ emptyText: 'No policies found' }}
+                        size="small"
+                        scroll={{ x: 'max-content' }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
