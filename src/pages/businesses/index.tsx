@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Table } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
 import { itemRender, onShowSizeChange } from "../paginationfunction";
@@ -652,7 +653,7 @@ const AdminBusinesses = () => {
   // TABLE COLUMNS
   // ==========================================================================
 
-const columns = [
+const columns: ColumnsType<Policy> = [
     {
       title: "Policy Number",
       dataIndex: "policy_number",
