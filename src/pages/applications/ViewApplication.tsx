@@ -71,8 +71,9 @@ const ViewApplication = () => {
   const [documents, setDocuments] = useState<DocumentWithUrl[]>([]);
   const [error, setError] = useState("");
   const [addDocOpen, setAddDocOpen] = useState(false);
-  const [addDocType, setAddDocType] = useState("");
+    const [addDocType, setAddDocType] = useState("");
   const [addDocFile, setAddDocFile] = useState<File | null>(null);
+  const [addDocPolicyNumber, setAddDocPolicyNumber] = useState("");
   const [addDocBusy, setAddDocBusy] = useState(false);
   const [notifyBusy, setNotifyBusy] = useState(false);
   useEffect(() => {
@@ -106,11 +107,12 @@ const ViewApplication = () => {
     if (!addDocFile || !addDocType || !id) return;
     setAddDocBusy(true);
     try {
-      const reqRes = await apiClient.post(`/applications/${id}/documents`, {
+        const reqRes = await apiClient.post(`/applications/${id}/documents`, {
         doc_type: addDocType,
         file_name: addDocFile.name,
         mime_type: addDocFile.type || "application/octet-stream",
         size_bytes: addDocFile.size,
+        policy_number: addDocPolicyNumber.trim() || undefined,
       });
       const { documentId, uploadUrl } = reqRes.data;
 
@@ -123,9 +125,10 @@ const ViewApplication = () => {
 
       await apiClient.patch(`/applications/${id}/documents/${documentId}`, {});
 
-      setAddDocOpen(false);
+            setAddDocOpen(false);
       setAddDocFile(null);
       setAddDocType("");
+      setAddDocPolicyNumber("");
       await reloadApplication();
     } catch (err: any) {
       alert(err.response?.data?.error || err.message || "Upload failed");
@@ -358,11 +361,19 @@ const logo = isOm ? omLogo : absaLogo;
                             : ""}
                         </td>
                       </tr>
-                                            <tr>
+                                                                  <tr>
                         <td>
                           <strong>Frequency</strong>
                         </td>
                         <td>{application.premium_frequency || "—"}</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Policy Number</strong>
+                        </td>
+                        <td style={{ fontWeight: 600 }}>
+                          {application.policy_number || "—"}
+                        </td>
                       </tr>
                       <tr>
                         <td>
@@ -693,7 +704,7 @@ const logo = isOm ? omLogo : absaLogo;
                   style={{ filter: "brightness(0) invert(1)" }}
                 />
               </div>
-              <div className="modal-body">
+                            <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Document Type</label>
                   <select
@@ -706,6 +717,24 @@ const logo = isOm ? omLogo : absaLogo;
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">
+                    Policy Number{" "}
+                    <span className="text-muted" style={{ fontWeight: 400, fontSize: "12px" }}>
+                      (optional — for Direct Debit uploads)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. 300900700"
+                    value={addDocPolicyNumber}
+                    onChange={(e) => setAddDocPolicyNumber(e.target.value)}
+                  />
+                  <small className="text-muted">
+                    If provided, this will appear in the follow-up email subject.
+                  </small>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">File</label>
