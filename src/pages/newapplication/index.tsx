@@ -46,16 +46,17 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
       })
       .catch(() => setAgents([]));
 
-    apiClient
+        apiClient
       .get("/policies")
       .then((res) => {
         const types = new Set<string>();
         (res.data?.data || []).forEach((p: any) => {
           if (p.product_type) types.add(p.product_type);
         });
+        types.add("Last Expense");
         setProductTypes(Array.from(types).sort());
       })
-      .catch(() => setProductTypes([]));
+      .catch(() => setProductTypes(["Last Expense"]));
   }, [isOm]);
 
     const [form, setForm] = useState({
