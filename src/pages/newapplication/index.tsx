@@ -10,6 +10,16 @@ interface NewApplicationProps {
   provider?: "absa" | "old_mutual";
 }
 
+const OM_PRODUCT_TYPES = [
+  "Lengo Savings",
+  "Lengo Digital",
+  "Zawadi Education",
+  "Elimika",
+  "Hakika",
+  "Greenlight",
+  "Greenlight Lite",
+];
+
 const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
   const isOm = provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
@@ -256,32 +266,36 @@ const NewApplication = ({ provider = "absa" }: NewApplicationProps) => {
                           </div>
                           </div>
                     </div>
-                    {/* Policy / Frequency / Payment Term */}
+                                        {/* Policy / Frequency / Payment Term */}
                     <div className="service-fields mb-3">
                       <div className="row">
-                        {/* Policy Type — Absa only */}
-                        {!isOm && (
-                          <div className="col-lg-6">
-                            <div className="form-group">
-                              <label>
-                                Policy Type <span className="text-danger">*</span>
-                              </label>
-                              <select
-                                className="form-select"
-                                value={form.product_type}
-                                onChange={(e) => handle("product_type", e.target.value)}
-                                required
-                              >
-                                <option value="">-- Select Policy Type --</option>
-                                {productTypes.map((t) => (
-                                  <option key={t} value={t}>
-                                    {t}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                        {/* Policy Type — both providers, different options */}
+                        <div className="col-lg-6">
+                          <div className="form-group">
+                            <label>
+                              Policy Type <span className="text-danger">*</span>
+                            </label>
+                            <select
+                              className="form-select"
+                              value={form.product_type}
+                              onChange={(e) => handle("product_type", e.target.value)}
+                              required
+                            >
+                              <option value="">-- Select Policy Type --</option>
+                              {isOm
+                                ? OM_PRODUCT_TYPES.map((t) => (
+                                    <option key={t} value={t}>
+                                      {t}
+                                    </option>
+                                  ))
+                                : productTypes.map((t) => (
+                                    <option key={t} value={t}>
+                                      {t}
+                                    </option>
+                                  ))}
+                            </select>
                           </div>
-                        )}
+                        </div>
 
                         {/* Frequency — both providers */}
                         <div className="col-lg-6">
