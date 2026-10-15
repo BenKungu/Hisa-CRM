@@ -16,10 +16,11 @@ const DOC_TYPES_BY_PROVIDER: Record<string, string[]> = {
     "Premium Illustrator",
   ],
   old_mutual: [
+    "Application Form",
     "Direct Debit",
     "Customer Declaration",
     "Free Cover Limit",
-    "Financial Questionnaire",
+    "FQ/Privacy Notice/ Consent Clauses",
     "Id",
     "Pin (Kra)",
     "Payment",

@@ -61,8 +61,9 @@ const ViewApplication = () => {
     "Identification", "Bank Proof", "Proof of Payment", "Premium Illustrator",
   ],
   old_mutual: [
-    "Direct Debit", "Customer Declaration", "Free Cover Limit",
-    "Financial Questionnaire", "Id", "Pin (Kra)", "Payment",
+    "Application Form", "Direct Debit", "Customer Declaration",
+    "Free Cover Limit", "FQ/Privacy Notice/ Consent Clauses",
+    "Id", "Pin (Kra)", "Payment",
   ],
 };
 
