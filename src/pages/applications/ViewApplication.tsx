@@ -756,13 +756,10 @@ const logo = isOm ? omLogo : absaLogo;
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g. 300900700"
+                    placeholder="e.g. OM500900700"
                     value={addDocPolicyNumber}
                     onChange={(e) => setAddDocPolicyNumber(e.target.value)}
                   />
-                  <small className="text-muted">
-                    If provided, this will appear in the follow-up email subject.
-                  </small>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">File</label>
