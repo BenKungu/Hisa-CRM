@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import SidebarNav from "../sidebar";
 import Header from "../header";
 import apiClient from "../../services/api";
-import { ArrowLeft, FileText, Download, ExternalLink } from "react-feather";
+import { ArrowLeft, FileText, Download, ExternalLink,Trash2 } from "react-feather";
 import absaLogo from "../../assets/logos/absa-logo.png";
 import omLogo from "../../assets/logos/om-logo.png";
 
@@ -134,6 +134,17 @@ const ViewApplication = () => {
       alert(err.response?.data?.error || err.message || "Upload failed");
     } finally {
       setAddDocBusy(false);
+    }
+  };
+
+  const handleRemoveDoc = async (doc: DocumentWithUrl) => {
+    if (!id) return;
+    if (!confirm(`Remove "${doc.file_name}"? This cannot be undone.`)) return;
+    try {
+      await apiClient.delete(`/applications/${id}/documents/${doc.id}`);
+      await reloadApplication();
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to remove document");
     }
   };
 
@@ -535,39 +546,55 @@ const logo = isOm ? omLogo : absaLogo;
                               : ""}
                           </div>
                         </div>
-                        {doc.viewUrl && (
-                          <div className="d-flex gap-2">
-                                                        <a
-                              href={doc.viewUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-sm"
+                                                <div className="d-flex gap-2">
+                          {doc.viewUrl && (
+                            <>
+                              <a
+                                href={doc.viewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-sm"
+                                style={{
+                                  backgroundColor: accent,
+                                  color: "#fff",
+                                  borderColor: accent,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Download size={12} className="me-1" />
+                                Download
+                              </a>
+                              <a
+                                href={doc.viewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-sm btn-outline-secondary"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <ExternalLink size={12} className="me-1" />
+                                New Tab
+                              </a>
+                            </>
+                          )}
+                          {isSubmitted && !doc.notified_at && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleRemoveDoc(doc)}
                               style={{
-                                backgroundColor: accent,
-                                color: "#fff",
-                                borderColor: accent,
                                 display: "inline-flex",
                                 alignItems: "center",
                               }}
                             >
-                              <Download size={12} className="me-1" />
-                              Download
-                            </a>
-                            <a
-                              href={doc.viewUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-sm btn-outline-secondary"
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                              }}
-                            >
-                              <ExternalLink size={12} className="me-1" />
-                              New Tab
-                            </a>
-                          </div>
-                        )}
+                              <Trash2 size={12} className="me-1" />
+                              Remove
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {!doc.viewUrl && (
