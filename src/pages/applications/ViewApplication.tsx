@@ -756,7 +756,7 @@ const logo = isOm ? omLogo : absaLogo;
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g. OM500900700"
+                    placeholder="e.g. OMk500900700 or ENDW34678090"
                     value={addDocPolicyNumber}
                     onChange={(e) => setAddDocPolicyNumber(e.target.value)}
                   />
