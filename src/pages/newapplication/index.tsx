@@ -11,7 +11,7 @@ interface NewApplicationProps {
 }
 
 const OM_PRODUCT_TYPES = [
-  "Lengo Savings",
+  "Zawadi Investment",
   "Lengo Digital",
   "Zawadi Education",
   "Elimika",
