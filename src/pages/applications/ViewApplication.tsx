@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import SidebarNav from "../sidebar";
 import Header from "../header";
 import apiClient from "../../services/api";
-import { ArrowLeft, FileText, Download, ExternalLink,Trash2 } from "react-feather";
+import { ArrowLeft, FileText, Download, ExternalLink, Trash2, RefreshCw } from "react-feather";
 import absaLogo from "../../assets/logos/absa-logo.png";
 import omLogo from "../../assets/logos/om-logo.png";
 
@@ -14,6 +14,7 @@ interface DocumentWithUrl {
   mime_type: string | null;
   size_bytes: number | null;
   uploaded: boolean;
+  status: string;
   notified_at: string | null;
   viewUrl: string | null;
 }
@@ -74,7 +75,9 @@ const ViewApplication = () => {
   const [addDocOpen, setAddDocOpen] = useState(false);
     const [addDocType, setAddDocType] = useState("");
   const [addDocFile, setAddDocFile] = useState<File | null>(null);
-  const [addDocPolicyNumber, setAddDocPolicyNumber] = useState("");
+    const [addDocPolicyNumber, setAddDocPolicyNumber] = useState("");
+  const [addDocIsReplacement, setAddDocIsReplacement] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [addDocBusy, setAddDocBusy] = useState(false);
   const [notifyBusy, setNotifyBusy] = useState(false);
   useEffect(() => {
@@ -100,20 +103,17 @@ const ViewApplication = () => {
     setDocuments(res.data.documents || []);
   };
 
-  const unnotifiedCount = documents.filter(
-    (d) => d.uploaded && !(d as any).notified_at
-  ).length;
-
   const handleAddDoc = async () => {
     if (!addDocFile || !addDocType || !id) return;
     setAddDocBusy(true);
     try {
-        const reqRes = await apiClient.post(`/applications/${id}/documents`, {
+              const reqRes = await apiClient.post(`/applications/${id}/documents`, {
         doc_type: addDocType,
         file_name: addDocFile.name,
         mime_type: addDocFile.type || "application/octet-stream",
         size_bytes: addDocFile.size,
         policy_number: addDocPolicyNumber.trim() || undefined,
+        is_replacement: addDocIsReplacement,
       });
       const { documentId, uploadUrl } = reqRes.data;
 
@@ -197,7 +197,9 @@ const ViewApplication = () => {
     );
   }
 
-    const uploadedDocs = documents.filter((d) => d.uploaded);
+      const activeDocs = documents.filter((d) => d.uploaded && d.status !== "superseded");
+  const supersededDocs = documents.filter((d) => d.uploaded && d.status === "superseded");
+  const unnotifiedCount = activeDocs.filter((d) => !d.notified_at).length;
   const applicantName = `${application.applicant_first_name || ""} ${
     application.applicant_surname || ""
   }`.trim();
@@ -502,21 +504,21 @@ const logo = isOm ? omLogo : absaLogo;
           {/* Documents */}
           <div className="row">
             <div className="col-12">
-              <div className="card">
+                            <div className="card">
                 <div className="card-header">
                   <h5 className="card-title mb-0">
                     <FileText size={16} className="me-2" />
-                    Documents ({uploadedDocs.length})
+                    Documents ({activeDocs.length})
                   </h5>
                 </div>
                 <div className="card-body">
-                  {uploadedDocs.length === 0 && (
+                                    {activeDocs.length === 0 && (
                     <p className="text-muted mb-0">
                       No documents were uploaded.
                     </p>
                   )}
 
-                  {uploadedDocs.map((doc) => (
+                  {activeDocs.map((doc) => (
                     <div
                       key={doc.id}
                       className="mb-4 pb-4"
@@ -580,6 +582,24 @@ const logo = isOm ? omLogo : absaLogo;
                                 New Tab
                               </a>
                             </>
+                          )}
+                                                    {isSubmitted && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => {
+                                setAddDocType(doc.doc_type);
+                                setAddDocIsReplacement(true);
+                                setAddDocOpen(true);
+                              }}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <RefreshCw size={12} className="me-1" />
+                              Replace
+                            </button>
                           )}
                           {isSubmitted && !doc.notified_at && (
                             <button
@@ -663,7 +683,45 @@ const logo = isOm ? omLogo : absaLogo;
                           </div>
                         )}
                     </div>
+                    
                                     ))}
+
+                                                      {/* History toggle */}
+                  {supersededDocs.length > 0 && (
+                    <div className="mt-3 p-3 bg-light rounded d-flex justify-content-between align-items-center" style={{ border: "1px solid #eee" }}>
+                      <span className="text-muted small">
+                        {supersededDocs.length} superseded document(s) hidden.
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-link p-0 text-decoration-none"
+                        onClick={() => setShowHistory(!showHistory)}
+                      >
+                        {showHistory ? "Hide History" : "View History"}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Superseded list */}
+                  {showHistory && supersededDocs.map((doc) => (
+                    <div key={doc.id} className="mt-3 pb-3" style={{ borderBottom: "1px solid #eee", opacity: 0.6 }}>
+                      <div className="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                        <div>
+                          <h6 className="mb-0 text-decoration-line-through text-muted" style={{ fontSize: "14px" }}>
+                            {doc.doc_type}
+                          </h6>
+                          <div style={{ fontSize: "12px", color: "#888" }}>
+                            {doc.file_name} (Superseded)
+                          </div>
+                        </div>
+                        {doc.viewUrl && (
+                          <a href={doc.viewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-secondary">
+                            Download Old Version
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
 
                   {/* Post-submit actions */}
                   {isSubmitted && (
@@ -739,6 +797,7 @@ const logo = isOm ? omLogo : absaLogo;
                     className="form-select"
                     value={addDocType}
                     onChange={(e) => setAddDocType(e.target.value)}
+                    disabled={addDocIsReplacement}
                   >
                     <option value="">-- Select --</option>
                     {(DOC_TYPES_BY_PROVIDER[application?.provider] || []).map((t) => (
@@ -746,13 +805,13 @@ const logo = isOm ? omLogo : absaLogo;
                     ))}
                   </select>
                 </div>
+                                {addDocIsReplacement && (
+                  <div className="alert alert-warning py-2 mb-3" style={{ fontSize: "13px" }}>
+                    You are uploading a <strong>replacement</strong> for <strong>{addDocType}</strong>. The old version will be kept in history but marked as superseded.
+                  </div>
+                )}
                 <div className="mb-3">
-                  <label className="form-label">
-                    Policy Number{" "}
-                    <span className="text-muted" style={{ fontWeight: 400, fontSize: "12px" }}>
-                      (optional — for Direct Debit uploads)
-                    </span>
-                  </label>
+                  <label className="form-label">Policy Number</label>
                   <input
                     type="text"
                     className="form-control"
