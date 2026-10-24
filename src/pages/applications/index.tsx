@@ -373,33 +373,48 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
               </div>
                             <div className="col-sm-5 text-end">
                 <div className="d-flex gap-2 justify-content-end align-items-center">
-                  <div className="btn-group btn-group-sm">
-                    <button
-                      className={`btn ${viewMode === "current" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ 
-                        backgroundColor: viewMode === "current" ? accent : undefined,
-                        borderColor: accent,
-                        color: viewMode === "current" ? "#fff" : accent
-                      }}
-                      onClick={() => setViewMode("current")}
-                    >
-                      Current Apps
-                    </button>
-                    <button
-                      className={`btn ${viewMode === "legacy" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ 
-                        backgroundColor: viewMode === "legacy" ? accent : undefined,
-                        borderColor: accent,
-                        color: viewMode === "legacy" ? "#fff" : accent
-                      }}
-                      onClick={() => setViewMode("legacy")}
-                    >
-                      Legacy Apps
-                    </button>
-                  </div>
-                  {viewMode === "current" && (
+                  
+                  {/* ONLY SHOW THIS FOR ABSA */}
+                  {provider === "absa" && (
+                    <div className="btn-group btn-group-sm">
+                      <button
+                        className={`btn ${viewMode === "current" ? "btn-primary" : "btn-outline-secondary"}`}
+                        style={{ 
+                          backgroundColor: viewMode === "current" ? accent : undefined,
+                          borderColor: accent,
+                          color: viewMode === "current" ? "#fff" : accent
+                        }}
+                        onClick={() => setViewMode("current")}
+                      >
+                        Current Apps
+                      </button>
+                      <button
+                        className={`btn ${viewMode === "legacy" ? "btn-primary" : "btn-outline-secondary"}`}
+                        style={{ 
+                          backgroundColor: viewMode === "legacy" ? accent : undefined,
+                          borderColor: accent,
+                          color: viewMode === "legacy" ? "#fff" : accent
+                        }}
+                        onClick={() => setViewMode("legacy")}
+                      >
+                        Legacy Apps
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ONLY SHOW NEW APP BUTTON IF NOT ON LEGACY VIEW */}
+                  {(!provider || provider === "absa") && viewMode === "current" && (
                     <Link
                       to="/new-application"
+                      className="btn btn-primary"
+                      style={{ backgroundColor: accent, borderColor: accent }}
+                    >
+                      + New Application
+                    </Link>
+                  )}
+                  {provider === "old_mutual" && (
+                    <Link
+                      to="/om-applications/new"
                       className="btn btn-primary"
                       style={{ backgroundColor: accent, borderColor: accent }}
                     >
