@@ -43,6 +43,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
 
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"current" | "legacy">("current");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [error, setError] = useState("");
@@ -81,6 +82,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
     if (statusFilter && statusFilter !== "all")
       params.append("status", statusFilter);
     params.append("provider", provider);
+    params.append("is_legacy", viewMode === "legacy" ? "true" : "false");
 
     const res = await apiClient.get(`/applications?${params.toString()}`
       );
@@ -98,7 +100,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
     useEffect(() => {
     loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, provider]);
+  }, [statusFilter, provider, viewMode]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -369,14 +371,42 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
                    <li className="breadcrumb-item active">{listTitle}</li>
                 </ul>
               </div>
-              <div className="col-sm-5 text-end">
-                                                <Link
-                  to="/new-application"
-                  className="btn btn-primary"
-                  style={{ backgroundColor: accent, borderColor: accent }}
-                >
-                  + New Application
-                </Link>
+                            <div className="col-sm-5 text-end">
+                <div className="d-flex gap-2 justify-content-end align-items-center">
+                  <div className="btn-group btn-group-sm">
+                    <button
+                      className={`btn ${viewMode === "current" ? "btn-primary" : "btn-outline-secondary"}`}
+                      style={{ 
+                        backgroundColor: viewMode === "current" ? accent : undefined,
+                        borderColor: accent,
+                        color: viewMode === "current" ? "#fff" : accent
+                      }}
+                      onClick={() => setViewMode("current")}
+                    >
+                      Current Apps
+                    </button>
+                    <button
+                      className={`btn ${viewMode === "legacy" ? "btn-primary" : "btn-outline-secondary"}`}
+                      style={{ 
+                        backgroundColor: viewMode === "legacy" ? accent : undefined,
+                        borderColor: accent,
+                        color: viewMode === "legacy" ? "#fff" : accent
+                      }}
+                      onClick={() => setViewMode("legacy")}
+                    >
+                      Legacy Apps
+                    </button>
+                  </div>
+                  {viewMode === "current" && (
+                    <Link
+                      to="/new-application"
+                      className="btn btn-primary"
+                      style={{ backgroundColor: accent, borderColor: accent }}
+                    >
+                      + New Application
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>
