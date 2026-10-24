@@ -583,7 +583,7 @@ const logo = isOm ? omLogo : absaLogo;
                               </a>
                             </>
                           )}
-                                                    {isSubmitted && (
+                          {isSubmitted && !application?.is_legacy && (
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-primary"
@@ -601,7 +601,7 @@ const logo = isOm ? omLogo : absaLogo;
                               Replace
                             </button>
                           )}
-                          {isSubmitted && !doc.notified_at && (
+                          {isSubmitted && !application?.is_legacy && !doc.notified_at && (
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-danger"
@@ -723,8 +723,8 @@ const logo = isOm ? omLogo : absaLogo;
                     </div>
                   ))}
 
-                  {/* Post-submit actions */}
-                  {isSubmitted && (
+                  {/* Post-submit actions — HIDDEN FOR LEGACY APPS */}
+                  {isSubmitted && !application?.is_legacy && (
                     <div className="mt-3 pt-3" style={{ borderTop: "1px solid #eee" }}>
                       <div className="d-flex flex-wrap gap-2">
                         <button
