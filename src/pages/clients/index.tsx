@@ -69,8 +69,8 @@ const AdminClients = () => {
   const [data, setData] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [includeMmfOnly, setIncludeMmfOnly] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+  const [mmfFilter, setMmfFilter] = useState<'default' | 'all' | 'no_mmf'>('default');
 
   // --------------------------------------------------------------------------
   // State – filters
@@ -235,11 +235,11 @@ const AdminClients = () => {
   // DATA LOADING
   // ==========================================================================
 
-  const loadClients = async () => {
+    const loadClients = async () => {
   setLoading(true);
   setError('');
   try {
-    const response = await clientService.getClients({ includeMmfOnly });
+    const response = await clientService.getClients({ mmfFilter });
     if (response.success) setData(response.data);
     else setError('Failed to load clients');
   } catch (err: any) {
@@ -277,18 +277,18 @@ const AdminClients = () => {
   };
 
   // Read `?search=` query param from the URL
-  useEffect(() => {
+    useEffect(() => {
   const params = new URLSearchParams(location.search);
   const searchQuery = params.get('search');
   if (searchQuery) {
     setSearchTerm(searchQuery);
-    setIncludeMmfOnly(true); 
+    setMmfFilter('all');
   }
 }, [location.search]);
 
   useEffect(() => {
   loadClients();
-}, [includeMmfOnly]);
+}, [mmfFilter]);
 
   // ==========================================================================
   // HANDLERS – Export
@@ -317,7 +317,7 @@ if (filters.policyCount.length > 0) params.policyCount = filters.policyCount;
 if (filters.status.length > 0) params.status = filters.status;
 if (filters.agent.length > 0) params.agent = filters.agent;
 if (filters.clientType.length > 0) params.clientType = filters.clientType;   
-params.includeMmfOnly = includeMmfOnly;                                     
+params.mmfFilter = mmfFilter;                                     
 if (filters.dobFilter.type !== 'none')  {
         params.dobType = filters.dobFilter.type;
         if (filters.dobFilter.type === 'custom') {
@@ -1215,32 +1215,49 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                     </div>
                     <div className="col-auto">
                       <div className="d-flex align-items-center gap-2">
-                          <div className="btn-group btn-group-sm" role="group">
+                          
+                                                    <div className="btn-group btn-group-sm" role="group">
                                 <button
                                   type="button"
                                   className="btn"
-                                  onClick={() => setIncludeMmfOnly(false)}
+                                  onClick={() => setMmfFilter('default')}
                                   style={{
                                     fontSize: '12px',
-                                    backgroundColor: !includeMmfOnly ? '#2a9d36' : '#f8f9fa',
-                                    color: !includeMmfOnly ? '#fff' : '#333',
+                                    backgroundColor: mmfFilter === 'default' ? '#2a9d36' : '#f8f9fa',
+                                    color: mmfFilter === 'default' ? '#fff' : '#333',
                                     border: '1px solid #d1d5db',
                                   }}
+                                  title="Clients with insurance policies (hides pure MMF clients)"
                                 >
-                                  Edwn/Edukn
+                                  Insurance Only
                                 </button>
                                 <button
                                   type="button"
                                   className="btn"
-                                  onClick={() => setIncludeMmfOnly(true)}
+                                  onClick={() => setMmfFilter('all')}
                                   style={{
                                     fontSize: '12px',
-                                    backgroundColor: includeMmfOnly ? '#2a9d36' : '#f8f9fa',
-                                    color: includeMmfOnly ? '#fff' : '#333',
+                                    backgroundColor: mmfFilter === 'all' ? '#2a9d36' : '#f8f9fa',
+                                    color: mmfFilter === 'all' ? '#fff' : '#333',
                                     border: '1px solid #d1d5db',
                                   }}
+                                  title="Show all clients including MMF-only"
                                 >
-                                  +Mmf
+                                  All Clients
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn"
+                                  onClick={() => setMmfFilter('no_mmf')}
+                                  style={{
+                                    fontSize: '12px',
+                                    backgroundColor: mmfFilter === 'no_mmf' ? '#c70e2a' : '#f8f9fa',
+                                    color: mmfFilter === 'no_mmf' ? '#fff' : '#333',
+                                    border: '1px solid #d1d5db',
+                                  }}
+                                  title="Show only clients who do NOT have an MMF account"
+                                >
+                                  No MMF
                                 </button>
                               </div>
 

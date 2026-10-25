@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-daterangepicker/daterangepicker.css";
 import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Header from "../header";
 import { Search, Eye, Edit3, CheckCircle, Trash2 } from "react-feather";
 import apiClient from "../../services/api";
@@ -41,9 +41,12 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
   const basePath = isOm ? "/om-applications" : "/applications";
   const logo = isOm ? omLogo : absaLogo;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialLegacy = searchParams.get("is_legacy") === "true";
+
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<"current" | "legacy">("current");
+  const [viewMode, setViewMode] = useState<"current" | "legacy">(initialLegacy ? "legacy" : "current");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [error, setError] = useState("");
@@ -97,8 +100,13 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
     }
   };
 
-    useEffect(() => {
+      useEffect(() => {
     loadApplications();
+    
+    const newParams = new URLSearchParams(searchParams);
+    if (viewMode === "legacy") newParams.set("is_legacy", "true");
+    else newParams.delete("is_legacy");
+    setSearchParams(newParams, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, provider, viewMode]);
 

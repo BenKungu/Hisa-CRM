@@ -205,10 +205,11 @@ const ViewApplication = () => {
   }`.trim();
 
   const isSubmitted = application.status === "submitted";
-  const isOm = application.provider === "old_mutual";
+   const isOm = application.provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
   const providerLabel = isOm ? "Old Mutual" : "Absa";
-const basePath = isOm ? "/om-applications" : "/applications";
+  let basePath = isOm ? "/om-applications" : "/applications";
+  if (application.is_legacy) basePath += "?is_legacy=true";
 const logo = isOm ? omLogo : absaLogo;
 
   return (
