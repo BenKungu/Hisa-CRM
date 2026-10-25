@@ -311,13 +311,13 @@ const AdminClients = () => {
 
     try {
       // Build filter params from current filter state
-      const params: any = {};
+            const params: any = {};
 if (searchTerm) params.search = searchTerm;
 if (filters.policyCount.length > 0) params.policyCount = filters.policyCount;
 if (filters.status.length > 0) params.status = filters.status;
-if (filters.agent.length > 0) params.agent = filters.agent;
+if (filters.agent.length > 0) params.agent = filters.agent.join(',');
 if (filters.clientType.length > 0) params.clientType = filters.clientType;   
-params.mmfFilter = mmfFilter;                                     
+params.mmfFilter = mmfFilter;
 if (filters.dobFilter.type !== 'none')  {
         params.dobType = filters.dobFilter.type;
         if (filters.dobFilter.type === 'custom') {
