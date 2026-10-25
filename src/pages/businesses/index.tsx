@@ -156,6 +156,18 @@ const AdminBusinesses = () => {
   const frequencyOptions = ['Monthly', 'Annual', 'Quarterly', 'Semi-Annual'];
   const productOptions = ['Education Policy', 'Endowment Policy'];
 
+
+  // Extract unique agents from the loaded policies
+  const agentOptions: string[] = (() => {
+    const names = new Set<string>();
+    data.forEach((p) => {
+      if (p.agent_name && p.agent_name !== 'N/A' && p.agent_name !== '--') {
+        names.add(p.agent_name);
+      }
+    });
+    return Array.from(names).sort();
+  })();
+
   // ==========================================================================
   // HELPERS
   // ==========================================================================
@@ -281,6 +293,7 @@ const AdminBusinesses = () => {
     return filters.status.length > 0 ||
            filters.frequency.length > 0 ||
            filters.productType.length > 0 ||
+           filters.agent.length > 0 ||
            filters.strikeDayRange.length > 0 ||
            filters.sumInsuredMin > 0 ||
            filters.sumInsuredMax > 0 ||
@@ -1412,7 +1425,7 @@ const columns: ColumnsType<Policy> = [
                           Filters
                           {hasActiveFilters() && (
                             <span className="badge bg-white text-dark ms-1" style={{ fontSize: '10px' }}>
-                              {filters.status.length + filters.frequency.length + filters.productType.length}
+                              {filters.status.length + filters.frequency.length + filters.productType.length + filters.agent.length}
                             </span>
                           )}
                         </button>
@@ -1523,6 +1536,38 @@ const columns: ColumnsType<Policy> = [
                                     }}
                                   />
                                   <label className="form-check-label" htmlFor={`product-${option}`}>{option}</label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Agent filter */}
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              style={{ fontSize: '12px', backgroundColor: '#f8f9fa', border: '1px solid #d1d5db', borderRadius: '6px', padding: '4px 12px', color: '#333' }}
+                            >
+                              Agent {filters.agent.length > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#c70e2a', color: '#fff', marginLeft: '4px' }}>
+                                  {filters.agent.length}
+                                </span>
+                              )}
+                            </button>
+                            <div className="dropdown-menu p-2" style={{ minWidth: '200px', maxHeight: '300px', overflowY: 'auto' }}>
+                              {agentOptions.map(option => (
+                                <div className="form-check" key={option}>
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id={`agent-${option}`}
+                                    checked={filters.agent.includes(option)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) setFilters({...filters, agent: [...filters.agent, option]});
+                                      else setFilters({...filters, agent: filters.agent.filter(a => a !== option)});
+                                    }}
+                                  />
+                                  <label className="form-check-label" htmlFor={`agent-${option}`}>{option}</label>
                                 </div>
                               ))}
                             </div>
