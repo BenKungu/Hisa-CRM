@@ -470,10 +470,10 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
                           <span className="input-group-text bg-white">
                             <Search size={14} className="text-muted" />
                           </span>
-                          <input
+                                                    <input
                             type="text"
                             className="form-control form-control-sm"
-                            placeholder="Search reference, applicant…"
+                            placeholder="Search ref, applicant name, ID…"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                           />
