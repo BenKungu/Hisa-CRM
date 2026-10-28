@@ -682,18 +682,30 @@ const columns: ColumnsType<Policy> = [
     {
       title: "Client",
       dataIndex: "client_name",
-      width: 180,
-      render: (text: string) => {
+      width: 200,
+      render: (text: string, record: Policy) => {
         const displayName = text || 'N/A';
         return (
-          <div className="cell-client">
-            <span
-              className="cell-avatar"
-              style={{ backgroundColor: getAvatarColor(displayName) }}
+          <div className="d-flex align-items-center justify-content-between w-100">
+            <div className="cell-client">
+              <span
+                className="cell-avatar"
+                style={{ backgroundColor: getAvatarColor(displayName) }}
+              >
+                {getInitials(displayName)}
+              </span>
+              <span className="cell-client-name">{displayName}</span>
+            </div>
+            
+            {/* QUICK VIEW ICON */}
+            <button
+              className="btn btn-sm btn-link p-1 text-muted"
+              onClick={() => openModal('view', record)}
+              title="Quick View"
+              style={{ textDecoration: 'none' }}
             >
-              {getInitials(displayName)}
-            </span>
-            <span className="cell-client-name">{displayName}</span>
+              <Eye size={16} />
+            </button>
           </div>
         );
       },
@@ -746,7 +758,6 @@ const columns: ColumnsType<Policy> = [
       width: 130,
       align: 'right' as const,
       responsive: ['xl'],
-      onCell: () => ({ className: 'cell-tint--soft' }),
       render: (value: number) => (
         <span className="cell-amount cell-amount--soft">
           KES {formatCurrency(value)}
@@ -760,7 +771,6 @@ const columns: ColumnsType<Policy> = [
       width: 130,
       align: 'right' as const,
       responsive: ['md', 'lg', 'xl'],
-      onCell: () => ({ className: 'cell-tint--strong' }),
       render: (value: number) => (
         <span className="cell-amount cell-amount--success">
           KES {formatCurrency(value)}
@@ -774,7 +784,6 @@ const columns: ColumnsType<Policy> = [
       width: 130,
       align: 'right' as const,
       responsive: ['xl'],
-      onCell: () => ({ className: 'cell-tint--soft' }),
       render: (value: number) => (
         <span className="cell-amount cell-amount--soft">
           KES {formatCurrency(value)}
@@ -787,7 +796,6 @@ const columns: ColumnsType<Policy> = [
       dataIndex: "strike_date",
       width: 100,
       responsive: ['lg', 'xl'],
-      onCell: () => ({ className: 'cell-tint--blue' }),
       render: (value: number) => {
         if (!value && value !== 0) return <span className="cell-text-muted">—</span>;
         const display = getStrikeDayWithOrdinal(value);
@@ -840,8 +848,9 @@ const columns: ColumnsType<Policy> = [
       dataIndex: "",
       width: 110,
       className: "text-end",
+      fixed: 'right' as const, // STICK ACTION COLUMN TO THE RIGHT
       render: (_: any, record: Policy) => (
-        <div className="row-actions">
+        <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
           <button
             className="btn-icon btn-icon--success"
             onClick={() => openModal('view', record)}
@@ -867,6 +876,208 @@ const columns: ColumnsType<Policy> = [
       ),
     },
   ];
+
+// const columns: ColumnsType<Policy> = [
+//     {
+//       title: "Policy Number",
+//       dataIndex: "policy_number",
+//       width: 150,
+//       render: (text: string) => (
+//         <span className="cell-reference">
+//           <FileText size={12} />
+//           {text || 'N/A'}
+//         </span>
+//       ),
+//       sorter: (a: any, b: any) => (a.policy_number || '').localeCompare(b.policy_number || ''),
+//     },
+//     {
+//       title: "Client",
+//       dataIndex: "client_name",
+//       width: 180,
+//       render: (text: string) => {
+//         const displayName = text || 'N/A';
+//         return (
+//           <div className="cell-client">
+//             <span
+//               className="cell-avatar"
+//               style={{ backgroundColor: getAvatarColor(displayName) }}
+//             >
+//               {getInitials(displayName)}
+//             </span>
+//             <span className="cell-client-name">{displayName}</span>
+//           </div>
+//         );
+//       },
+//       sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
+//     },
+//     {
+//       title: "Status",
+//       dataIndex: "policy_status",
+//       width: 150,
+//       responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
+//       render: (status: string) => {
+//         const cleaned = cleanPolicyStatus(status);
+//         const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
+//         return (
+//           <span
+//             className="status-badge"
+//             style={{ backgroundColor: style.bg }}
+//             title={status || 'N/A'}
+//           >
+//             {style.icon} {cleaned}
+//           </span>
+//         );
+//       },
+//       sorter: (a: any, b: any) =>
+//         cleanPolicyStatus(a.policy_status).localeCompare(cleanPolicyStatus(b.policy_status)),
+//     },
+//     {
+//       title: "Frequency",
+//       dataIndex: "premium_frequency",
+//       width: 100,
+//       responsive: ['lg', 'xl'],
+//       render: (text: string) => {
+//         if (!text) return <span className="cell-text-muted">—</span>;
+//         return (
+//           <span
+//             className="chip"
+//             style={{
+//               color: getFrequencyColor(text),
+//               backgroundColor: getFrequencyColor(text) + '15',
+//             }}
+//           >
+//             {text}
+//           </span>
+//         );
+//       },
+//     },
+//     {
+//       title: "Initial Premium",
+//       dataIndex: "initial_gross_premium",
+//       width: 130,
+//       align: 'right' as const,
+//       responsive: ['xl'],
+//       onCell: () => ({ className: 'cell-tint--soft' }),
+//       render: (value: number) => (
+//         <span className="cell-amount cell-amount--soft">
+//           KES {formatCurrency(value)}
+//         </span>
+//       ),
+//       sorter: (a: any, b: any) => (a.initial_gross_premium || 0) - (b.initial_gross_premium || 0),
+//     },
+//     {
+//       title: "Current Premium",
+//       dataIndex: "new_gross_premium",
+//       width: 130,
+//       align: 'right' as const,
+//       responsive: ['md', 'lg', 'xl'],
+//       onCell: () => ({ className: 'cell-tint--strong' }),
+//       render: (value: number) => (
+//         <span className="cell-amount cell-amount--success">
+//           KES {formatCurrency(value)}
+//         </span>
+//       ),
+//       sorter: (a: any, b: any) => (a.new_gross_premium || 0) - (b.new_gross_premium || 0),
+//     },
+//     {
+//       title: "Total Sum Insured",
+//       dataIndex: "total_sum_insured",
+//       width: 130,
+//       align: 'right' as const,
+//       responsive: ['xl'],
+//       onCell: () => ({ className: 'cell-tint--soft' }),
+//       render: (value: number) => (
+//         <span className="cell-amount cell-amount--soft">
+//           KES {formatCurrency(value)}
+//         </span>
+//       ),
+//       sorter: (a: any, b: any) => (a.total_sum_insured || 0) - (b.total_sum_insured || 0),
+//     },
+//     {
+//       title: "Strike Day",
+//       dataIndex: "strike_date",
+//       width: 100,
+//       responsive: ['lg', 'xl'],
+//       onCell: () => ({ className: 'cell-tint--blue' }),
+//       render: (value: number) => {
+//         if (!value && value !== 0) return <span className="cell-text-muted">—</span>;
+//         const display = getStrikeDayWithOrdinal(value);
+//         if (!display) return '—';
+//         return <span className="strike-day">{display}</span>;
+//       },
+//       sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
+//     },
+//     {
+//       title: "Agent",
+//       dataIndex: "agent_name",
+//       width: 140,
+//       responsive: ['lg', 'xl'],
+//       render: (text: string) => (
+//         <span className="cell-text-muted">{text || '—'}</span>
+//       ),
+//       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
+//     },
+//     {
+//       title: "Last Updated",
+//       dataIndex: "updated_at",
+//       width: 130,
+//       responsive: ['xl'],
+//       render: (date: string) => {
+//         if (!date) return '—';
+//         const updated = new Date(date);
+//         const now = new Date();
+//         const diffMs = now.getTime() - updated.getTime();
+//         const diffMins = Math.floor(diffMs / 60000);
+//         const diffHours = Math.floor(diffMs / 3600000);
+//         const diffDays = Math.floor(diffMs / 86400000);
+//         let timeAgo = '';
+//         if (diffMins < 1) timeAgo = 'Now';
+//         else if (diffMins < 60) timeAgo = `${diffMins}m`;
+//         else if (diffHours < 24) timeAgo = `${diffHours}h`;
+//         else timeAgo = `${diffDays}d`;
+
+//         return (
+//           <div className="cell-time">
+//             <div>{formatDateCompact(date)}</div>
+//             <div className="cell-time-ago">{timeAgo}</div>
+//           </div>
+//         );
+//       },
+//       sorter: (a: any, b: any) =>
+//         new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+//     },
+//     {
+//       title: "",
+//       dataIndex: "",
+//       width: 110,
+//       className: "text-end",
+//       render: (_: any, record: Policy) => (
+//         <div className="row-actions">
+//           <button
+//             className="btn-icon btn-icon--success"
+//             onClick={() => openModal('view', record)}
+//             title="View"
+//           >
+//             <Eye size={13} />
+//           </button>
+//           <button
+//             className="btn-icon btn-icon--muted"
+//             disabled
+//             title="Edit (Coming soon)"
+//           >
+//             <Edit size={13} />
+//           </button>
+//           <button
+//             className="btn-icon btn-icon--danger"
+//             onClick={() => openModal('delete', record)}
+//             title="Delete"
+//           >
+//             <Trash2 size={13} />
+//           </button>
+//         </div>
+//       ),
+//     },
+//   ];
 
   // ==========================================================================
   // MODAL CONTENT – View / Delete
@@ -1861,7 +2072,7 @@ const columns: ColumnsType<Policy> = [
                         })}
                     </div>
                   ) : (
-                    <div className="table-responsive app-table-wrap">
+                      <div className="table-responsive app-table-wrap">
                       <Table
                         loading={loading}
                         rowClassName={rowClassName}
@@ -1890,36 +2101,40 @@ const columns: ColumnsType<Policy> = [
         </div>
       </div>
 
-      {/* Table styles */}
+                  {/* Table styles */}
       <style>{`
-        .table-row-even { background-color: #ffffff; }
-        .table-row-odd { background-color: #f8f9fa; }
-        .table-row-even:hover, .table-row-odd:hover {
-          background-color: #e8f0fe !important;
-          transition: background-color 0.15s ease;
+        /* 1. High contrast zebra stripes */
+        .table-row-even > td { background-color: #ffffff !important; }
+        .table-row-odd > td { background-color: #e2e8f0 !important; } /* Darker grey for clear visibility */
+        
+        /* 2. Hover state */
+        .table-row-even:hover > td { background-color: #f1f5f9 !important; }
+        .table-row-odd:hover > td { background-color: #cbd5e1 !important; }
+
+        /* 3. Ensure the sticky Action column has a solid background */
+        .ant-table-cell-fix-right {
+          background-color: inherit !important;
+          z-index: 2;
         }
-        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+
+        /* 4. Header styling */
         .ant-table-thead > tr > th {
-          background-color: #f1f3f5 !important;
-          font-weight: 600 !important;
-          color: #333 !important;
+          background-color: #cbd5e1 !important; 
+          font-weight: 700 !important;
+          color: #0f172a !important;
           padding: 12px 12px !important;
-          border-bottom: 2px solid #dee2e6 !important;
+          border-bottom: 2px solid #94a3b8 !important;
         }
-        .ant-table-tbody > tr > td:first-child {
-          border-left: 3px solid transparent;
-        }
-        .ant-table-tbody > tr.table-row-even:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
-        .ant-table-tbody > tr.table-row-odd:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
-        .avatar {
-          border-radius: 50% !important;
-          overflow: hidden !important;
-          flex-shrink: 0 !important;
-        }
+        
+        /* 5. Cell padding */
+        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+        
+        /* 6. Left border hover indicator */
+        .ant-table-tbody > tr > td:first-child { border-left: 3px solid transparent; }
+        .ant-table-tbody > tr.table-row-even:hover > td:first-child { border-left-color: #2a9d36; }
+        .ant-table-tbody > tr.table-row-odd:hover > td:first-child { border-left-color: #2a9d36; }
+
+        .avatar { border-radius: 50% !important; overflow: hidden !important; flex-shrink: 0 !important; }
         .avatar span { border-radius: 50% !important; }
       `}</style>
 
