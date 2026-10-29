@@ -179,3 +179,10 @@ Save this as `HISA-CRM-MASTER-CONTEXT.md`.
   - Email threading fix (SES raw-send).
   - Node 22 upgrade consideration.
   - If Waweru is unavailable, Hisa has no one who knows the CRM internals. A "how to keep the server alive" doc is a future mitigation.
+
+  ## 14. RECENT UPDATES (Late October 2026)
+
+- **Legacy Migration Forensics:** Conducted a deep analysis of the old server storage. 748 legacy applications have zero documents because the old system generated fake, corrupted `.xlsx` placeholders instead of saving real PDFs. Rescued an additional 5 apps (34 PDFs) via a deep disk scan and synced them to Prod.
+- **Email Document Ordering:** Added `sortDocumentsCanonical` to both `submitApplication` and `notifyUpdateApplication` in `applicationController.ts`. Emails now list documents in the standard canonical order, perfectly matching the Preview and View pages.
+- **Policies Table UX:** On desktop, the Action column is now sticky to the right. Added a Quick View (Eye icon) inside the Client column. Strengthened zebra stripes for better horizontal eye tracking. Mobile view (cards) remains untouched.
+- **Application Search:** Updated the frontend search placeholder to "Search ref, applicant name, ID…" (Backend was already fully tokenized to support name searches).
