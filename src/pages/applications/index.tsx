@@ -489,10 +489,10 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
                           <span className="input-group-text bg-white">
                             <Search size={14} className="text-muted" />
                           </span>
-                                                    <input
+                            <input
                             type="text"
                             className="form-control form-control-sm"
-                            placeholder="Search ref, applicant name, ID…"
+                            placeholder="Search ref, applicant, ID, policy no…"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                           />
@@ -512,7 +512,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
                     </div>
                   </div>
                 </div>
-                                <div className="card-body">
+                  <div className="card-body">
                   {isMobile ? (
                     <div className="m-card-list">
                       {loading && <div className="m-card__empty">Loading…</div>}
