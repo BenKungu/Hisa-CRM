@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import Header from "../header";
 import { Search, FileText, CheckCircle, XCircle, Eye} from 'react-feather';
 import { policyService } from '../../services/policy';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface PolicyType {
   product_type: string;
@@ -71,6 +72,7 @@ const defaultConfig = {
 };
 
 const AdminPolicyTypes = () => {
+  const isMobile = useIsMobile();
   const [data, setData] = useState<PolicyType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -568,27 +570,93 @@ const AdminPolicyTypes = () => {
                     </div>
                   </div>
                 </div>
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <Table
-                      loading={loading}
-                      rowClassName={rowClassName}
-                      pagination={{
-                        total: filteredData.length,
-                        showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} policy types`,
-                        showSizeChanger: true,
-                        onShowSizeChange: onShowSizeChange,
-                        itemRender: itemRender,
-                        defaultPageSize: 10,
-                      }}
-                      style={{ overflowX: "auto" }}
-                      columns={columns}
-                      dataSource={filteredData}
-                      rowKey={(record) => record.product_type}
-                      locale={{ emptyText: 'No policy types found' }}
-                    />
-                  </div>
+                                <div className="card-body">
+                  {isMobile ? (
+                    <div className="m-card-list">
+                      {loading && <div className="m-card__empty">Loading…</div>}
+                      {!loading && filteredData.length === 0 && (
+                        <div className="m-card__empty">No policy types found</div>
+                      )}
+
+                      {!loading && filteredData.map((item) => {
+                        const config = getProductTypeConfig(item.product_type);
+                        return (
+                          <div
+                            key={item.product_type}
+                            className="m-card"
+                            onClick={() => openModal(item)}
+                          >
+                            {/* Row 1: Icon + Name + Eye */}
+                            <div className="m-card__top">
+                              <span className="m-card__ref" style={{ color: config.color }}>
+                                <span style={{ fontSize: '16px', marginRight: '6px' }}>{config.icon}</span>
+                                {item.product_type || 'Uncategorized'}
+                              </span>
+                              <button
+                                className="btn btn-sm btn-link p-0 text-muted"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal(item);
+                                }}
+                              >
+                                <Eye size={16} />
+                              </button>
+                            </div>
+
+                            {/* Row 2: Policies + Premium */}
+                            <div className="m-card__meta" style={{ paddingBottom: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '500' }}>
+                                {item.count} Policies
+                              </span>
+                              <span className="m-card__premium">
+                                KES {formatCurrency(item.total_premium)}
+                              </span>
+                            </div>
+
+                            {/* Row 3: Status pills */}
+                            <div className="d-flex gap-2 flex-wrap pt-2" style={{ borderTop: '1px solid #f1f3f5' }}>
+                              {item.finalised_count > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#e8f5e9', color: '#2a9d36', padding: '4px 8px', fontSize: '11px' }}>
+                                  <CheckCircle size={10} className="me-1" /> {item.finalised_count} Finalised
+                                </span>
+                              )}
+                              {item.active_count > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#cfe2ff', color: '#0d6efd', padding: '4px 8px', fontSize: '11px' }}>
+                                  <FileText size={10} className="me-1" /> {item.active_count} Active
+                                </span>
+                              )}
+                              {item.cancelled_count > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#fde8ea', color: '#c70e2a', padding: '4px 8px', fontSize: '11px' }}>
+                                  <XCircle size={10} className="me-1" /> {item.cancelled_count} Cancelled
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <Table
+                        loading={loading}
+                        rowClassName={rowClassName}
+                        pagination={{
+                          total: filteredData.length,
+                          showTotal: (total, range) =>
+                            `Showing ${range[0]} to ${range[1]} of ${total} policy types`,
+                          showSizeChanger: true,
+                          onShowSizeChange: onShowSizeChange,
+                          itemRender: itemRender,
+                          defaultPageSize: 10,
+                        }}
+                        style={{ overflowX: "auto" }}
+                        columns={columns}
+                        dataSource={filteredData}
+                        rowKey={(record) => record.product_type}
+                        locale={{ emptyText: 'No policy types found' }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
