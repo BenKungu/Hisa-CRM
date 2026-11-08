@@ -128,7 +128,7 @@ const SidebarNav = () => {
                     <span>Agents</span>
                   </Link>
                 </li>
-                <li className={pathname?.includes("policies") ? "active" : ""}>
+                <li className={pathname?.includes("policy-type") ? "active" : ""}>
                   <Link to="/policy-types">
                     <Box size={16} /> <span>Products</span>
                   </Link>
