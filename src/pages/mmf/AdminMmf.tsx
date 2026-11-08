@@ -12,6 +12,7 @@ import {
 } from 'react-feather';
 import { mmfService } from '../../services/mmf';
 import { policyService } from '../../services/policy';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 // ============================================================================
 // TYPES
@@ -58,6 +59,7 @@ interface UploadResult {
 // ============================================================================
 
 const AdminMmf = () => {
+  const isMobile = useIsMobile();
   // --------------------------------------------------------------------------
   // State – data
   // --------------------------------------------------------------------------
@@ -284,12 +286,11 @@ const getMatchBadge = (holder: Holder | null) => {
   // TABLE COLUMNS
   // ==========================================================================
 
-  const columns = [
+    const columns = [
     {
       title: "Member No",
       dataIndex: "member_no",
       width: 130,
-      fixed: 'left' as const,
       render: (text: string) => (
         <span style={{ color: '#475569', fontWeight: '600', fontSize: '13px' }}>
           <FileText size={12} className="me-1" style={{ color: '#475569' }} />
@@ -301,46 +302,57 @@ const getMatchBadge = (holder: Holder | null) => {
     {
       title: "Primary Holder",
       dataIndex: "primary_holder",
-      width: 260,
-      fixed: 'left' as const,
-      render: (h: Holder | null) => {
-  if (!h) return <span className="text-muted">—</span>;
-  const display = `${h.title ? h.title + ' ' : ''}${h.name}`.trim();
-  const badge = getMatchBadge(h);
-  return (
-    <div className="d-flex align-items-center">
-      <span
-        className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-        style={{
-          width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
-          backgroundColor: '#475569', color: '#fff',
-          fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
-          borderRadius: '50%', flexShrink: 0
-        }}
-      >
-        {getInitials(display)}
-      </span>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: '13px', fontWeight: '500' }}>{display}</div>
-        {badge && (
-          <span
-            className="badge"
-            style={{
-              backgroundColor: badge.bg,
-              color: '#fff',
-              fontSize: '9px',
-              fontWeight: '500',
-              padding: '1px 6px',
-              marginTop: '2px',
-            }}
-          >
-            {badge.label}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-},
+      width: 280, // Slightly wider to fit the eye icon
+      render: (h: Holder | null, record: MmfAccount) => {
+        if (!h) return <span className="text-muted">—</span>;
+        const display = `${h.title ? h.title + ' ' : ''}${h.name}`.trim();
+        const badge = getMatchBadge(h);
+        return (
+          <div className="d-flex align-items-center justify-content-between w-100 pe-2">
+            <div className="d-flex align-items-center">
+              <span
+                className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{
+                  width: '28px', height: '28px', minWidth: '28px', minHeight: '28px',
+                  backgroundColor: '#475569', color: '#fff',
+                  fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase',
+                  borderRadius: '50%', flexShrink: 0
+                }}
+              >
+                {getInitials(display)}
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: '500' }}>{display}</div>
+                {badge && (
+                  <span
+                    className="badge"
+                    style={{
+                      backgroundColor: badge.bg,
+                      color: '#fff',
+                      fontSize: '9px',
+                      fontWeight: '500',
+                      padding: '1px 6px',
+                      marginTop: '2px',
+                    }}
+                  >
+                    {badge.label}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* QUICK VIEW EYE ICON */}
+            <button
+              className="btn btn-sm btn-link p-1 text-muted"
+              onClick={() => openModal(record)}
+              title="Quick View"
+              style={{ textDecoration: 'none' }}
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        );
+      },
       sorter: (a: any, b: any) =>
         (a.primary_holder?.name || '').localeCompare(b.primary_holder?.name || ''),
     },
@@ -416,7 +428,7 @@ const getMatchBadge = (holder: Holder | null) => {
       dataIndex: "",
       width: 70,
       className: "text-end",
-      fixed: 'right' as const,
+      fixed: 'right' as const, // STICK TO RIGHT
       render: (_: any, record: MmfAccount) => (
         <div className="text-end">
           <button
@@ -697,29 +709,94 @@ const getMatchBadge = (holder: Holder | null) => {
                   </div>
                 </div>
 
-                {/* ---------- Table ---------- */}
+              {/* ---------- Table ---------- */}
                 <div className="card-body">
-                  <div className="table-responsive">
-                    <Table
-                      loading={loading}
-                      rowClassName={rowClassName}
-                      pagination={{
-                        total: filteredData.length,
-                        showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} accounts`,
-                        showSizeChanger: true,
-                        onShowSizeChange: onShowSizeChange,
-                        itemRender: itemRender,
-                        defaultPageSize: 25,
-                      }}
-                      style={{ overflowX: 'auto' }}
-                      columns={columns}
-                      dataSource={filteredData}
-                      rowKey={(record) => record.id}
-                      locale={{ emptyText: 'No MMF accounts found' }}
-                      scroll={{ x: 1400 }}
-                    />
-                  </div>
+                  {isMobile ? (
+                    <div className="m-card-list">
+                      {loading && <div className="m-card__empty">Loading…</div>}
+                      {!loading && filteredData.length === 0 && (
+                        <div className="m-card__empty">No MMF accounts found</div>
+                      )}
+
+                      {!loading && filteredData.map((account) => {
+                        const primary = account.primary_holder;
+                        const displayName = primary ? `${primary.title ? primary.title + ' ' : ''}${primary.name}`.trim() : 'Unknown Holder';
+
+                        return (
+                          <div
+                            key={account.id}
+                            className="m-card"
+                            onClick={() => openModal(account)}
+                          >
+                            {/* Row 1: Member No + Eye */}
+                            <div className="m-card__top">
+                              <span className="m-card__ref">
+                                <FileText size={12} />
+                                Member {account.member_no}
+                              </span>
+                              <button
+                                className="btn btn-sm btn-link p-0 text-muted"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal(account);
+                                }}
+                              >
+                                <Eye size={16} />
+                              </button>
+                            </div>
+
+                            {/* Row 2: Primary Holder */}
+                            <div className="m-card__client" style={{ paddingBottom: '8px' }}>
+                              <span className="cell-avatar" style={{ backgroundColor: '#475569' }}>
+                                {getInitials(displayName)}
+                              </span>
+                              <div>
+                                <span className="m-card__client-name">{displayName}</span>
+                                {primary && primary.policy_count > 0 && (
+                                  <span className="badge ms-2" style={{ backgroundColor: '#eaf7ed', color: '#2a9d36', fontSize: '10px', padding: '2px 6px' }}>
+                                    +{primary.policy_count} Ins
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Row 3: Phone/Email + Holders count */}
+                            <div className="m-card__meta">
+                              <span style={{ fontSize: '12px', color: '#666' }}>
+                                {primary?.phone || primary?.email || 'No contact'}
+                              </span>
+                              <span style={{ fontSize: '12px', fontWeight: '600', color: account.holder_count > 1 ? '#0d6efd' : '#999' }}>
+                                <Users size={12} className="me-1" />
+                                {account.holder_count} Holder(s)
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="table-responsive app-table-wrap">
+                      <Table
+                        loading={loading}
+                        rowClassName={rowClassName}
+                        pagination={{
+                          total: filteredData.length,
+                          showTotal: (total, range) =>
+                            `Showing ${range[0]} to ${range[1]} of ${total} accounts`,
+                          showSizeChanger: true,
+                          onShowSizeChange: onShowSizeChange,
+                          itemRender: itemRender,
+                          defaultPageSize: 25,
+                        }}
+                        columns={columns}
+                        dataSource={filteredData}
+                        rowKey={(record) => record.id}
+                        locale={{ emptyText: 'No MMF accounts found' }}
+                        size="small"
+                        scroll={{ x: 'max-content' }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -727,37 +804,44 @@ const getMatchBadge = (holder: Holder | null) => {
         </div>
       </div>
 
-      {/* Table styles */}
+            {/* Table styles */}
       <style>{`
-        .table-row-even { background-color: #ffffff; }
-        .table-row-odd { background-color: #f8f9fa; }
-        .table-row-even:hover, .table-row-odd:hover {
-          background-color: #e8f0fe !important;
-          transition: background-color 0.15s ease;
+        /* 1. High contrast zebra stripes */
+        .table-row-even > td { background-color: #ffffff !important; }
+        .table-row-odd > td { background-color: #f1f5f9 !important; } 
+        
+        /* 2. Hover state */
+        .table-row-even:hover > td { background-color: #e0e7ff !important; }
+        .table-row-odd:hover > td { background-color: #e0e7ff !important; }
+
+        /* 3. Ensure the sticky Action column has a solid background */
+        .ant-table-cell-fix-right {
+          background-color: inherit !important;
+          z-index: 2;
         }
-        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+
+        /* 4. Header styling */
         .ant-table-thead > tr > th {
-          background-color: #f1f3f5 !important;
+          background-color: #e2e8f0 !important; 
           font-weight: 600 !important;
-          color: #333 !important;
+          color: #1e293b !important;
           padding: 12px 12px !important;
-          border-bottom: 2px solid #dee2e6 !important;
+          border-bottom: 2px solid #cbd5e1 !important;
         }
-        .ant-table-tbody > tr > td:first-child {
-          border-left: 3px solid transparent;
-        }
-        .ant-table-tbody > tr.table-row-even:hover > td:first-child {
-          border-left-color: #475569;
-        }
-        .ant-table-tbody > tr.table-row-odd:hover > td:first-child {
-          border-left-color: #475569;
-        }
+        
+        /* 5. Cell padding */
+        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+        
+        /* 6. Left border hover indicator (Slate for MMF) */
+        .ant-table-tbody > tr > td:first-child { border-left: 3px solid transparent; }
+        .ant-table-tbody > tr.table-row-even:hover > td:first-child { border-left-color: #475569; }
+        .ant-table-tbody > tr.table-row-odd:hover > td:first-child { border-left-color: #475569; }
+
         .avatar {
           border-radius: 50% !important;
           overflow: hidden !important;
           flex-shrink: 0 !important;
         }
-        .avatar span { border-radius: 50% !important; }
       `}</style>
 
       {/* =====================================================================

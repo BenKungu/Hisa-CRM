@@ -6,8 +6,9 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link, useSearchParams } from "react-router-dom";
 import Header from "../header";
-import { Search, Eye, Edit3, CheckCircle, Trash2 } from "react-feather";
+import { Search, Eye, Edit3, CheckCircle, Trash2, FileText } from "react-feather";
 import apiClient from "../../services/api";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import absaLogo from "../../assets/logos/absa-logo.png";
 import omLogo from "../../assets/logos/om-logo.png";
 
@@ -35,6 +36,7 @@ interface ApplicationsListProps {
 }
 
 const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
+  const isMobile = useIsMobile();
   const isOm = provider === "old_mutual";
   const accent = isOm ? "#2a9d36" : "#c70e2a";
   const listTitle = isOm ? "Old Mutual Applications" : "Absa Applications";
@@ -134,7 +136,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
 
   // ============ TABLE COLUMNS ============
 
-  const columns = [
+    const columns = [
     {
       title: "#",
       dataIndex: "reference",
@@ -160,17 +162,34 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
     {
       title: "Applicant",
       dataIndex: "applicant_name",
-      width: 220,
-      render: (_: any, record: ApplicationRow) => (
-        <div>
-          <div style={{ fontWeight: "500", fontSize: "14px" }}>
-            {record.applicant_name || "—"}
+      width: 250, // Increased width to fit the eye
+      render: (_: any, record: ApplicationRow) => {
+        const linkPath = record.status === "submitted" 
+          ? `${basePath}/${record.id}` 
+          : `${basePath}/${record.id}/documents`;
+
+        return (
+          <div className="d-flex align-items-center justify-content-between w-100 pe-2">
+            <div>
+              <div style={{ fontWeight: "500", fontSize: "14px" }}>
+                {record.applicant_name || "—"}
+              </div>
+              <div style={{ fontSize: "12px", color: "#888" }}>
+                ID: {record.applicant_id_no}
+              </div>
+            </div>
+            
+            {/* QUICK VIEW EYE ICON */}
+            <Link
+              to={linkPath}
+              title={record.status === "submitted" ? "View Application" : "Continue Application"}
+              style={{ color: "#888", textDecoration: "none" }}
+            >
+              <Eye size={16} />
+            </Link>
           </div>
-          <div style={{ fontSize: "12px", color: "#888" }}>
-            ID: {record.applicant_id_no}
-          </div>
-        </div>
-      ),
+        );
+      },
       sorter: (a: any, b: any) =>
         (a.applicant_name || "").localeCompare(b.applicant_name || ""),
     },
@@ -202,7 +221,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
       dataIndex: "premium_amount",
       width: 160,
       align: "right" as const,
-            render: (value: any, record: ApplicationRow) => (
+      render: (value: any, record: ApplicationRow) => (
         <div style={{ textAlign: "right" }}>
           <div style={{ fontWeight: "600", color: accent, fontSize: "13px" }}>
             KES {formatCurrency(value)}
@@ -230,7 +249,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
         return at - bt;
       },
     },
-        {
+    {
       title: "Debit Date",
       dataIndex: "direct_debit_date",
       width: 120,
@@ -248,7 +267,7 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
       dataIndex: "status",
       width: 110,
       align: "center" as const,
-            render: (status: string) =>
+      render: (status: string) =>
         status === "submitted" ? (
           <span
             style={{
@@ -280,11 +299,12 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
           </span>
         ),
     },
-        {
+    {
       title: "",
       dataIndex: "",
       width: 110,
       className: "text-end",
+      fixed: 'right' as const, // STICK TO RIGHT
       render: (_: any, record: ApplicationRow) => (
         <div className="text-end d-flex gap-1 justify-content-end">
           {record.status === "submitted" ? (
@@ -344,7 +364,6 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
         </div>
       ),
     },    
-
   ];
 
   const rowClassName = (_record: any, index: number) => {
@@ -493,27 +512,126 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
                     </div>
                   </div>
                 </div>
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <Table
-                      loading={loading}
-                      rowClassName={rowClassName}
-                      pagination={{
-                        total: applications.length,
-                        showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} applications`,
-                        showSizeChanger: true,
-                        onShowSizeChange: onShowSizeChange,
-                        itemRender: itemRender,
-                        defaultPageSize: 10,
-                      }}
-                      style={{ overflowX: "auto" }}
-                      columns={columns}
-                      dataSource={applications}
-                      rowKey={(record) => record.id}
-                      locale={{ emptyText: "No applications found" }}
-                    />
-                  </div>
+                                <div className="card-body">
+                  {isMobile ? (
+                    <div className="m-card-list">
+                      {loading && <div className="m-card__empty">Loading…</div>}
+                      {!loading && applications.length === 0 && (
+                        <div className="m-card__empty">No applications found</div>
+                      )}
+
+                      {!loading && applications.map((app) => {
+                        const linkPath = app.status === "submitted" 
+                          ? `${basePath}/${app.id}` 
+                          : `${basePath}/${app.id}/documents`;
+
+                        return (
+                          <div
+                            key={app.id}
+                            className="m-card"
+                            onClick={() => window.location.href = linkPath}
+                          >
+                            {/* Row 1: Ref + Status */}
+                            <div className="m-card__top">
+                              <span className="m-card__ref">
+                                <FileText size={12} />
+                                {app.reference}
+                              </span>
+                              {app.status === "submitted" ? (
+                                <span className="badge" style={{ backgroundColor: '#f5f5f5', color: accent, padding: '4px 8px', fontSize: '11px' }}>
+                                  <CheckCircle size={10} className="me-1" /> Submitted
+                                </span>
+                              ) : (
+                                <span className="badge" style={{ backgroundColor: '#fff3e0', color: '#fd7e14', padding: '4px 8px', fontSize: '11px' }}>
+                                  Draft
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Row 2: Applicant + Eye link */}
+                            <div className="m-card__client" style={{ paddingBottom: '8px' }}>
+                              <div>
+                                <span className="m-card__client-name">{app.applicant_name}</span>
+                                <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                                  ID: {app.applicant_id_no}
+                                </div>
+                              </div>
+                              <Link
+                                to={linkPath}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ color: '#888', textDecoration: 'none' }}
+                              >
+                                <Eye size={16} />
+                              </Link>
+                            </div>
+
+                            {/* Row 3: Agent + Premium */}
+                            <div className="m-card__meta">
+                              <span style={{ fontSize: '12px', color: '#666' }}>
+                                {app.agent_name || 'No Agent'}
+                              </span>
+                              <span className="m-card__premium" style={{ color: accent }}>
+                                KES {formatCurrency(app.premium_amount)}
+                              </span>
+                            </div>
+
+                            {/* Row 4: Action Buttons */}
+                            <div className="m-card__actions" onClick={(e) => e.stopPropagation()}>
+                              {app.status === "submitted" ? (
+                                <Link
+                                  to={linkPath}
+                                  className="btn btn-sm"
+                                  style={{ backgroundColor: accent, color: "#fff", border: "none" }}
+                                >
+                                  View Application
+                                </Link>
+                              ) : (
+                                <>
+                                  <Link
+                                    to={linkPath}
+                                    className="btn btn-sm"
+                                    style={{ backgroundColor: "#fd7e14", color: "#fff", border: "none" }}
+                                  >
+                                    Continue
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm"
+                                    onClick={() => handleDelete(app)}
+                                    style={{ backgroundColor: "#c70e2a", color: "#fff", border: "none" }}
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="table-responsive app-table-wrap">
+                      <Table
+                        loading={loading}
+                        rowClassName={rowClassName}
+                        pagination={{
+                          total: applications.length,
+                          showTotal: (total, range) =>
+                            `Showing ${range[0]} to ${range[1]} of ${total} applications`,
+                          showSizeChanger: true,
+                          onShowSizeChange: onShowSizeChange,
+                          itemRender: itemRender,
+                          defaultPageSize: 10,
+                        }}
+                        columns={columns}
+                        dataSource={applications}
+                        rowKey={(record) => record.id}
+                        locale={{ emptyText: "No applications found" }}
+                        size="small"
+                        scroll={{ x: 'max-content' }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -521,29 +639,42 @@ const ApplicationsList = ({ provider = "absa" }: ApplicationsListProps) => {
         </div>
       </div>
 
-      <style>{`
-        .table-row-even { background-color: #ffffff; }
-        .table-row-odd { background-color: #f8f9fa; }
-        .table-row-even:hover, .table-row-odd:hover {
-          background-color: #e8f0fe !important;
-          transition: background-color 0.15s ease;
+            <style>{`
+        /* 1. High contrast zebra stripes */
+        .table-row-even > td { background-color: #ffffff !important; }
+        .table-row-odd > td { background-color: #f1f5f9 !important; } 
+        
+        /* 2. Hover state */
+        .table-row-even:hover > td { background-color: #e0e7ff !important; }
+        .table-row-odd:hover > td { background-color: #e0e7ff !important; }
+
+        /* 3. Ensure the sticky Action column has a solid background */
+        .ant-table-cell-fix-right {
+          background-color: inherit !important;
+          z-index: 2;
         }
-        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+
+        /* 4. Header styling */
         .ant-table-thead > tr > th {
-          background-color: #f1f3f5 !important;
+          background-color: #e2e8f0 !important; 
           font-weight: 600 !important;
-          color: #333 !important;
+          color: #1e293b !important;
           padding: 12px 12px !important;
-          border-bottom: 2px solid #dee2e6 !important;
+          border-bottom: 2px solid #cbd5e1 !important;
         }
-        .ant-table-tbody > tr > td:first-child {
-          border-left: 3px solid transparent;
-        }
-        .ant-table-tbody > tr.table-row-even:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
-        .ant-table-tbody > tr.table-row-odd:hover > td:first-child {
-          border-left-color: #2a9d36;
+        
+        /* 5. Cell padding */
+        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+        
+        /* 6. Left border hover indicator */
+        .ant-table-tbody > tr > td:first-child { border-left: 3px solid transparent; }
+        .ant-table-tbody > tr.table-row-even:hover > td:first-child { border-left-color: #2a9d36; }
+        .ant-table-tbody > tr.table-row-odd:hover > td:first-child { border-left-color: #2a9d36; }
+
+        .avatar {
+          border-radius: 50% !important;
+          overflow: hidden !important;
+          flex-shrink: 0 !important;
         }
       `}</style>
     </>

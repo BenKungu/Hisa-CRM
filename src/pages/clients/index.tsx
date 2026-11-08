@@ -12,6 +12,7 @@ import {
 } from 'react-feather';
 import { clientService } from '../../services/client';
 import { policyService } from '../../services/policy';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 // ============================================================================
 // TYPES
@@ -63,6 +64,7 @@ interface Policy {
 // ============================================================================
 
 const AdminClients = () => {
+  const isMobile = useIsMobile();
   // --------------------------------------------------------------------------
   // State – data
   // --------------------------------------------------------------------------
@@ -543,33 +545,44 @@ if (filters.dobFilter.type !== 'none')  {
   // TABLE COLUMNS
   // ==========================================================================
 
-  const columns = [
+    const columns = [
     {
       title: "Client",
       dataIndex: "client_name",
-      width: 200,
-      fixed: 'left' as const,
+      width: 250,
       render: (text: string, record: any) => {
         const displayName = text || 'N/A';
         return (
-          <div className="d-flex align-items-center">
-            <span
-              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '32px', height: '32px', minWidth: '32px', minHeight: '32px',
-                backgroundColor: getAvatarColor(displayName), color: '#fff',
-                fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase',
-                borderRadius: '50%', flexShrink: 0
-              }}
-            >
-              {getInitials(displayName)}
-            </span>
-            <div>
-              <div style={{ fontWeight: '500', fontSize: '13px' }}>{displayName}</div>
-              <div style={{ fontSize: '11px', color: '#999' }}>
-                ID: {record.id_no || 'No ID'}
+          <div className="d-flex align-items-center justify-content-between w-100 pe-2">
+            <div className="d-flex align-items-center">
+              <span
+                className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{
+                  width: '32px', height: '32px', minWidth: '32px', minHeight: '32px',
+                  backgroundColor: getAvatarColor(displayName), color: '#fff',
+                  fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase',
+                  borderRadius: '50%', flexShrink: 0
+                }}
+              >
+                {getInitials(displayName)}
+              </span>
+              <div>
+                <div style={{ fontWeight: '500', fontSize: '13px' }}>{displayName}</div>
+                <div style={{ fontSize: '11px', color: '#999' }}>
+                  ID: {record.id_no || 'No ID'}
+                </div>
               </div>
             </div>
+
+            {/* QUICK VIEW EYE ICON */}
+            <button
+              className="btn btn-sm btn-link p-1 text-muted"
+              onClick={() => openModal('view', record)}
+              title="Quick View"
+              style={{ textDecoration: 'none' }}
+            >
+              <Eye size={16} />
+            </button>
           </div>
         );
       },
@@ -638,17 +651,16 @@ if (filters.dobFilter.type !== 'none')  {
       dataIndex: "agent_name",
       width: 140,
       render: (text: string) => {
-       const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
-       return (
-    <span style={{ fontSize: '13px', color: display === 'No Agent' ? '#999' : '#555' }}>
-      <Users size={13} className="me-1" style={{ color: '#999' }} />
-      {display}
-    </span>
-  );
-},
+        const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
+        return (
+          <span style={{ fontSize: '13px', color: display === 'No Agent' ? '#999' : '#555' }}>
+            <Users size={13} className="me-1" style={{ color: '#999' }} />
+            {display}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
-
     {
       title: "Occupation",
       dataIndex: "occupation",
@@ -658,7 +670,6 @@ if (filters.dobFilter.type !== 'none')  {
       ),
       sorter: (a: any, b: any) => (a.occupation || '').localeCompare(b.occupation || ''),
     },
-
     {
       title: "Last Updated",
       dataIndex: "updated_at",
@@ -692,7 +703,7 @@ if (filters.dobFilter.type !== 'none')  {
       dataIndex: "",
       width: 100,
       className: "text-end",
-      fixed: 'right' as const,
+      fixed: 'right' as const, // STICK TO RIGHT
       render: (_: any, record: Client) => (
         <div className="text-end" style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
           <button
@@ -1568,29 +1579,93 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                   )}
                 </div>
 
-                {/* ---------- Table ---------- */}
+                                {/* ---------- Table ---------- */}
                 <div className="card-body">
-                  <div className="table-responsive">
-                    <Table
-                      loading={loading}
-                      rowClassName={rowClassName}
-                      pagination={{
-                        total: filteredData.length,
-                        showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} clients`,
-                        showSizeChanger: true,
-                        onShowSizeChange: onShowSizeChange,
-                        itemRender: itemRender,
-                        defaultPageSize: 25,
-                      }}
-                      style={{ overflowX: "auto" }}
-                      columns={columns}
-                      dataSource={filteredData}
-                      rowKey={(record) => record.id}
-                      locale={{ emptyText: 'No clients found' }}
-                      scroll={{ x: 1500 }}
-                    />
-                  </div>
+                  {isMobile ? (
+                    <div className="m-card-list">
+                      {loading && <div className="m-card__empty">Loading…</div>}
+                      {!loading && filteredData.length === 0 && (
+                        <div className="m-card__empty">No clients found</div>
+                      )}
+
+                      {!loading && filteredData.map((client) => {
+                        const displayName = client.client_name || 'N/A';
+                        return (
+                          <div
+                            key={client.id}
+                            className="m-card"
+                            onClick={() => openModal('view', client)}
+                          >
+                            <div className="m-card__top">
+                              <div className="d-flex align-items-center gap-2">
+                                <span
+                                  className="cell-avatar"
+                                  style={{ backgroundColor: getAvatarColor(displayName) }}
+                                >
+                                  {getInitials(displayName)}
+                                </span>
+                                <div>
+                                  <div style={{ fontWeight: '600', fontSize: '14px' }}>
+                                    {displayName}
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: '#888' }}>
+                                    ID: {client.id_no || 'No ID'}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                className="btn btn-sm btn-link p-0 text-muted"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal('view', client);
+                                }}
+                              >
+                                <Eye size={16} />
+                              </button>
+                            </div>
+
+                            <div className="m-card__meta" style={{ paddingBottom: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '500' }}>
+                                {client.policy_count || 0} Policies
+                              </span>
+                              <span style={{ fontSize: '13px', color: '#666' }}>
+                                {client.phone_no || 'No Phone'}
+                              </span>
+                            </div>
+
+                            <div className="d-flex gap-2 flex-wrap pt-2" style={{ borderTop: '1px solid #f1f3f5' }}>
+                              <span className="badge" style={{ backgroundColor: '#f8f9fa', color: '#555', padding: '4px 8px', fontSize: '11px' }}>
+                                <Users size={10} className="me-1" />
+                                {client.agent_name || 'No Agent'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="table-responsive app-table-wrap">
+                      <Table
+                        loading={loading}
+                        rowClassName={rowClassName}
+                        pagination={{
+                          total: filteredData.length,
+                          showTotal: (total, range) =>
+                            `Showing ${range[0]} to ${range[1]} of ${total} clients`,
+                          showSizeChanger: true,
+                          onShowSizeChange: onShowSizeChange,
+                          itemRender: itemRender,
+                          defaultPageSize: 25,
+                        }}
+                        columns={columns}
+                        dataSource={filteredData}
+                        rowKey={(record) => record.id}
+                        locale={{ emptyText: 'No clients found' }}
+                        size="small"
+                        scroll={{ x: 'max-content' }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1598,36 +1673,45 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
         </div>
       </div>
 
-      {/* Table styles */}
+            {/* Table styles */}
       <style>{`
-        .table-row-even { background-color: #ffffff; }
-        .table-row-odd { background-color: #f8f9fa; }
-        .table-row-even:hover, .table-row-odd:hover {
-          background-color: #e8f0fe !important;
-          transition: background-color 0.15s ease;
+        /* 1. High contrast zebra stripes */
+        .table-row-even > td { background-color: #ffffff !important; }
+        .table-row-odd > td { background-color: #f1f5f9 !important; } 
+        
+        /* 2. Hover state */
+        .table-row-even:hover > td { background-color: #e0e7ff !important; }
+        .table-row-odd:hover > td { background-color: #e0e7ff !important; }
+
+        /* 3. Ensure the sticky Action column has a solid background */
+        .ant-table-cell-fix-right {
+          background-color: inherit !important;
+          z-index: 2;
         }
-        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+
+        /* 4. Header styling */
         .ant-table-thead > tr > th {
-          background-color: #f1f3f5 !important;
+          background-color: #e2e8f0 !important; 
           font-weight: 600 !important;
-          color: #333 !important;
+          color: #1e293b !important;
           padding: 12px 12px !important;
-          border-bottom: 2px solid #dee2e6 !important;
+          border-bottom: 2px solid #cbd5e1 !important;
         }
-        .ant-table-tbody > tr > td:first-child {
-          border-left: 3px solid transparent;
-        }
-        .ant-table-tbody > tr.table-row-even:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
-        .ant-table-tbody > tr.table-row-odd:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
+        
+        /* 5. Cell padding */
+        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+        
+        /* 6. Left border hover indicator */
+        .ant-table-tbody > tr > td:first-child { border-left: 3px solid transparent; }
+        .ant-table-tbody > tr.table-row-even:hover > td:first-child { border-left-color: #2a9d36; }
+        .ant-table-tbody > tr.table-row-odd:hover > td:first-child { border-left-color: #2a9d36; }
+
         .avatar {
           border-radius: 50% !important;
           overflow: hidden !important;
           flex-shrink: 0 !important;
         }
+        .avatar span { border-radius: 50% !important; }
       `}</style>
 
       {/* =====================================================================
