@@ -200,31 +200,42 @@ const AdminPolicyTypes = () => {
         </span>
       ),
     },
-    {
+        {
       title: "Policy Type",
       dataIndex: "product_type",
-      width: 250,
-      render: (text: string) => {
+      width: 300, 
+      render: (text: string, record: PolicyType) => {
         const config = getProductTypeConfig(text);
         return (
-          <div className="d-flex align-items-center">
-            <span 
-              className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '40px',
-                height: '40px',
-                minWidth: '40px',
-                minHeight: '40px',
-                backgroundColor: config.color + '20',
-                color: config.color,
-                fontSize: '20px',
-                borderRadius: '50%',
-                flexShrink: 0
-              }}
+          <div className="d-flex align-items-center justify-content-between w-100 pe-2">
+            <div className="d-flex align-items-center">
+              <span 
+                className="avatar me-3 rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  minWidth: '40px',
+                  minHeight: '40px',
+                  backgroundColor: config.color + '20',
+                  color: config.color,
+                  fontSize: '20px',
+                  borderRadius: '50%',
+                  flexShrink: 0
+                }}
+              >
+                {config.icon}
+              </span>
+              <span style={{ fontWeight: '500', fontSize: '14px' }}>{text || 'Uncategorized'}</span>
+            </div>
+            
+            <button
+              className="btn btn-sm btn-link p-1 text-muted"
+              onClick={() => openModal(record)}
+              title="View Details"
+              style={{ textDecoration: 'none' }}
             >
-              {config.icon}
-            </span>
-            <span style={{ fontWeight: '500', fontSize: '14px' }}>{text || 'Uncategorized'}</span>
+              <Eye size={18} />
+            </button>
           </div>
         );
       },
@@ -585,20 +596,21 @@ const AdminPolicyTypes = () => {
         </div>
       </div>
 
-      <style>{`
-        .table-row-even { background-color: #ffffff; }
-        .table-row-odd { background-color: #f8f9fa; }
-        .table-row-even:hover, .table-row-odd:hover {
-          background-color: #e8f0fe !important;
-          transition: background-color 0.15s ease;
-        }
+            <style>{`
+        /* High contrast zebra stripes */
+        .table-row-even > td { background-color: #ffffff !important; }
+        .table-row-odd > td { background-color: #f1f5f9 !important; } 
+        
+        .table-row-even:hover > td { background-color: #e0e7ff !important; }
+        .table-row-odd:hover > td { background-color: #e0e7ff !important; }
+
         .ant-table-tbody > tr > td { padding: 10px 12px !important; }
         .ant-table-thead > tr > th {
-          background-color: #f1f3f5 !important;
+          background-color: #e2e8f0 !important; 
           font-weight: 600 !important;
-          color: #333 !important;
+          color: #1e293b !important;
           padding: 12px 12px !important;
-          border-bottom: 2px solid #dee2e6 !important;
+          border-bottom: 2px solid #cbd5e1 !important;
         }
         .ant-table-tbody > tr > td:first-child {
           border-left: 3px solid transparent;
@@ -610,7 +622,6 @@ const AdminPolicyTypes = () => {
           border-left-color: #2a9d36;
         }
       `}</style>
-
       {/* Modal */}
       {modalOpen && (
         <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
