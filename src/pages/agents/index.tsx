@@ -6,8 +6,9 @@ import { itemRender, onShowSizeChange } from "../paginationfunction";
 import SidebarNav from "../sidebar";
 import { Link, useLocation } from "react-router-dom";
 import Header from "../header";
-import { Eye, Search, Filter, X, Users, FileText, CheckCircle, XCircle, Clock, User, Briefcase } from 'react-feather';
+import { Eye, Search, Filter, X, Users, FileText, CheckCircle, XCircle, Clock, User } from 'react-feather';
 import { policyService } from '../../services/policy';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface Agent {
   agent_name: string;
@@ -21,6 +22,7 @@ interface Agent {
 }
 
 const AdminAgents = () => {
+  const isMobile = useIsMobile();
   const [data, setData] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -209,78 +211,73 @@ const fallbackDownload = (blob: Blob) => {
 
   // ============ TABLE COLUMNS ============
 
-  const columns = [
+    const columns = [
     {
-  title: "Agent",
-  dataIndex: "agent_name",
-  width: 200,
-  fixed: 'left' as const,
-  render: (text: string, record: any) => {
-    // Check if agent has valid name (not empty, null, undefined, or '--')
-    const hasValidName = text && text !== '' && text !== '--' && text !== 'Unknown Agent' && text !== 'null' && text !== 'undefined';
-    const hasValidCode = record.agent_code && record.agent_code !== '' && record.agent_code !== 'null' && record.agent_code !== 'undefined' && record.agent_code !== '--';
-    
-    let displayName = text;
-    let isUnknown = false;
-    
-    if (!hasValidName && hasValidCode) {
-      displayName = `Agent (${record.agent_code})`;
-      isUnknown = false;
-    } else if (!hasValidName && !hasValidCode) {
-      displayName = 'Agent not provided';
-      isUnknown = true;
-    } else if (text === '--' || text === 'Unknown Agent') {
-      displayName = 'Agent not provided';
-      isUnknown = true;
-    }
-    
-    return (
-      <div className="d-flex align-items-center">
-        <span 
-          className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
-          style={{
-            width: '32px',
-            height: '32px',
-            minWidth: '32px',
-            minHeight: '32px',
-            backgroundColor: isUnknown ? '#999' : getAvatarColor(displayName),
-            color: '#fff',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            borderRadius: '50%',
-            flexShrink: 0
-          }}
-        >
-          {isUnknown ? '?' : getInitials(displayName)}
-        </span>
-        <div>
-          <div style={{ fontWeight: '500', fontSize: '13px', color: isUnknown ? '#999' : '#333' }}>
-            {displayName}
-          </div>
-          <div style={{ fontSize: '11px', color: '#999' }}>
-            Code: {hasValidCode ? record.agent_code : 'N/A'}
-          </div>
-        </div>
-      </div>
-    );
-  },
-  sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
-},
-    {
-      title: "Agent Code",
-      dataIndex: "agent_code",
-      width: 120,
-      render: (text: string) => {
-        const isValid = text && text !== '' && text !== 'null' && text !== 'undefined' && text !== '--';
+      title: "Agent",
+      dataIndex: "agent_name",
+      width: 250,
+      render: (text: string, record: any) => {
+        const hasValidName = text && text !== '' && text !== '--' && text !== 'Unknown Agent' && text !== 'null' && text !== 'undefined';
+        const hasValidCode = record.agent_code && record.agent_code !== '' && record.agent_code !== 'null' && record.agent_code !== 'undefined' && record.agent_code !== '--';
+        
+        let displayName = text;
+        let isUnknown = false;
+        
+        if (!hasValidName && hasValidCode) {
+          displayName = `Agent (${record.agent_code})`;
+          isUnknown = false;
+        } else if (!hasValidName && !hasValidCode) {
+          displayName = 'Agent not provided';
+          isUnknown = true;
+        } else if (text === '--' || text === 'Unknown Agent') {
+          displayName = 'Agent not provided';
+          isUnknown = true;
+        }
+        
         return (
-          <span style={{ fontSize: '13px', fontWeight: '500', color: isValid ? '#555' : '#999' }}>
-            <Briefcase size={13} className="me-1" style={{ color: '#999' }} />
-            {isValid ? text : 'N/A'}
-          </span>
+          <div className="d-flex align-items-center justify-content-between w-100 pe-2">
+            <div className="d-flex align-items-center">
+              <span 
+                className="avatar me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  minWidth: '32px',
+                  minHeight: '32px',
+                  backgroundColor: isUnknown ? '#999' : getAvatarColor(displayName),
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  borderRadius: '50%',
+                  flexShrink: 0
+                }}
+              >
+                {isUnknown ? '?' : getInitials(displayName)}
+              </span>
+              <div>
+                <div style={{ fontWeight: '500', fontSize: '13px', color: isUnknown ? '#999' : '#333' }}>
+                  {displayName}
+                </div>
+                <div style={{ fontSize: '11px', color: '#999' }}>
+                  Code: {hasValidCode ? record.agent_code : 'N/A'}
+                </div>
+              </div>
+            </div>
+
+            {/* QUICK VIEW EYE ICON */}
+            <button
+              className="btn btn-sm btn-link p-1 text-muted"
+              onClick={() => openModal(record)}
+              title="Quick View"
+              style={{ textDecoration: 'none' }}
+            >
+              <Eye size={16} />
+            </button>
+          </div>
         );
       },
-      sorter: (a: any, b: any) => (a.agent_code || '').localeCompare(b.agent_code || ''),
+      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
     },
     {
       title: "Clients",
@@ -289,13 +286,9 @@ const fallbackDownload = (blob: Blob) => {
       align: 'center' as const,
       render: (count: number) => (
         <span style={{ 
-          fontWeight: '600', 
-          fontSize: '15px',
-          color: '#2a9d36',
-          backgroundColor: '#e8f5e9',
-          padding: '2px 12px',
-          borderRadius: '12px',
-          display: 'inline-block'
+          fontWeight: '600', fontSize: '15px', color: '#2a9d36',
+          backgroundColor: '#e8f5e9', padding: '2px 12px',
+          borderRadius: '12px', display: 'inline-block'
         }}>
           <User size={12} className="me-1" />
           {count || 0}
@@ -310,13 +303,9 @@ const fallbackDownload = (blob: Blob) => {
       align: 'center' as const,
       render: (count: number) => (
         <span style={{ 
-          fontWeight: '600', 
-          fontSize: '15px',
-          color: '#2c3e8f',
-          backgroundColor: '#d8ddf3',
-          padding: '2px 12px',
-          borderRadius: '12px',
-          display: 'inline-block'
+          fontWeight: '600', fontSize: '15px', color: '#2c3e8f',
+          backgroundColor: '#d8ddf3', padding: '2px 12px',
+          borderRadius: '12px', display: 'inline-block'
         }}>
           <FileText size={12} className="me-1" />
           {count || 0}
@@ -343,13 +332,10 @@ const fallbackDownload = (blob: Blob) => {
       align: 'center' as const,
       render: (count: number) => (
         <span style={{ 
-          fontWeight: '500', 
-          fontSize: '13px',
+          fontWeight: '500', fontSize: '13px',
           color: count > 0 ? '#2a9d36' : '#999',
           backgroundColor: count > 0 ? '#e8f5e9' : '#f5f5f5',
-          padding: '2px 10px',
-          borderRadius: '12px',
-          display: 'inline-block'
+          padding: '2px 10px', borderRadius: '12px', display: 'inline-block'
         }}>
           <CheckCircle size={12} className="me-1" />
           {count || 0}
@@ -364,13 +350,10 @@ const fallbackDownload = (blob: Blob) => {
       align: 'center' as const,
       render: (count: number) => (
         <span style={{ 
-          fontWeight: '500', 
-          fontSize: '13px',
+          fontWeight: '500', fontSize: '13px',
           color: count > 0 ? '#c70e2a' : '#999',
           backgroundColor: count > 0 ? '#fde8ea' : '#f5f5f5',
-          padding: '2px 10px',
-          borderRadius: '12px',
-          display: 'inline-block'
+          padding: '2px 10px', borderRadius: '12px', display: 'inline-block'
         }}>
           <XCircle size={12} className="me-1" />
           {count || 0}
@@ -383,7 +366,7 @@ const fallbackDownload = (blob: Blob) => {
       dataIndex: "",
       width: 80,
       className: "text-end",
-      fixed: 'right' as const,
+      fixed: 'right' as const, // STICK TO RIGHT
       render: (_: any, record: Agent) => (
         <div className="text-end">
           <button
@@ -753,59 +736,149 @@ const fallbackDownload = (blob: Blob) => {
                   )}
                 </div>
 
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <Table
-                      loading={loading}
-                      rowClassName={rowClassName}
-                      pagination={{
-                        total: filteredData.length,
-                        showTotal: (total, range) =>
-                          `Showing ${range[0]} to ${range[1]} of ${total} agents`,
-                        showSizeChanger: true,
-                        onShowSizeChange: onShowSizeChange,
-                        itemRender: itemRender,
-                        defaultPageSize: 25,
-                      }}
-                      style={{ overflowX: "auto" }}
-                      columns={columns}
-                      dataSource={filteredData}
-                      rowKey={(record) => record.agent_code || record.agent_name}
-                      locale={{ emptyText: 'No agents found' }}
-                      scroll={{ x: 1100 }}
-                    />
-                  </div>
+                                <div className="card-body">
+                  {isMobile ? (
+                    <div className="m-card-list">
+                      {loading && <div className="m-card__empty">Loading…</div>}
+                      {!loading && filteredData.length === 0 && (
+                        <div className="m-card__empty">No agents found</div>
+                      )}
+
+                      {!loading && filteredData.map((agent) => {
+                        const hasValidName = agent.agent_name && agent.agent_name !== '--' && agent.agent_name !== 'Unknown Agent';
+                        const displayName = hasValidName ? agent.agent_name : `Agent (${agent.agent_code || 'N/A'})`;
+                        const isUnknown = !hasValidName && !agent.agent_code;
+
+                        return (
+                          <div
+                            key={agent.agent_code || agent.agent_name}
+                            className="m-card"
+                            onClick={() => openModal(agent)}
+                          >
+                            {/* Row 1: Avatar + Name + Eye */}
+                            <div className="m-card__top">
+                              <div className="d-flex align-items-center gap-2">
+                                <span
+                                  className="cell-avatar"
+                                  style={{ backgroundColor: isUnknown ? '#999' : getAvatarColor(displayName) }}
+                                >
+                                  {isUnknown ? '?' : getInitials(displayName)}
+                                </span>
+                                <div>
+                                  <div style={{ fontWeight: '600', fontSize: '14px', color: isUnknown ? '#999' : '#1a1a1a' }}>
+                                    {isUnknown ? 'Agent not provided' : displayName}
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: '#888' }}>
+                                    Code: {agent.agent_code || 'N/A'}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                className="btn btn-sm btn-link p-0 text-muted"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal(agent);
+                                }}
+                              >
+                                <Eye size={16} />
+                              </button>
+                            </div>
+
+                            {/* Row 2: Policies + Premium */}
+                            <div className="m-card__meta" style={{ paddingBottom: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '500' }}>
+                                {agent.policy_count} Policies · {agent.client_count} Clients
+                              </span>
+                              <span className="m-card__premium">
+                                KES {formatCurrency(agent.total_premium)}
+                              </span>
+                            </div>
+
+                            {/* Row 3: Status pills */}
+                            <div className="d-flex gap-2 flex-wrap pt-2" style={{ borderTop: '1px solid #f1f3f5' }}>
+                              {agent.finalised_count > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#e8f5e9', color: '#2a9d36', padding: '4px 8px', fontSize: '11px' }}>
+                                  <CheckCircle size={10} className="me-1" /> {agent.finalised_count} Finalised
+                                </span>
+                              )}
+                              {agent.active_count > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#cfe2ff', color: '#0d6efd', padding: '4px 8px', fontSize: '11px' }}>
+                                  <Clock size={10} className="me-1" /> {agent.active_count} Active
+                                </span>
+                              )}
+                              {agent.cancelled_count > 0 && (
+                                <span className="badge" style={{ backgroundColor: '#fde8ea', color: '#c70e2a', padding: '4px 8px', fontSize: '11px' }}>
+                                  <XCircle size={10} className="me-1" /> {agent.cancelled_count} Cancelled
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="table-responsive app-table-wrap">
+                      <Table
+                        loading={loading}
+                        rowClassName={rowClassName}
+                        pagination={{
+                          total: filteredData.length,
+                          showTotal: (total, range) =>
+                            `Showing ${range[0]} to ${range[1]} of ${total} agents`,
+                          showSizeChanger: true,
+                          onShowSizeChange: onShowSizeChange,
+                          itemRender: itemRender,
+                          defaultPageSize: 25,
+                        }}
+                        columns={columns}
+                        dataSource={filteredData}
+                        rowKey={(record) => record.agent_code || record.agent_name}
+                        locale={{ emptyText: 'No agents found' }}
+                        size="small"
+                        scroll={{ x: 'max-content' }}
+                      />
+                    </div>
+                  )}
                 </div>
+
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <style>{`
-        .table-row-even { background-color: #ffffff; }
-        .table-row-odd { background-color: #f8f9fa; }
-        .table-row-even:hover, .table-row-odd:hover {
-          background-color: #e8f0fe !important;
-          transition: background-color 0.15s ease;
+            <style>{`
+        /* 1. High contrast zebra stripes */
+        .table-row-even > td { background-color: #ffffff !important; }
+        .table-row-odd > td { background-color: #f1f5f9 !important; } 
+        
+        /* 2. Hover state */
+        .table-row-even:hover > td { background-color: #e0e7ff !important; }
+        .table-row-odd:hover > td { background-color: #e0e7ff !important; }
+
+        /* 3. Ensure the sticky Action column has a solid background */
+        .ant-table-cell-fix-right {
+          background-color: inherit !important;
+          z-index: 2;
         }
-        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+
+        /* 4. Header styling */
         .ant-table-thead > tr > th {
-          background-color: #f1f3f5 !important;
+          background-color: #e2e8f0 !important; 
           font-weight: 600 !important;
-          color: #333 !important;
+          color: #1e293b !important;
           padding: 12px 12px !important;
-          border-bottom: 2px solid #dee2e6 !important;
+          border-bottom: 2px solid #cbd5e1 !important;
         }
-        .ant-table-tbody > tr > td:first-child {
-          border-left: 3px solid transparent;
-        }
-        .ant-table-tbody > tr.table-row-even:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
-        .ant-table-tbody > tr.table-row-odd:hover > td:first-child {
-          border-left-color: #2a9d36;
-        }
+        
+        /* 5. Cell padding */
+        .ant-table-tbody > tr > td { padding: 10px 12px !important; }
+        
+        /* 6. Left border hover indicator */
+        .ant-table-tbody > tr > td:first-child { border-left: 3px solid transparent; }
+        .ant-table-tbody > tr.table-row-even:hover > td:first-child { border-left-color: #2a9d36; }
+        .ant-table-tbody > tr.table-row-odd:hover > td:first-child { border-left-color: #2a9d36; }
+
         .avatar {
           border-radius: 50% !important;
           overflow: hidden !important;
