@@ -166,14 +166,15 @@ const AdminClients = () => {
     return `${day}${getOrdinal(day)} ${month} ${year}`;
   };
 
-  /** Long birthday format without year, e.g., "10th June". */
+    /** Long birthday format with year, e.g., "10th June 1980". */
   const formatBirthday = (dateString: string | null) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'N/A';
     const day = date.getDate();
     const month = date.toLocaleString('default', { month: 'long' });
-    return `${day}${getOrdinal(day)} ${month}`;
+    const year = date.getFullYear();
+    return `${day}${getOrdinal(day)} ${month} ${year}`;
   };
 
   /** Two-letter uppercase initials from a full name. */
@@ -588,6 +589,7 @@ if (filters.dobFilter.type !== 'none')  {
       },
       sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
+    
     {
       title: "Phone",
       dataIndex: "phone_no",
@@ -600,6 +602,23 @@ if (filters.dobFilter.type !== 'none')  {
       ),
       sorter: (a: any, b: any) => (a.phone_no || '').localeCompare(b.phone_no || ''),
     },
+
+{
+      title: "Agent",
+      dataIndex: "agent_name",
+      width: 140,
+      render: (text: string) => {
+        const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
+        return (
+          <span style={{ fontSize: '13px', color: display === 'No Agent' ? '#999' : '#555' }}>
+            <Users size={13} className="me-1" style={{ color: '#999' }} />
+            {display}
+          </span>
+        );
+      },
+      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
+    },
+
     {
       title: "Email",
       dataIndex: "email",
@@ -646,21 +665,7 @@ if (filters.dobFilter.type !== 'none')  {
       },
       sorter: (a: any, b: any) => (a.dob || '').localeCompare(b.dob || ''),
     },
-    {
-      title: "Agent",
-      dataIndex: "agent_name",
-      width: 140,
-      render: (text: string) => {
-        const display = !text || text === 'N/A' || text === '--' ? 'No Agent' : text;
-        return (
-          <span style={{ fontSize: '13px', color: display === 'No Agent' ? '#999' : '#555' }}>
-            <Users size={13} className="me-1" style={{ color: '#999' }} />
-            {display}
-          </span>
-        );
-      },
-      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
-    },
+    
     {
       title: "Occupation",
       dataIndex: "occupation",
@@ -946,16 +951,18 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                     alignItems: 'center', flexWrap: 'wrap',
                     cursor: 'pointer', transition: 'background-color 0.15s',
                   }}>
-                    <div>
-                      <span
+                                        <div>
+                      <a
+                        href={`/businesses?search=${policy.policy_number}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
                           fontWeight: '500', color: '#0d6efd',
                           textDecoration: 'underline', cursor: 'pointer'
                         }}
-                        onClick={() => navigate(`/businesses?search=${policy.policy_number}`)}
                       >
                         {policy.policy_number}
-                      </span>
+                      </a>
                       <span className="text-muted" style={{ fontSize: '11px', marginLeft: '10px' }}>
                         {policy.product_type || 'N/A'}
                       </span>
