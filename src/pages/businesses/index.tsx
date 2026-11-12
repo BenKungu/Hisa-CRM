@@ -711,6 +711,18 @@ const columns: ColumnsType<Policy> = [
       },
       sorter: (a: any, b: any) => (a.client_name || '').localeCompare(b.client_name || ''),
     },
+
+{
+      title: "Agent",
+      dataIndex: "agent_name",
+      width: 140,
+      responsive: ['lg', 'xl'],
+      render: (text: string) => (
+        <span className="cell-text-muted">{text || '—'}</span>
+      ),
+      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
+    },
+
     {
       title: "Status",
       dataIndex: "policy_status",
@@ -804,16 +816,7 @@ const columns: ColumnsType<Policy> = [
       },
       sorter: (a: any, b: any) => (a.strike_date || 0) - (b.strike_date || 0),
     },
-    {
-      title: "Agent",
-      dataIndex: "agent_name",
-      width: 140,
-      responsive: ['lg', 'xl'],
-      render: (text: string) => (
-        <span className="cell-text-muted">{text || '—'}</span>
-      ),
-      sorter: (a: any, b: any) => (a.agent_name || '').localeCompare(b.agent_name || ''),
-    },
+    
     {
       title: "Last Updated",
       dataIndex: "updated_at",
