@@ -13,6 +13,7 @@ interface PublicDoc {
 
 interface PublicApplication {
   reference: string;
+  provider: string;
   applicant_name: string;
   applicant_id_no: string;
   product_type: string | null;
@@ -47,9 +48,12 @@ const VerifyPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [application, setApplication] = useState<PublicApplication | null>(
+    const [application, setApplication] = useState<PublicApplication | null>(
     null
   );
+
+  const isOm = application?.provider === "old_mutual";
+  const accent = isOm ? "#2a9d36" : "#c70e2a";
 
   useEffect(() => {
     if (!token) return;
@@ -156,9 +160,9 @@ const VerifyPage = () => {
       >
         {/* Header */}
         <div
-          style={{
+                    style={{
             padding: "30px 40px",
-            borderBottom: "3px solid #2a9d36",
+            borderBottom: `3px solid ${accent}`,
           }}
         >
           <div
@@ -189,7 +193,7 @@ const VerifyPage = () => {
             }}
           >
             Reference:{" "}
-            <span style={{ color: "#2a9d36", fontWeight: "600" }}>
+                        <span style={{ color: accent, fontWeight: "600" }}>
               {application.reference}
             </span>
           </div>
@@ -360,12 +364,12 @@ const VerifyPage = () => {
                       textAlign: "right",
                     }}
                   >
-                    <a
+                                        <a
                       href={doc.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        color: "#2a9d36",
+                        color: accent,
                         textDecoration: "none",
                         fontWeight: "600",
                         fontSize: "14px",
