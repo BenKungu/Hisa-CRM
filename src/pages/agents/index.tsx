@@ -8,6 +8,7 @@ import { Link, useLocation } from "react-router-dom";
 import Header from "../header";
 import { Eye, Search, Filter, X, Users, FileText, CheckCircle, XCircle, Clock, User } from 'react-feather';
 import { policyService } from '../../services/policy';
+import { agentService } from '../../services/agent';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface Agent {
@@ -19,7 +20,12 @@ interface Agent {
   finalised_count: number;
   active_count: number;
   cancelled_count: number;
+  registered_id?: string; // set when the agent is in the Agent table (editable)
+  phone_no?: string | null;
+  email?: string | null;
 }
+
+const EMPTY_AGENT_FORM = { agent_code: '', agent_name: '', phone_no: '', email: '' };
 
 const AdminAgents = () => {
   const isMobile = useIsMobile();
@@ -31,6 +37,14 @@ const AdminAgents = () => {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+
+  // Add / edit agent form
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [agentForm, setAgentForm] = useState(EMPTY_AGENT_FORM);
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -164,6 +178,62 @@ const fallbackDownload = (blob: Blob) => {
   const closeModal = () => {
     setModalOpen(false);
     setSelectedAgent(null);
+  };
+
+  const openAddAgent = () => {
+    setEditingId(null);
+    setAgentForm(EMPTY_AGENT_FORM);
+    setFormError('');
+    setFormOpen(true);
+  };
+
+  const openEditAgent = (agent: Agent) => {
+    if (!agent.registered_id) return;
+    closeModal();
+    setEditingId(agent.registered_id);
+    setAgentForm({
+      agent_code: agent.agent_code,
+      agent_name: agent.agent_name,
+      phone_no: agent.phone_no || '',
+      email: agent.email || '',
+    });
+    setFormError('');
+    setFormOpen(true);
+  };
+
+  const closeForm = () => {
+    if (saving) return;
+    setFormOpen(false);
+    setEditingId(null);
+  };
+
+  const saveAgent = async () => {
+    if (!agentForm.agent_code.trim() || !agentForm.agent_name.trim()) {
+      setFormError('Agent code and agent name are required');
+      return;
+    }
+    setSaving(true);
+    setFormError('');
+    try {
+      if (editingId) {
+        await agentService.updateAgent(editingId, {
+          agent_name: agentForm.agent_name,
+          phone_no: agentForm.phone_no,
+          email: agentForm.email,
+        });
+        setSuccessMsg(`Agent ${agentForm.agent_code.toUpperCase()} updated`);
+      } else {
+        await agentService.createAgent(agentForm);
+        setSuccessMsg(`Agent ${agentForm.agent_code.toUpperCase()} added`);
+      }
+      setFormOpen(false);
+      setEditingId(null);
+      await loadAgents();
+    } catch (err: any) {
+      setFormError(err.error || 'Failed to save agent');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // ===== FILTERED DATA =====
@@ -468,6 +538,11 @@ const fallbackDownload = (blob: Blob) => {
       ),
       footer: (
         <div className="modal-footer">
+          {selectedAgent.registered_id && (
+            <button type="button" className="btn btn-app-success" onClick={() => openEditAgent(selectedAgent)}>
+              Edit Agent
+            </button>
+          )}
           <button type="button" className="btn btn-secondary" onClick={closeModal}>Close</button>
         </div>
       ),
@@ -498,19 +573,20 @@ const fallbackDownload = (blob: Blob) => {
                 </ul>
               </div>
               <div className="col-sm-5 text-end">
-                <button
-                  className="btn btn-primary"
-                  style={{ backgroundColor: '#2a9d36', borderColor: '#2a9d36' }}
-                  disabled
-                >
+                <button className="btn btn-app-success" onClick={openAddAgent}>
                   <Users size={16} className="me-1" /> Add Agent
                 </button>
-                <span className="text-muted ms-2" style={{ fontSize: '11px' }}>(Coming soon)</span>
               </div>
             </div>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
+          {successMsg && (
+            <div className="alert alert-success alert-dismissible">
+              {successMsg}
+              <button type="button" className="btn-close" onClick={() => setSuccessMsg('')} />
+            </div>
+          )}
 
           <div className="row">
             <div className="col-sm-12">
@@ -847,6 +923,69 @@ const fallbackDownload = (blob: Blob) => {
                 {modalContent.body}
               </div>
               {modalContent.footer}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {formOpen && (
+        <div className="modal show d-block app-modal app-modal--sm" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">{editingId ? 'Edit Agent' : 'Add Agent'}</h5>
+                <button type="button" className="btn-close" onClick={closeForm} />
+              </div>
+              <div className="modal-body">
+                {formError && <div className="alert alert-danger py-2 app-modal__note">{formError}</div>}
+                <div className="mb-3">
+                  <label className="form-label">Agent Code *</label>
+                  <input
+                    className="form-control"
+                    placeholder="e.g. HISA0110"
+                    value={agentForm.agent_code}
+                    disabled={!!editingId}
+                    onChange={(e) => setAgentForm({ ...agentForm, agent_code: e.target.value.toUpperCase() })}
+                  />
+                  {editingId && <div className="app-modal__tiny mt-1">The code can't be changed because policies use it.</div>}
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Agent Name *</label>
+                  <input
+                    className="form-control"
+                    placeholder="Full name"
+                    value={agentForm.agent_name}
+                    onChange={(e) => setAgentForm({ ...agentForm, agent_name: e.target.value })}
+                  />
+                </div>
+                <div className="row">
+                  <div className="col-12 col-sm-6 mb-3">
+                    <label className="form-label">Phone</label>
+                    <input
+                      className="form-control"
+                      placeholder="07XX XXX XXX"
+                      value={agentForm.phone_no}
+                      onChange={(e) => setAgentForm({ ...agentForm, phone_no: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-12 col-sm-6 mb-3">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="name@example.com"
+                      value={agentForm.email}
+                      onChange={(e) => setAgentForm({ ...agentForm, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeForm} disabled={saving}>Cancel</button>
+                <button type="button" className="btn btn-app-success" onClick={saveAgent} disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Add Agent'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
