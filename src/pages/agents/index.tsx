@@ -539,7 +539,12 @@ const fallbackDownload = (blob: Blob) => {
       footer: (
         <div className="modal-footer">
           {selectedAgent.registered_id && (
-            <button type="button" className="btn btn-app-success" onClick={() => openEditAgent(selectedAgent)}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => openEditAgent(selectedAgent)}
+              style={{ backgroundColor: '#2a9d36', borderColor: '#2a9d36' }}
+            >
               Edit Agent
             </button>
           )}
@@ -573,7 +578,11 @@ const fallbackDownload = (blob: Blob) => {
                 </ul>
               </div>
               <div className="col-sm-5 text-end">
-                <button className="btn btn-app-success" onClick={openAddAgent}>
+                <button
+                  className="btn btn-primary"
+                  onClick={openAddAgent}
+                  style={{ backgroundColor: '#2a9d36', borderColor: '#2a9d36' }}
+                >
                   <Users size={16} className="me-1" /> Add Agent
                 </button>
               </div>
@@ -982,7 +991,13 @@ const fallbackDownload = (blob: Blob) => {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={closeForm} disabled={saving}>Cancel</button>
-                <button type="button" className="btn btn-app-success" onClick={saveAgent} disabled={saving}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={saveAgent}
+                  disabled={saving}
+                  style={{ backgroundColor: '#2a9d36', borderColor: '#2a9d36' }}
+                >
                   {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Add Agent'}
                 </button>
               </div>
