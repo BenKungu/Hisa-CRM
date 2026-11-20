@@ -18,6 +18,7 @@ import Header from '../header';
 import SidebarNav from '../sidebar';
 import { dashboardService } from '../../services/dashboard';
 import { mmfService } from '../../services/mmf';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 // ============================================================================
 // TYPES
@@ -79,6 +80,7 @@ const COLORS = ['#2a9d36', '#fd7e14', '#c70e2a', '#0d6efd', '#6f42c1', '#17a2b8'
 // ============================================================================
 
 const AdminDashboard = () => {
+  const isMobile = useIsMobile();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -628,9 +630,9 @@ useEffect(() => {
           <div className="row" style={{ marginBottom: '20px' }}>
 
             {/* Absa Active Policies */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100">
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
                       <span className="kpi-label">Absa active policies</span>
@@ -650,9 +652,9 @@ useEffect(() => {
             </div>
 
             {/* Total Current Premium + Sum Insured */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100">
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div style={{ flex: 1 }}>
                       <span className="kpi-label">Total Current Premium</span>
@@ -685,9 +687,9 @@ useEffect(() => {
             </div>
 
             {/* Total Hisa Clients */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100">
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
                       <span className="kpi-label">Total Hisa Clients</span>
@@ -712,9 +714,9 @@ useEffect(() => {
             </div>
 
             {/* MMF Accounts */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100">
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
                       <span className="kpi-label">MMF Accounts</span>
@@ -739,9 +741,9 @@ useEffect(() => {
           <div className="row" style={{ marginBottom: '20px' }}>
 
             {/* Lapsed Arrears */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', borderLeft: '4px solid #d97706' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100" style={{ borderLeft: '4px solid #d97706' }}>
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div style={{ flex: 1 }}>
                       <span className="kpi-label">Lapsed Arrears</span>
@@ -768,9 +770,9 @@ useEffect(() => {
             </div>
 
             {/* Absa Surrendered */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', borderLeft: '4px solid #6f42c1' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100" style={{ borderLeft: '4px solid #6f42c1' }}>
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
                       <span className="kpi-label">Absa Surrendered</span>
@@ -796,9 +798,9 @@ useEffect(() => {
             </div>
 
             {/* New Business Last 60 days */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', borderLeft: '4px solid #2a9d36' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100" style={{ borderLeft: '4px solid #2a9d36' }}>
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
                       <span className="kpi-label">New Business Last 60 days</span>
@@ -820,9 +822,9 @@ useEffect(() => {
             </div>
 
             {/* Cross-sell Opportunity */}
-            <div className="col-xl-3 col-sm-6 col-12" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', borderLeft: '4px solid #6f42c1' }}>
-                <div className="card-body" style={{ padding: '20px' }}>
+            <div className="col-xl-3 col-sm-6 col-12 mb-3">
+              <div className="kpi-card h-100" style={{ borderLeft: '4px solid #6f42c1' }}>
+                <div className="card-body kpi-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
                       <span className="kpi-label">Cross-sell</span>
@@ -850,15 +852,15 @@ useEffect(() => {
           {/* ===== CHARTS ROW ===== */}
           <div className="row" style={{ marginBottom: '20px' }}>
 
-            <div className="col-md-12 col-lg-7" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
+            <div className="col-md-12 col-lg-7 mb-3">
+              <div className="kpi-card kpi-card--chart h-100">
                 <div className="card-header kpi-card-header">
                   <h4 className="card-title">Annual Performance</h4>
                   <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
                     Actual collected vs expected (no lapse / no surrender)
                   </p>
                 </div>
-                <div className="card-body" style={{ padding: '20px', height: 'calc(100% - 60px)' }}>
+                <div className="card-body kpi-chart-body">
                   {performance && performance.years.length > 0 ? (
                     <ReactApexChart
                       options={performanceChartOptions}
@@ -867,7 +869,7 @@ useEffect(() => {
                         { name: 'If No Lapse/Surrender', data: performance.potential },
                       ]}
                       type="line"
-                      height={320}
+                      height={isMobile ? 240 : 320}
                     />
                   ) : (
                     <div className="text-center text-muted py-4">No performance data</div>
@@ -877,21 +879,21 @@ useEffect(() => {
             </div>
 
             {/* Business Distribution */}
-            <div className="col-md-12 col-lg-5" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
+            <div className="col-md-12 col-lg-5 mb-3">
+              <div className="kpi-card kpi-card--chart h-100">
                 <div className="card-header kpi-card-header">
                   <h4 className="card-title">Business Distribution</h4>
                   <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
                     Policies + MMF accounts
                   </p>
                 </div>
-                <div className="card-body" style={{ padding: '20px', height: 'calc(100% - 60px)' }}>
+                <div className="card-body kpi-chart-body">
                   {stats.productTypeDistribution.length > 0 ? (
                     <ReactApexChart
                       options={pieChartOptions}
                       series={stats.productTypeDistribution.map(d => d.value)}
                       type="donut"
-                      height={280}
+                      height={isMobile ? 260 : 280}
                     />
                   ) : (
                     <div className="text-center text-muted py-4">No data available</div>
@@ -906,21 +908,21 @@ useEffect(() => {
           <div className="row" style={{ marginBottom: '20px' }}>
 
             {/* Top Agents */}
-            <div className="col-md-12 col-lg-7" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
+            <div className="col-md-12 col-lg-7 mb-3">
+              <div className="kpi-card kpi-card--chart h-100">
                 <div className="card-header kpi-card-header">
                   <h4 className="card-title">New Business Momentum</h4>
                     <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
                       Policies started per month (last 12 months)
                     </p>
                 </div>
-                <div className="card-body" style={{ padding: '15px 15px 5px 15px', height: 'calc(100% - 60px)' }}>
+                <div className="card-body kpi-chart-body kpi-chart-body--tight">
                   {stats.monthlyNewPolicies.length > 0 ? (
                     <ReactApexChart
                       options={barChartOptions}
                       series={[{ name: 'New Policies', data: stats.monthlyNewPolicies.map(d => d.count) }]}
                       type="bar"
-                      height={320}
+                      height={isMobile ? 240 : 320}
                     />
                   ) : (
                     <div className="text-center text-muted py-4">No data available</div>
@@ -930,15 +932,15 @@ useEffect(() => {
             </div>
 
             {/* Recent Activity */}
-            <div className="col-md-12 col-lg-5" style={{ marginBottom: '15px' }}>
-              <div className="kpi-card" style={{ height: '100%', minHeight: '380px' }}>
+            <div className="col-md-12 col-lg-5 mb-3">
+              <div className="kpi-card kpi-card--chart h-100">
                 <div className="card-header kpi-card-header">
                   <h4 className="card-title">Recent Activity</h4>
                   <p className="text-muted" style={{ fontSize: '12px', marginBottom: 0 }}>
                     Latest policy updates
                   </p>
                 </div>
-                <div className="card-body" style={{ padding: '15px', height: 'calc(100% - 60px)', overflowY: 'auto' }}>
+                <div className="card-body kpi-chart-body kpi-chart-body--scroll">
                   {stats.recentPolicies.map((policy, index) => (
                     <div
                       key={index}
@@ -1074,11 +1076,46 @@ useEffect(() => {
           padding: 16px 20px;
         }
 
+        .kpi-body {
+          padding: 20px;
+        }
+
+        .kpi-card--chart {
+          min-height: 380px;
+        }
+
+        .kpi-chart-body {
+          padding: 20px;
+          height: calc(100% - 60px);
+        }
+
+        .kpi-chart-body--tight {
+          padding: 15px 15px 5px 15px;
+        }
+
+        .kpi-chart-body--scroll {
+          padding: 15px;
+          overflow-y: auto;
+        }
+
         .kpi-card-header .card-title {
           font-size: 15px;
           font-weight: 600;
           margin-bottom: 2px;
           color: #1f2937;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 575.98px) {
+          .kpi-body { padding: 14px; }
+          .kpi-value { font-size: 22px; }
+          .kpi-value-money { font-size: 18px; word-break: break-word; }
+          .kpi-icon { width: 38px; height: 38px; }
+          .kpi-card:hover { transform: none; }
+          .kpi-card--chart { min-height: 0; }
+          .kpi-card-header { padding: 12px 14px; }
+          .kpi-chart-body { padding: 10px; height: auto; }
+          .kpi-chart-body--scroll { padding: 12px; max-height: 360px; }
         }
       `}</style>
     </>

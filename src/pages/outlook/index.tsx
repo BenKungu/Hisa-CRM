@@ -4,6 +4,7 @@ import Header from '../header';
 import SidebarNav from '../sidebar';
 import { FileText, CheckCircle, XCircle, AlertTriangle, AlertCircle } from 'react-feather';
 import { reconciliationService } from '../../services/reconciliation';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface ReportItem {
   policyNumber: string;
@@ -37,6 +38,7 @@ interface ReportData {
 }
 
 const AdminOutlook = () => {
+  const isMobile = useIsMobile();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [report, setReport] = useState<ReportData | null>(null);
@@ -72,6 +74,10 @@ const AdminOutlook = () => {
     setFile(null);
     setReport(null);
     setError(null);
+  };
+
+  const openPolicy = (policyNumber: string) => {
+    window.open(`/businesses?search=${encodeURIComponent(policyNumber)}`, '_blank', 'noopener,noreferrer');
   };
 
   const getAnomalyBadge = (anomaly: string) => {
@@ -172,8 +178,8 @@ const AdminOutlook = () => {
 
                       {file && (
                         <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                          <div className="d-flex align-items-center justify-content-between">
-                            <div className="d-flex align-items-center">
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div className="d-flex align-items-center flex-wrap">
                               <FileText size={24} style={{ color: '#2a9d36' }} />
                               <span style={{ marginLeft: '10px', fontWeight: '500' }}>{file.name}</span>
                               <span style={{ marginLeft: '10px', fontSize: '12px', color: '#999' }}>
@@ -213,7 +219,7 @@ const AdminOutlook = () => {
                   ) : (
                     // Report Section
                     <div>
-                      <div className="d-flex justify-content-between align-items-start mb-3">
+                      <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
                         <div>
                           <h5 className="card-title mb-0">Outlook Reconciliation Report</h5>
                           <p className="text-muted" style={{ fontSize: '13px' }}>
@@ -233,7 +239,7 @@ const AdminOutlook = () => {
 
                       {/* Summary Cards */}
                       <div className="row mb-4">
-                        <div className="col-md-3">
+                        <div className="col-6 col-md-3">
                           <div className="card" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #2a9d36' }}>
                             <div className="card-body">
                               <div style={{ fontSize: '20px', fontWeight: '700', color: '#2a9d36' }}>{report.summary.matched}</div>
@@ -241,7 +247,7 @@ const AdminOutlook = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="col-md-3">
+                        <div className="col-6 col-md-3">
                           <div className="card" style={{ backgroundColor: '#fde8ea', borderLeft: '4px solid #c70e2a' }}>
                             <div className="card-body">
                               <div style={{ fontSize: '20px', fontWeight: '700', color: '#c70e2a' }}>
@@ -251,7 +257,7 @@ const AdminOutlook = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="col-md-3">
+                        <div className="col-6 col-md-3">
                           <div className="card" style={{ backgroundColor: '#fff3cd', borderLeft: '4px solid #856404' }}>
                             <div className="card-body">
                               <div style={{ fontSize: '20px', fontWeight: '700', color: '#856404' }}>
@@ -261,7 +267,7 @@ const AdminOutlook = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="col-md-3">
+                        <div className="col-6 col-md-3">
                           <div className="card" style={{ backgroundColor: '#e3f2fd', borderLeft: '4px solid #0d6efd' }}>
                             <div className="card-body">
                               <div style={{ fontSize: '20px', fontWeight: '700', color: '#0d6efd' }}>{report.summary.subjectToReview}</div>
@@ -271,14 +277,38 @@ const AdminOutlook = () => {
                         </div>
                       </div>
                       <p className="text-muted" style={{ fontSize: '12px', marginBottom: '8px' }}>
-  💡 Click any policy number to open it in a new tab
+  💡 {isMobile ? 'Tap a policy' : 'Click any policy number'} to open it in a new tab
 </p>
 
                       {/* Main Table – only show non‑Match anomalies */}
                       { (() => {
                         const nonMatchDetails = report.details.filter(item => item.anomaly !== 'Match');
                         return nonMatchDetails.length > 0 ? (
-                          
+                          isMobile ? (
+                            <div className="m-card-list">
+                              {nonMatchDetails.map((item, idx) => (
+                                <div key={idx} className="m-card" onClick={() => openPolicy(item.policyNumber)}>
+                                  <div className="m-card__top">
+                                    <span className="m-card__ref">
+                                      <FileText size={12} />
+                                      {item.policyNumber}
+                                    </span>
+                                    {getAnomalyBadge(item.anomaly)}
+                                  </div>
+                                  <div className="m-card__client">
+                                    <span className="m-card__client-name">{item.clientName}</span>
+                                  </div>
+                                  <div className="m-card__meta">
+                                    <span className="chip chip--gray">{item.frequency}</span>
+                                    <span className="cell-text-muted">{item.agentName || '—'}</span>
+                                  </div>
+                                  <div className="cell-text-muted">
+                                    Strike: Outlook {item.strikeDayOutlook ?? 'N/A'} · DB {item.strikeDayDb ?? 'N/A'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
                           <div className="table-responsive">
                             <table className="table table-hover" style={{ fontSize: '13px' }}>
                               <thead style={{ backgroundColor: '#f1f3f5' }}>
@@ -321,6 +351,7 @@ const AdminOutlook = () => {
                               </tbody>
                             </table>
                           </div>
+                          )
                         ) : (
                           <p className="text-success">All policies match – no discrepancies found.</p>
                         );
@@ -338,8 +369,32 @@ const AdminOutlook = () => {
                             Please verify manually.
                           </p>
                           <p className="text-muted" style={{ fontSize: '12px', marginBottom: '8px' }}>
-  💡 Click any policy number to open it in a new tab
+  💡 {isMobile ? 'Tap a policy' : 'Click any policy number'} to open it in a new tab
 </p>
+                          {isMobile ? (
+                            <div className="m-card-list">
+                              {report.subjectToReviewItems.map((item, idx) => (
+                                <div key={idx} className="m-card" onClick={() => openPolicy(item.policyNumber)}>
+                                  <div className="m-card__top">
+                                    <span className="m-card__ref">
+                                      <FileText size={12} />
+                                      {item.policyNumber}
+                                    </span>
+                                    <span className="chip chip--gray">{item.frequency}</span>
+                                  </div>
+                                  <div className="m-card__client">
+                                    <span className="m-card__client-name">{item.clientName}</span>
+                                  </div>
+                                  <div className="m-card__meta">
+                                    <span className="cell-text-muted">{item.agentName || '—'}</span>
+                                  </div>
+                                  <div className="cell-text-muted">
+                                    Inception {item.inceptionDate || 'N/A'} · Est. strike {item.estimatedDate || 'N/A'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
                           <div className="table-responsive">
                             <table className="table table-sm" style={{ fontSize: '12px' }}>
                               <thead style={{ backgroundColor: '#f8f9fa' }}>
@@ -380,6 +435,7 @@ const AdminOutlook = () => {
                               </tbody>
                             </table>
                           </div>
+                          )}
                         </div>
                       )}
                     </div>
