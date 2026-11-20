@@ -319,10 +319,10 @@ const AdminWhitelist = () => {
 
       {/* Confirmation Modal */}
       {modalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal show d-block app-modal" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header">
+              <div className="modal-header app-modal__header">
                 <h5 className="modal-title">{modalContent.title}</h5>
                 <button
                   type="button"

@@ -1,0 +1,357 @@
+/* ==========================================================================
+   APP MODALS — Hisa CRM additions
+   Shared View / Delete modal styles for Clients, Businesses, Agents,
+   Policy Types, MMF, Whitelist, Profile and Applications.
+   Replaces inline styles so modals behave the same on desktop and mobile.
+   ========================================================================== */
+
+$hisa-red: #c70e2a;
+$hisa-green: #2a9d36;
+$hisa-orange: #F15A29;
+$hisa-slate: #475569;
+$hisa-link: #0d6efd;
+
+/* --------------------------------------------------------------------------
+   SHELL: overlay, dialog sizes, header
+   -------------------------------------------------------------------------- */
+
+.app-modal {
+  background-color: rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+
+  .modal-dialog {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &--sm .modal-dialog { max-width: 500px; }
+  &--md .modal-dialog { max-width: 600px; }
+  &--lg .modal-dialog { max-width: 700px; }
+  &--xl .modal-dialog { max-width: 800px; }
+
+  .modal-content {
+    max-height: calc(100vh - 3.5rem);
+  }
+
+  .modal-body {
+    overflow-y: auto;
+  }
+}
+
+.app-modal__header {
+  background-color: $hisa-red;
+  color: #fff;
+
+  .modal-title { color: #fff; }
+  .btn-close { filter: brightness(0) invert(1); }
+
+  &--mmf { background-color: $hisa-slate; }
+  &--om { background-color: $hisa-green; }
+}
+
+.app-modal__body--padded {
+  padding: 25px;
+}
+
+/* --------------------------------------------------------------------------
+   BODY: hero card (avatar + name + subtitle)
+   -------------------------------------------------------------------------- */
+
+.app-modal__hero {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid $hisa-red;
+
+  &--mmf { border-left-color: $hisa-slate; }
+  &--green { border-left-color: $hisa-green; }
+}
+
+.app-modal__avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.app-modal__hero-title {
+  margin-bottom: 2px;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.app-modal__hero-sub {
+  font-size: 13px;
+  color: #666;
+}
+
+.app-modal__hero-meta {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   BODY: label / value fields
+   -------------------------------------------------------------------------- */
+
+.app-modal__field {
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.app-modal__label {
+  color: #999;
+  font-size: 12px;
+}
+
+.app-modal__value {
+  font-weight: 500;
+  word-break: break-word;
+
+  &--strong { font-weight: 600; }
+  &--link { color: $hisa-link; }
+  &--success { color: $hisa-green; }
+  &--danger { color: $hisa-red; }
+  &--accent { color: $hisa-orange; }
+  &--mono { font-family: monospace; }
+}
+
+/* --------------------------------------------------------------------------
+   BODY: grouped sections
+   -------------------------------------------------------------------------- */
+
+.app-modal__section {
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+
+  &--green { background-color: #eaf7ed; }
+  &--bank { background-color: #fef3e8; margin-bottom: 10px; }
+}
+
+.app-modal__section-title {
+  font-size: 12px;
+  color: $hisa-red;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.app-modal__heading {
+  color: $hisa-red;
+
+  &--mmf { color: $hisa-slate; }
+}
+
+.app-modal__note {
+  font-size: 13px;
+}
+
+.app-modal__small {
+  font-size: 12px;
+}
+
+.app-modal__tiny {
+  font-size: 11px;
+  color: #999;
+}
+
+/* --------------------------------------------------------------------------
+   BODY: scrolling lists (policies, history)
+   -------------------------------------------------------------------------- */
+
+.app-modal__list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.app-modal__list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  font-size: 13px;
+
+  &--history {
+    display: block;
+    border-left: 3px solid $hisa-green;
+  }
+}
+
+.app-modal__link {
+  color: $hisa-link;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.app-modal__change-old {
+  color: $hisa-red;
+  font-family: monospace;
+  margin-left: 6px;
+}
+
+.app-modal__change-arrow {
+  margin: 0 5px;
+  color: #999;
+}
+
+.app-modal__change-new {
+  color: $hisa-green;
+  font-family: monospace;
+}
+
+/* --------------------------------------------------------------------------
+   FOOTER BUTTONS
+   -------------------------------------------------------------------------- */
+
+.btn-app-danger {
+  background-color: $hisa-red;
+  border-color: $hisa-red;
+  color: #fff;
+
+  &:hover,
+  &:focus {
+    background-color: #a50c23;
+    border-color: #a50c23;
+    color: #fff;
+  }
+}
+
+.btn-app-mmf {
+  background-color: $hisa-slate;
+  border: none;
+  color: #fff;
+
+  &:hover,
+  &:focus {
+    background-color: #3a4657;
+    color: #fff;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   MOBILE
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 575.98px) {
+  .app-modal {
+    .modal-dialog {
+      margin: 0.5rem;
+      max-width: none;
+    }
+
+    .modal-content {
+      max-height: calc(100vh - 1rem);
+    }
+
+    .modal-footer {
+      flex-wrap: nowrap;
+
+      .btn { flex: 1; }
+    }
+  }
+
+  .app-modal__body--padded {
+    padding: 15px;
+  }
+
+  .app-modal__hero {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .app-modal__avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}
+
+/* Lets long text wrap inside flex rows instead of pushing the modal wider */
+.app-modal__shrink {
+  min-width: 0;
+}
+
+.app-modal__list-item .badge {
+  font-size: 10px;
+}
+
+.btn-app-success {
+  background-color: $hisa-green;
+  border-color: $hisa-green;
+  color: #fff;
+
+  &:hover,
+  &:focus {
+    background-color: #23842d;
+    border-color: #23842d;
+    color: #fff;
+  }
+}
+
+.app-modal__section--edge-green {
+  border-left: 4px solid $hisa-green;
+}
+
+/* --------------------------------------------------------------------------
+   STAT TILES (Agents, Policy Types)
+   -------------------------------------------------------------------------- */
+
+.app-modal__stat {
+  text-align: center;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+
+  &--sm { padding: 8px; border-radius: 6px; }
+  &--green { background-color: #e8f5e9; }
+  &--blue { background-color: #e3f2fd; }
+  &--amber { background-color: #fff3cd; }
+  &--red { background-color: #fde8ea; }
+}
+
+.app-modal__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+
+  &--md { font-size: 16px; }
+  &--sm { font-size: 14px; font-weight: 600; }
+  &--green { color: $hisa-green; }
+  &--blue { color: $hisa-link; }
+  &--amber { color: #856404; }
+  &--red { color: $hisa-red; }
+  &--orange { color: #fd7e14; }
+}
+
+.app-modal__stat-label {
+  font-size: 11px;
+  color: #666;
+
+  &--sm { font-size: 10px; }
+}
+
+/* Businesses: lapse / surrender / payment boxes */
+.app-modal__section--lapse { background-color: #fef2f2; border-left: 4px solid #7f1d1d; }
+.app-modal__section--surrender { background-color: #f1f5f9; border-left: 4px solid $hisa-slate; }
+.app-modal__section--edge-orange { border-left: 4px solid $hisa-orange; }
+.app-modal__value--lapse { color: #7f1d1d; }
+.app-modal__value--lg { font-size: 15px; }
+.app-modal__divider { border-top: 1px solid #cbd5e1; }

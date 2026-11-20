@@ -394,36 +394,15 @@ const fallbackDownload = (blob: Blob) => {
       title: 'Agent Details',
       body: (
         <div>
-          <div style={{ 
-            backgroundColor: '#f8f9fa', 
-            padding: '15px', 
-            borderRadius: '8px',
-            marginBottom: '20px',
-            borderLeft: '4px solid #c70e2a',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            <span 
-              className="rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '56px',
-                height: '56px',
-                backgroundColor: getAvatarColor(displayName),
-                color: '#fff',
-                fontSize: '22px',
-                fontWeight: 'bold',
-                textTransform: 'uppercase',
-                flexShrink: 0
-              }}
-            >
+          <div className="app-modal__hero">
+            <span className="app-modal__avatar" style={{ backgroundColor: getAvatarColor(displayName) }}>
               {getInitials(displayName)}
             </span>
-            <div>
-              <h5 style={{ marginBottom: '2px', fontWeight: '600' }}>
+            <div className="app-modal__shrink">
+              <h5 className="app-modal__hero-title">
                 {displayName}
               </h5>
-              <div style={{ fontSize: '13px', color: '#666' }}>
+              <div className="app-modal__hero-sub">
                 Code: <strong>{displayCode}</strong>
               </div>
             </div>
@@ -431,87 +410,57 @@ const fallbackDownload = (blob: Blob) => {
 
           <div className="row g-2">
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '12px', 
-                backgroundColor: '#e8f5e9', 
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#2a9d36' }}>
+              <div className="app-modal__stat app-modal__stat--green">
+                <div className="app-modal__stat-value app-modal__stat-value--green">
                   {selectedAgent.client_count || 0}
                 </div>
-                <div style={{ fontSize: '11px', color: '#666' }}>Clients</div>
+                <div className="app-modal__stat-label">Clients</div>
               </div>
             </div>
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '12px', 
-                backgroundColor: '#e3f2fd', 
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#0d6efd' }}>
+              <div className="app-modal__stat app-modal__stat--blue">
+                <div className="app-modal__stat-value app-modal__stat-value--blue">
                   {selectedAgent.policy_count || 0}
                 </div>
-                <div style={{ fontSize: '11px', color: '#666' }}>Policies</div>
+                <div className="app-modal__stat-label">Policies</div>
               </div>
             </div>
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '12px', 
-                backgroundColor: '#fff3cd', 
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: '#856404' }}>
+              <div className="app-modal__stat app-modal__stat--amber">
+                <div className="app-modal__stat-value app-modal__stat-value--md app-modal__stat-value--amber">
                   KES {formatCurrency(selectedAgent.total_premium)}
                 </div>
-                <div style={{ fontSize: '11px', color: '#666' }}>Total Premium</div>
+                <div className="app-modal__stat-label">Total Premium</div>
               </div>
             </div>
           </div>
 
           <div className="row g-2 mt-2">
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '8px', 
-                backgroundColor: '#e8f5e9', 
-                borderRadius: '6px'
-              }}>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: '#2a9d36' }}>
+              <div className="app-modal__stat app-modal__stat--sm app-modal__stat--green">
+                <span className="app-modal__stat-value app-modal__stat-value--sm app-modal__stat-value--green">
                   <CheckCircle size={14} className="me-1" />
                   {selectedAgent.finalised_count || 0}
                 </span>
-                <div style={{ fontSize: '10px', color: '#666' }}>Finalised</div>
+                <div className="app-modal__stat-label app-modal__stat-label--sm">Finalised</div>
               </div>
             </div>
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '8px', 
-                backgroundColor: '#fde8ea', 
-                borderRadius: '6px'
-              }}>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: '#c70e2a' }}>
+              <div className="app-modal__stat app-modal__stat--sm app-modal__stat--red">
+                <span className="app-modal__stat-value app-modal__stat-value--sm app-modal__stat-value--red">
                   <XCircle size={14} className="me-1" />
                   {selectedAgent.cancelled_count || 0}
                 </span>
-                <div style={{ fontSize: '10px', color: '#666' }}>Cancelled</div>
+                <div className="app-modal__stat-label app-modal__stat-label--sm">Cancelled</div>
               </div>
             </div>
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '8px', 
-                backgroundColor: '#fff3cd', 
-                borderRadius: '6px'
-              }}>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: '#fd7e14' }}>
+              <div className="app-modal__stat app-modal__stat--sm app-modal__stat--amber">
+                <span className="app-modal__stat-value app-modal__stat-value--sm app-modal__stat-value--orange">
                   <Clock size={14} className="me-1" />
                   {selectedAgent.active_count || 0}
                 </span>
-                <div style={{ fontSize: '10px', color: '#666' }}>Active</div>
+                <div className="app-modal__stat-label app-modal__stat-label--sm">Active</div>
               </div>
             </div>
           </div>
@@ -887,12 +836,12 @@ const fallbackDownload = (blob: Blob) => {
       `}</style>
 
       {modalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '500px' }}>
+        <div className="modal show d-block app-modal app-modal--sm" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
-                <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">{modalContent.title}</h5>
+                <button type="button" className="btn-close" onClick={closeModal} />
               </div>
               <div className="modal-body">
                 {modalContent.body}

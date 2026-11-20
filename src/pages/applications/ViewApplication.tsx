@@ -771,24 +771,22 @@ const logo = isOm ? omLogo : absaLogo;
       {/* Add Document Modal */}
       {addDocOpen && (
         <div
-          className="modal show d-block"
+          className="modal show d-block app-modal"
           tabIndex={-1}
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          role="dialog"
         >
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
               <div
-                className="modal-header"
-                style={{ backgroundColor: accent, color: "#fff" }}
+                className={`modal-header app-modal__header${isOm ? " app-modal__header--om" : ""}`}
               >
-                <h5 className="modal-title" style={{ color: "#fff" }}>
+                <h5 className="modal-title">
                   Add Document
                 </h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setAddDocOpen(false)}
-                  style={{ filter: "brightness(0) invert(1)" }}
                 />
               </div>
                             <div className="modal-body">
@@ -807,7 +805,7 @@ const logo = isOm ? omLogo : absaLogo;
                   </select>
                 </div>
                                 {addDocIsReplacement && (
-                  <div className="alert alert-warning py-2 mb-3" style={{ fontSize: "13px" }}>
+                  <div className="alert alert-warning py-2 mb-3 app-modal__note">
                     You are uploading a <strong>replacement</strong> for <strong>{addDocType}</strong>. The old version will be kept in history but marked as superseded.
                   </div>
                 )}
@@ -841,10 +839,9 @@ const logo = isOm ? omLogo : absaLogo;
                 </button>
                 <button
                   type="button"
-                  className="btn"
+                  className={`btn ${isOm ? "btn-app-success" : "btn-app-danger"}`}
                   onClick={handleAddDoc}
                   disabled={!addDocType || !addDocFile || addDocBusy}
-                  style={{ backgroundColor: accent, borderColor: accent, color: "#fff" }}
                 >
                   {addDocBusy ? "Uploading…" : "Upload"}
                 </button>

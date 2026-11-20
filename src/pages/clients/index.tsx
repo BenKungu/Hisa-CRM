@@ -771,12 +771,7 @@ if (filters.dobFilter.type !== 'none')  {
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
             {!hasPolicies && (
-              <button
-                type="button"
-                className="btn"
-                onClick={confirmDelete}
-                style={{ backgroundColor: '#c70e2a', color: '#fff', borderColor: '#c70e2a' }}
-              >
+              <button type="button" className="btn btn-app-danger" onClick={confirmDelete}>
                 Yes, Delete
               </button>
             )}
@@ -804,70 +799,59 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
         body: (
           <div>
             {/* Client header with avatar */}
-            <div style={{
-              backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px',
-              marginBottom: '20px', borderLeft: '4px solid #c70e2a',
-              display: 'flex', alignItems: 'center', gap: '15px'
-            }}>
-              <span
-                className="rounded-circle d-inline-flex align-items-center justify-content-center"
-                style={{
-                  width: '56px', height: '56px',
-                  backgroundColor: getAvatarColor(displayName), color: '#fff',
-                  fontSize: '22px', fontWeight: 'bold', textTransform: 'uppercase', flexShrink: 0
-                }}
-              >
+            <div className="app-modal__hero">
+              <span className="app-modal__avatar" style={{ backgroundColor: getAvatarColor(displayName) }}>
                 {getInitials(displayName)}
               </span>
-              <div>
-                <h5 style={{ marginBottom: '2px', fontWeight: '600' }}>{fullNameWithTitle}</h5>
-                <div style={{ fontSize: '13px', color: '#666' }}>
+              <div className="app-modal__shrink">
+                <h5 className="app-modal__hero-title">{fullNameWithTitle}</h5>
+                <div className="app-modal__hero-sub">
                   ID: {selectedClient.id_no || 'N/A'} · {selectedClient.policy_count || 0} Total · {selectedClient.finalised_count || 0} Finalised
                 </div>
-                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
-                 Agent: {agentName} {agentCode ? `(${agentCode})` : ''}
-                 </div>
+                <div className="app-modal__hero-meta">
+                  Agent: {agentName} {agentCode ? `(${agentCode})` : ''}
+                </div>
               </div>
             </div>
 
-            {/* Two-column client data */}
+            {/* Two-column client data (stacks on mobile) */}
             <div className="row">
-              <div className="col-6">
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Full Name</span>
-                  <div style={{ fontWeight: '500' }}>{fullNameWithTitle}</div>
+              <div className="col-12 col-sm-6">
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Full Name</span>
+                  <div className="app-modal__value">{fullNameWithTitle}</div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>First Name</span>
-                  <div style={{ fontWeight: '500' }}>{selectedClient.first_name || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">First Name</span>
+                  <div className="app-modal__value">{selectedClient.first_name || 'N/A'}</div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Birthday</span>
-                  <div style={{ fontWeight: '500', color: '#F15A29' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Birthday</span>
+                  <div className="app-modal__value app-modal__value--accent">
                     {selectedClient.dob ? formatBirthday(selectedClient.dob) : 'N/A'}
                   </div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>ID Number</span>
-                  <div style={{ fontWeight: '500' }}>{selectedClient.id_no || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">ID Number</span>
+                  <div className="app-modal__value">{selectedClient.id_no || 'N/A'}</div>
                 </div>
               </div>
-              <div className="col-6">
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Phone</span>
-                  <div style={{ fontWeight: '500', color: '#0d6efd' }}>{selectedClient.phone_no || 'N/A'}</div>
+              <div className="col-12 col-sm-6">
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Phone</span>
+                  <div className="app-modal__value app-modal__value--link">{selectedClient.phone_no || 'N/A'}</div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Email</span>
-                  <div style={{ fontWeight: '500' }}>{selectedClient.email || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Email</span>
+                  <div className="app-modal__value">{selectedClient.email || 'N/A'}</div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Total Policies</span>
-                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>{selectedClient.policy_count || 0}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Total Policies</span>
+                  <div className="app-modal__value app-modal__value--strong app-modal__value--success">{selectedClient.policy_count || 0}</div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Last Updated</span>
-                  <div style={{ fontWeight: '500' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Last Updated</span>
+                  <div className="app-modal__value">
                     {selectedClient.updated_at ? formatDateCompact(selectedClient.updated_at) : 'N/A'}
                   </div>
                 </div>
@@ -876,34 +860,32 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
 
             {/* Agent section */}
             {agentName !== 'N/A' && (
-              <div style={{ backgroundColor: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+              <div className="app-modal__section">
                 <div className="row">
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Agent Name</span>
-                    <div style={{ fontWeight: '500' }}>{agentName}</div>
+                  <div className="col-12 col-sm-6 app-modal__field">
+                    <span className="app-modal__label">Agent Name</span>
+                    <div className="app-modal__value">{agentName}</div>
                   </div>
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Agent Code</span>
-                    <div style={{ fontWeight: '500' }}>{agentCode}</div>
+                  <div className="col-12 col-sm-6 app-modal__field">
+                    <span className="app-modal__label">Agent Code</span>
+                    <div className="app-modal__value">{agentCode}</div>
                   </div>
                 </div>
               </div>
             )}
 
-                        {/* Employment */}
+            {/* Employment */}
             {(selectedClient.employer || selectedClient.occupation) && (
-              <div style={{ backgroundColor: '#eaf7ed', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
-                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
-                  🏢 Employment
-                </div>
+              <div className="app-modal__section app-modal__section--green">
+                <div className="app-modal__section-title">🏢 Employment</div>
                 <div className="row">
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Employer</span>
-                    <div style={{ fontWeight: '500' }}>{selectedClient.employer || 'N/A'}</div>
+                  <div className="col-12 col-sm-6 app-modal__field">
+                    <span className="app-modal__label">Employer</span>
+                    <div className="app-modal__value">{selectedClient.employer || 'N/A'}</div>
                   </div>
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Occupation</span>
-                    <div style={{ fontWeight: '500' }}>{selectedClient.occupation || 'N/A'}</div>
+                  <div className="col-12 col-sm-6 app-modal__field">
+                    <span className="app-modal__label">Occupation</span>
+                    <div className="app-modal__value">{selectedClient.occupation || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -911,18 +893,16 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
 
             {/* Addresses */}
             {(selectedClient.residential_address || selectedClient.postal_address) && (
-              <div style={{ backgroundColor: '#f8f9fa', padding: '12px 15px', borderRadius: '8px', marginBottom: '15px' }}>
-                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
-                  📍 Addresses
-                </div>
+              <div className="app-modal__section">
+                <div className="app-modal__section-title">📍 Addresses</div>
                 <div className="row">
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Residential</span>
-                    <div style={{ fontWeight: '500' }}>{selectedClient.residential_address || 'N/A'}</div>
+                  <div className="col-12 col-sm-6 app-modal__field">
+                    <span className="app-modal__label">Residential</span>
+                    <div className="app-modal__value">{selectedClient.residential_address || 'N/A'}</div>
                   </div>
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Postal</span>
-                    <div style={{ fontWeight: '500' }}>{selectedClient.postal_address || 'N/A'}</div>
+                  <div className="col-12 col-sm-6 app-modal__field">
+                    <span className="app-modal__label">Postal</span>
+                    <div className="app-modal__value">{selectedClient.postal_address || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -930,44 +910,35 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
 
             {/* Policies section */}
             <hr />
-            <h6 className="mt-3" style={{ color: '#c70e2a' }}>
+            <h6 className="mt-3 app-modal__heading">
               <FileText size={14} className="me-1" /> Policies ({clientPolicies.length})
-              <span className="ms-2 text-success" style={{ fontSize: '12px' }}>
+              <span className="ms-2 text-success app-modal__small">
                 <CheckCircle size={12} className="me-1" />
                 {clientPolicies.filter(p => p.policy_status?.toLowerCase().includes('finalised')).length} Finalised
               </span>
             </h6>
             {loadingPolicies ? (
-              <p className="text-muted" style={{ fontSize: '13px' }}>Loading policies...</p>
+              <p className="text-muted app-modal__note">Loading policies...</p>
             ) : !hasPolicies ? (
-              <p className="text-muted" style={{ fontSize: '13px' }}>No policies found for this client</p>
+              <p className="text-muted app-modal__note">No policies found for this client</p>
             ) : (
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="app-modal__list">
                 {clientPolicies.map((policy, idx) => (
-                  <div key={idx} style={{
-                    padding: '8px 12px', marginBottom: '5px',
-                    backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '13px',
-                    display: 'flex', justifyContent: 'space-between',
-                    alignItems: 'center', flexWrap: 'wrap',
-                    cursor: 'pointer', transition: 'background-color 0.15s',
-                  }}>
-                                        <div>
+                  <div key={idx} className="app-modal__list-item">
+                    <div className="app-modal__shrink">
                       <a
                         href={`/businesses?search=${policy.policy_number}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          fontWeight: '500', color: '#0d6efd',
-                          textDecoration: 'underline', cursor: 'pointer'
-                        }}
+                        className="app-modal__link"
                       >
                         {policy.policy_number}
                       </a>
-                      <span className="text-muted" style={{ fontSize: '11px', marginLeft: '10px' }}>
+                      <span className="text-muted app-modal__tiny ms-2">
                         {policy.product_type || 'N/A'}
                       </span>
-                                            {(policy.bank_name || policy.bank_account_number) && (
-                        <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                      {(policy.bank_name || policy.bank_account_number) && (
+                        <div className="app-modal__tiny mt-1">
                           🏦 {policy.bank_name || 'N/A'}
                           {policy.bank_account_number ? ` · ${policy.bank_account_number}` : ''}
                         </div>
@@ -978,10 +949,10 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
                         policy.policy_status?.toLowerCase().includes('finalised') ? 'bg-success' :
                         policy.policy_status?.toLowerCase().includes('unfinalised') ? 'bg-warning text-dark' :
                         policy.policy_status?.toLowerCase().includes('cancelled') ? 'bg-danger' : 'bg-secondary'
-                      }`} style={{ fontSize: '10px' }}>
+                      }`}>
                         {policy.policy_status || 'N/A'}
                       </span>
-                      <span style={{ marginLeft: '10px', fontSize: '12px', color: '#2a9d36' }}>
+                      <span className="ms-2 app-modal__small app-modal__value--success">
                         KES {formatCurrency(policy.new_gross_premium)}
                       </span>
                     </div>
@@ -992,25 +963,22 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
             {((selectedClient as any).mmf_count || 0) > 0 && (
               <>
                 <hr />
-                <h6 className="mt-3" style={{ color: '#475569' }}>
+                <h6 className="mt-3 app-modal__heading app-modal__heading--mmf">
                   💼 MMF Accounts ({((selectedClient as any).mmf_count)})
                 </h6>
-                <div style={{ fontSize: '13px', color: '#555' }}>
-                  <p className="text-muted" style={{ fontSize: '12px' }}>
-                    This client also holds an MMF account. Click below to see the account.
-                  </p>
-                  <Link
-                    to={`/mmf?search=${encodeURIComponent(
-                      selectedClient.phone_no ||
-                      selectedClient.email ||
-                      selectedClient.client_name
-                    )}`}
-                    className="btn btn-sm"
-                    style={{ backgroundColor: '#475569', color: '#fff', border: 'none' }}
-                  >
-                    View MMF Account
-                  </Link>
-                </div>
+                <p className="text-muted app-modal__small">
+                  This client also holds an MMF account. Click below to see the account.
+                </p>
+                <Link
+                  to={`/mmf?search=${encodeURIComponent(
+                    selectedClient.phone_no ||
+                    selectedClient.email ||
+                    selectedClient.client_name
+                  )}`}
+                  className="btn btn-sm btn-app-mmf"
+                >
+                  View MMF Account
+                </Link>
               </>
             )}
 
@@ -1048,43 +1016,30 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
               return (
                 <>
                   <hr />
-                  <h6 className="mt-3" style={{ color: '#c70e2a' }}>
-                    🏦 Bank Details
-                  </h6>
+                  <h6 className="mt-3 app-modal__heading">🏦 Bank Details</h6>
                   {bankGroups.map((g, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        backgroundColor: '#fef3e8',
-                        padding: '12px 15px',
-                        borderRadius: '8px',
-                        marginBottom: '10px',
-                      }}
-                    >
-                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#c70e2a' }}>
+                    <div key={idx} className="app-modal__section app-modal__section--bank">
+                      <div className="app-modal__value app-modal__value--strong app-modal__value--danger">
                         {g.bank_name || 'N/A'}
                       </div>
                       {g.bank_branch_name && (
-                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                        <div className="app-modal__hero-sub app-modal__small mt-1">
                           Branch: {g.bank_branch_name}
                           {g.bank_branch_code ? ` (${g.bank_branch_code})` : ''}
                         </div>
                       )}
                       {g.bank_account_number && (
-                        <div style={{ fontSize: '13px', fontFamily: 'monospace', marginTop: '4px' }}>
+                        <div className="app-modal__value--mono app-modal__note mt-1">
                           {g.bank_account_number}
                         </div>
                       )}
                       {g.policies.length > 0 && (
-                        <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
+                        <div className="app-modal__tiny mt-2">
                           Policies:{' '}
                           {g.policies.map((pn, i) => (
                             <span key={i}>
                               {i > 0 && ', '}
-                              <span
-                                style={{ color: '#0d6efd', cursor: 'pointer', textDecoration: 'underline' }}
-                                onClick={() => navigate(`/businesses?search=${pn}`)}
-                              >
+                              <span className="app-modal__link" onClick={() => navigate(`/businesses?search=${pn}`)}>
                                 {pn}
                               </span>
                             </span>
@@ -1101,39 +1056,21 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
             {bankHistory.length > 0 && (
               <>
                 <hr />
-                <h6 className="mt-3" style={{ color: '#c70e2a' }}>
-                  📋 Bank Amendment History
-                </h6>
+                <h6 className="mt-3 app-modal__heading">📋 Bank Amendment History</h6>
                 {loadingBankHistory ? (
-                  <p className="text-muted" style={{ fontSize: '13px' }}>Loading...</p>
+                  <p className="text-muted app-modal__note">Loading...</p>
                 ) : (
-                  <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                  <div className="app-modal__list">
                     {bankHistory.map((change: any, idx: number) => (
-                      <div
-                        key={idx}
-                        style={{
-                          padding: '8px 12px',
-                          marginBottom: '5px',
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '4px',
-                          fontSize: '13px',
-                          borderLeft: '3px solid #2a9d36',
-                        }}
-                      >
-                        <div style={{ fontSize: '11px', color: '#c70e2a', fontWeight: '600' }}>
-                          {change.policy_number}
-                        </div>
+                      <div key={idx} className="app-modal__list-item app-modal__list-item--history">
+                        <div className="app-modal__section-title mb-0">{change.policy_number}</div>
                         <div>
-                          <span style={{ fontWeight: '500' }}>{change.field}:</span>
-                          <span style={{ color: '#c70e2a', fontFamily: 'monospace', marginLeft: '6px' }}>
-                            {change.old_value}
-                          </span>
-                          <span style={{ margin: '0 5px', color: '#999' }}>→</span>
-                          <span style={{ color: '#2a9d36', fontFamily: 'monospace' }}>
-                            {change.new_value}
-                          </span>
+                          <span className="app-modal__value">{change.field}:</span>
+                          <span className="app-modal__change-old">{change.old_value}</span>
+                          <span className="app-modal__change-arrow">→</span>
+                          <span className="app-modal__change-new">{change.new_value}</span>
                         </div>
-                        <div style={{ color: '#999', fontSize: '11px', marginTop: '2px' }}>
+                        <div className="app-modal__tiny mt-1">
                           {new Date(change.changed_at).toLocaleString()}
                         </div>
                       </div>
@@ -1725,12 +1662,12 @@ const agentCode = selectedClient.agent_code && selectedClient.agent_code !== 'N/
           MODAL – View / Delete
           ===================================================================== */}
       {modalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '700px' }}>
+        <div className="modal show d-block app-modal app-modal--lg" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
-                <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">{modalContent.title}</h5>
+                <button type="button" className="btn-close" onClick={closeModal} />
               </div>
               <div className="modal-body">{modalContent.body}</div>
               {modalContent.footer}

@@ -501,8 +501,8 @@ const AdminProfile = () => {
       >
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content">
-            <div className="modal-header" style={{ backgroundColor: "#c70e2a", color: "#fff" }}>
-              <h5 className="modal-title" style={{ color: "#fff" }}>
+            <div className="modal-header app-modal__header">
+              <h5 className="modal-title">
                 Personal Details
               </h5>
               <button
@@ -510,7 +510,6 @@ const AdminProfile = () => {
                 className="btn-close"
                 onClick={closeModal}
                 aria-label="Close"
-                style={{ filter: "brightness(0) invert(1)" }}
               />
             </div>
             <div className="modal-body">
@@ -653,12 +652,7 @@ const AdminProfile = () => {
                 </div>
                 <button
                   type="submit"
-                  className="btn w-100"
-                  style={{
-                    backgroundColor: "#2a9d36",
-                    color: "#fff",
-                    borderColor: "#2a9d36",
-                  }}
+                  className="btn w-100 btn-app-success"
                 >
                   Save Changes
                 </button>

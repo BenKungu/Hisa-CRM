@@ -896,12 +896,7 @@ const columns: ColumnsType<Policy> = [
         footer: (
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-            <button
-              type="button"
-              className="btn"
-              onClick={confirmDelete}
-              style={{ backgroundColor: '#c70e2a', color: '#fff', borderColor: '#c70e2a' }}
-            >
+            <button type="button" className="btn btn-app-danger" onClick={confirmDelete}>
               Yes, Delete
             </button>
           </div>
@@ -916,31 +911,27 @@ const columns: ColumnsType<Policy> = [
         body: (
           <div>
             {/* Header – policy number + status */}
-            <div style={{
-              backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px',
-              marginBottom: '20px', borderLeft: '4px solid #c70e2a'
-            }}>
+            <div className="app-modal__hero d-block">
               <div className="row">
-                <div className="col-6">
-                  <span style={{ color: '#999', fontSize: '12px' }}>Policy Number</span>
-                  <h5 style={{ color: '#2a9d36', fontWeight: 'bold', marginBottom: '0' }}>
+                <div className="col-12 col-sm-6">
+                  <span className="app-modal__label">Policy Number</span>
+                  <h5 className="mb-0 fw-bold app-modal__value--success">
                     {selectedPolicy.policy_number}
                   </h5>
                 </div>
-                <div className="col-6 text-end">
-                  <span style={{ color: '#999', fontSize: '12px' }}>Status</span>
+                <div className="col-12 col-sm-6 text-sm-end">
+                  <span className="app-modal__label">Status</span>
                   <div>
                     {(() => {
                       const cleaned = cleanPolicyStatus(selectedPolicy.policy_status);
                       const style = STATUS_STYLES[cleaned] || DEFAULT_STATUS_STYLE;
                       return (
                         <span
-                          className="badge"
+                          className="badge text-white"
                           style={{
                             fontSize: '14px',
                             padding: '5px 15px',
                             backgroundColor: style.bg,
-                            color: '#fff',
                           }}
                         >
                           {style.icon} {cleaned}
@@ -952,82 +943,82 @@ const columns: ColumnsType<Policy> = [
               </div>
             </div>
 
-            {/* Two-column body */}
+            {/* Two-column body (stacks on mobile) */}
             <div className="row">
               {/* Left column */}
-              <div className="col-6">
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Client</span>
-                  <div style={{ fontWeight: '500' }}>
+              <div className="col-12 col-sm-6">
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Client</span>
+                  <div className="app-modal__value">
                     {selectedPolicy.title && selectedPolicy.title.trim() !== '' ? `${selectedPolicy.title} ` : ''}
                     {selectedPolicy.client_name || 'N/A'}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Client ID</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.client_id_no || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Client ID</span>
+                  <div className="app-modal__value">{selectedPolicy.client_id_no || 'N/A'}</div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Product Type</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.product_type || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Product Type</span>
+                  <div className="app-modal__value">{selectedPolicy.product_type || 'N/A'}</div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Current Frequency</span>
-                  <div style={{ fontWeight: '500', color: '#0d6efd' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Current Frequency</span>
+                  <div className="app-modal__value app-modal__value--link">
                     {selectedPolicy.premium_frequency || 'N/A'}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Inception Date</span>
-                  <div style={{ fontWeight: '500', color: '#F15A29' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Inception Date</span>
+                  <div className="app-modal__value app-modal__value--accent">
                     {formatDateToOrdinal(selectedPolicy.inception_date)}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Initial Frequency</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.initial_frequency || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Initial Frequency</span>
+                  <div className="app-modal__value">{selectedPolicy.initial_frequency || 'N/A'}</div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Premium Payment Term</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.premium_payment_term || 'N/A'}</div>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Premium Payment Term</span>
+                  <div className="app-modal__value">{selectedPolicy.premium_payment_term || 'N/A'}</div>
                 </div>
               </div>
 
               {/* Right column */}
-              <div className="col-6">
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Strike Day</span>
-                  <div style={{ fontWeight: '500', color: '#0d6efd' }}>
+              <div className="col-12 col-sm-6">
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Strike Day</span>
+                  <div className="app-modal__value app-modal__value--link">
                     {selectedPolicy.strike_date ? getStrikeDayWithOrdinal(selectedPolicy.strike_date) : 'N/A'}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Total Sum Insured</span>
-                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Total Sum Insured</span>
+                  <div className="app-modal__value app-modal__value--strong app-modal__value--success">
                     KES {formatCurrency(selectedPolicy.total_sum_insured)}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Annualised Premium</span>
-                  <div style={{ fontWeight: '600', color: '#2a9d36' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Annualised Premium</span>
+                  <div className="app-modal__value app-modal__value--strong app-modal__value--success">
                     KES {formatCurrency(selectedPolicy.annualised_premium)}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Initial Gross Premium</span>
-                  <div style={{ fontWeight: '500' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Initial Gross Premium</span>
+                  <div className="app-modal__value">
                     KES {formatCurrency(selectedPolicy.initial_gross_premium)}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>New Gross Premium</span>
-                  <div style={{ fontWeight: '600', color: '#c70e2a' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">New Gross Premium</span>
+                  <div className="app-modal__value app-modal__value--strong app-modal__value--danger">
                     KES {formatCurrency(selectedPolicy.new_gross_premium)}
                   </div>
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Inflation Protection</span>
-                  <div style={{ fontWeight: '500' }}>
+                <div className="app-modal__field">
+                  <span className="app-modal__label">Inflation Protection</span>
+                  <div className="app-modal__value">
                     {selectedPolicy.inflation_protection !== null ? `${selectedPolicy.inflation_protection}%` : 'N/A'}
                   </div>
                 </div>
@@ -1037,12 +1028,12 @@ const columns: ColumnsType<Policy> = [
                   const info = getMaturityInfo(selectedPolicy.inception_date, selectedPolicy.premium_payment_term);
                   if (!info) return null;
                   return (
-                    <div style={{ marginBottom: '15px' }}>
-                      <span style={{ color: '#999', fontSize: '12px' }}>Maturity</span>
-                      <div style={{ fontWeight: '500', color: info.status === 'Matured' ? '#c70e2a' : '#2a9d36' }}>
+                    <div className="app-modal__field">
+                      <span className="app-modal__label">Maturity</span>
+                      <div className={`app-modal__value ${info.status === 'Matured' ? 'app-modal__value--danger' : 'app-modal__value--success'}`}>
                         {info.status === 'Matured' ? '✅ Matured' : `⏳ ${info.status}`}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#666' }}>
+                      <div className="app-modal__hero-sub app-modal__small">
                         Matures on: {formatDateToOrdinal(info.date.toISOString())}
                       </div>
                     </div>
@@ -1057,34 +1048,29 @@ const columns: ColumnsType<Policy> = [
               selectedPolicy.total_premium_paid !== null ||
               selectedPolicy.arrears_due !== null ||
               selectedPolicy.new_gross_premium_at_lapse !== null) && (
-              <div style={{
-                backgroundColor: '#fef2f2',
-                padding: '15px',
-                borderRadius: '8px',
-                marginTop: '10px',
-                marginBottom: '15px',
-                borderLeft: '4px solid #7f1d1d'
-              }}>
-                <div style={{ fontSize: '12px', color: '#7f1d1d', fontWeight: '600', marginBottom: '12px' }}>
+              <div
+                className="app-modal__section app-modal__section--lapse mt-2"
+              >
+                <div className="app-modal__section-title app-modal__value--lapse">
                   ⚠ Lapse &amp; Arrears
                 </div>
 
                 <div className="row">
                   {/* Left column – lapse premium + expected */}
-                  <div className="col-6">
+                  <div className="col-12 col-sm-6">
                     {selectedPolicy.new_gross_premium_at_lapse !== null && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Premium at Lapse</span>
-                        <div style={{ fontWeight: '500', color: '#7f1d1d' }}>
+                      <div className="app-modal__field">
+                        <span className="app-modal__label">Premium at Lapse</span>
+                        <div className="app-modal__value app-modal__value--lapse">
                           KES {formatCurrency(selectedPolicy.new_gross_premium_at_lapse)}
                         </div>
                       </div>
                     )}
 
                     {selectedPolicy.expected_premium !== null && (
-                      <div style={{ marginBottom: '0' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Expected Premium</span>
-                        <div style={{ fontWeight: '500' }}>
+                      <div className="app-modal__field mb-0">
+                        <span className="app-modal__label">Expected Premium</span>
+                        <div className="app-modal__value">
                           KES {formatCurrency(selectedPolicy.expected_premium)}
                         </div>
                       </div>
@@ -1092,20 +1078,20 @@ const columns: ColumnsType<Policy> = [
                   </div>
 
                   {/* Right column – paid + arrears */}
-                  <div className="col-6">
+                  <div className="col-12 col-sm-6">
                     {selectedPolicy.total_premium_paid !== null && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Total Premium Paid</span>
-                        <div style={{ fontWeight: '500', color: '#2a9d36' }}>
+                      <div className="app-modal__field">
+                        <span className="app-modal__label">Total Premium Paid</span>
+                        <div className="app-modal__value app-modal__value--success">
                           KES {formatCurrency(selectedPolicy.total_premium_paid)}
                         </div>
                       </div>
                     )}
 
                     {selectedPolicy.arrears_due !== null && (
-                      <div style={{ marginBottom: '0' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Arrears Due</span>
-                        <div style={{ fontWeight: '700', color: '#c70e2a', fontSize: '15px' }}>
+                      <div className="app-modal__field mb-0">
+                        <span className="app-modal__label">Arrears Due</span>
+                        <div className="app-modal__value app-modal__value--danger app-modal__value--lg fw-bold">
                           KES {formatCurrency(selectedPolicy.arrears_due)}
                         </div>
                       </div>
@@ -1117,53 +1103,48 @@ const columns: ColumnsType<Policy> = [
 
             {/* Surrender details — only for Surrendered policies */}
             {cleanPolicyStatus(selectedPolicy.policy_status) === 'Surrendered' && (
-              <div style={{
-                backgroundColor: '#f1f5f9',
-                padding: '15px',
-                borderRadius: '8px',
-                marginTop: '10px',
-                marginBottom: '15px',
-                borderLeft: '4px solid #475569'
-              }}>
-                <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600', marginBottom: '12px' }}>
+              <div
+                className="app-modal__section app-modal__section--surrender mt-2"
+              >
+                <div className="app-modal__section-title app-modal__heading--mmf">
                   ⇦ Surrender Details
                 </div>
 
                 <div className="row">
-                  <div className="col-6">
+                  <div className="col-12 col-sm-6">
                     {selectedPolicy.surrender_amount !== null && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Surrender Amount</span>
-                        <div style={{ fontWeight: '600', color: '#475569' }}>
+                      <div className="app-modal__field">
+                        <span className="app-modal__label">Surrender Amount</span>
+                        <div className="app-modal__value app-modal__value--strong app-modal__heading--mmf">
                           KES {formatCurrency(selectedPolicy.surrender_amount)}
                         </div>
                       </div>
                     )}
 
                     {selectedPolicy.months_paid !== null && (
-                      <div style={{ marginBottom: '0' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Months Paid</span>
-                        <div style={{ fontWeight: '500' }}>
+                      <div className="app-modal__field mb-0">
+                        <span className="app-modal__label">Months Paid</span>
+                        <div className="app-modal__value">
                           {selectedPolicy.months_paid}
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="col-6">
+                  <div className="col-12 col-sm-6">
                     {selectedPolicy.duration_in_force !== null && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Duration in Force</span>
-                        <div style={{ fontWeight: '500' }}>
+                      <div className="app-modal__field">
+                        <span className="app-modal__label">Duration in Force</span>
+                        <div className="app-modal__value">
                           {selectedPolicy.duration_in_force} month{selectedPolicy.duration_in_force !== 1 ? 's' : ''}
                         </div>
                       </div>
                     )}
 
                     {selectedPolicy.surrender_reason && (
-                      <div style={{ marginBottom: '0' }}>
-                        <span style={{ color: '#999', fontSize: '12px' }}>Surrender Reason</span>
-                        <div style={{ fontWeight: '500', color: '#475569' }}>
+                      <div className="app-modal__field mb-0">
+                        <span className="app-modal__label">Surrender Reason</span>
+                        <div className="app-modal__value app-modal__heading--mmf">
                           {selectedPolicy.surrender_reason}
                         </div>
                       </div>
@@ -1173,9 +1154,9 @@ const columns: ColumnsType<Policy> = [
 
                 {/* Endorsement date — shown only for Surrendered */}
                 {selectedPolicy.endorsement_date && (
-                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #cbd5e1' }}>
-                    <span style={{ color: '#999', fontSize: '12px' }}>Endorsement Date</span>
-                    <div style={{ fontWeight: '500' }}>
+                  <div className="mt-3 pt-2 app-modal__divider">
+                    <span className="app-modal__label">Endorsement Date</span>
+                    <div className="app-modal__value">
                       {formatDateCompact(selectedPolicy.endorsement_date)}
                     </div>
                   </div>
@@ -1184,22 +1165,19 @@ const columns: ColumnsType<Policy> = [
             )}
 
             {/* Agent + branch footer */}
-            <div style={{
-              backgroundColor: '#f8f9fa', padding: '12px 15px',
-              borderRadius: '8px', marginTop: '10px', marginBottom: '15px'
-            }}>
+            <div className="app-modal__section mt-2">
               <div className="row">
-                <div className="col-6">
-                  <span style={{ color: '#999', fontSize: '12px' }}>Agent</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.agent_name || 'N/A'}</div>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Agent Code</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.agent_code || 'N/A'}</div>
+                <div className="col-12 col-sm-6">
+                  <span className="app-modal__label">Agent</span>
+                  <div className="app-modal__value">{selectedPolicy.agent_name || 'N/A'}</div>
+                  <span className="app-modal__label">Agent Code</span>
+                  <div className="app-modal__value">{selectedPolicy.agent_code || 'N/A'}</div>
                 </div>
-                <div className="col-6">
-                  <span style={{ color: '#999', fontSize: '12px' }}>Sales Branch</span>
-                  <div style={{ fontWeight: '500' }}>{selectedPolicy.sales_branch || 'N/A'}</div>
-                  <span style={{ color: '#999', fontSize: '12px' }}>Last Updated</span>
-                  <div style={{ fontWeight: '500' }}>
+                <div className="col-12 col-sm-6">
+                  <span className="app-modal__label">Sales Branch</span>
+                  <div className="app-modal__value">{selectedPolicy.sales_branch || 'N/A'}</div>
+                  <span className="app-modal__label">Last Updated</span>
+                  <div className="app-modal__value">
                     {selectedPolicy.updated_at ? formatDateToOrdinal(selectedPolicy.updated_at) : 'N/A'}
                   </div>
                 </div>
@@ -1208,30 +1186,28 @@ const columns: ColumnsType<Policy> = [
 
             {/* Payment Method — only when the policy has bank data */}
             {(selectedPolicy.bank_name || selectedPolicy.bank_account_number) && (
-              <div style={{
-                backgroundColor: '#fef3e8', padding: '12px 15px',
-                borderRadius: '8px', marginTop: '10px', marginBottom: '15px',
-                borderLeft: '4px solid #F15A29'
-              }}>
-                <div style={{ fontSize: '12px', color: '#c70e2a', fontWeight: '600', marginBottom: '10px' }}>
+              <div
+                className="app-modal__section app-modal__section--bank app-modal__section--edge-orange mt-2"
+              >
+                <div className="app-modal__section-title">
                   🏦 Payment Method
                 </div>
                 <div className="row">
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Bank Name</span>
-                    <div style={{ fontWeight: '500' }}>{selectedPolicy.bank_name || 'N/A'}</div>
+                  <div className="col-12 col-sm-6">
+                    <span className="app-modal__label">Bank Name</span>
+                    <div className="app-modal__value">{selectedPolicy.bank_name || 'N/A'}</div>
                   </div>
-                  <div className="col-6">
-                    <span style={{ color: '#999', fontSize: '12px' }}>Account Number</span>
-                    <div style={{ fontWeight: '500', fontFamily: 'monospace' }}>
+                  <div className="col-12 col-sm-6">
+                    <span className="app-modal__label">Account Number</span>
+                    <div className="app-modal__value app-modal__value--mono">
                       {selectedPolicy.bank_account_number || 'N/A'}
                     </div>
                   </div>
                 </div>
                 {(selectedPolicy.bank_branch_name || selectedPolicy.bank_branch_code) && (
-                  <div style={{ marginTop: '10px' }}>
-                    <span style={{ color: '#999', fontSize: '12px' }}>Branch</span>
-                    <div style={{ fontWeight: '500' }}>
+                  <div className="mt-2">
+                    <span className="app-modal__label">Branch</span>
+                    <div className="app-modal__value">
                       {selectedPolicy.bank_branch_name || 'N/A'}
                       {selectedPolicy.bank_branch_code ? ` (${selectedPolicy.bank_branch_code})` : ''}
                     </div>
@@ -1242,21 +1218,20 @@ const columns: ColumnsType<Policy> = [
 
             {/* Change history */}
             <hr />
-            <h6 className="mt-3" style={{ color: '#c70e2a' }}>📋 Change History</h6>
+            <h6 className="mt-3 app-modal__heading">📋 Change History</h6>
             {loadingHistory ? (
-              <p className="text-muted" style={{ fontSize: '13px' }}>Loading history...</p>
+              <p className="text-muted app-modal__note">Loading history...</p>
             ) : policyHistory.length === 0 ? (
-              <p className="text-muted" style={{ fontSize: '13px' }}>No changes recorded</p>
+              <p className="text-muted app-modal__note">No changes recorded</p>
             ) : (
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="app-modal__list">
                 {policyHistory.map((change: any, idx: number) => (
-                  <div key={idx} style={{
-                    padding: '8px 12px', marginBottom: '5px',
-                    backgroundColor: change.field === 'Status' ? '#fdf0f2' : '#f8f9fa',
-                    borderRadius: '4px', fontSize: '13px',
-                    borderLeft: change.field === 'Status' ? '3px solid #c70e2a' : '3px solid #2a9d36'
-                  }}>
-                    <span style={{ fontWeight: '500' }}>{change.field}:</span>
+                  <div
+                    key={idx}
+                    className="app-modal__list-item app-modal__list-item--history"
+                    style={change.field === 'Status' ? { backgroundColor: '#fdf0f2', borderLeftColor: '#c70e2a' } : undefined}
+                  >
+                    <span className="app-modal__value">{change.field}:</span>
                     {(() => {
                       const dateFields = ['Endorsement Date', 'Inception Date', 'Last Updated'];
                       const currencyFields = ['Total Sum Insured', 'Annual Premium', 'New Gross Premium',
@@ -1281,20 +1256,21 @@ const columns: ColumnsType<Policy> = [
                       };
 
                       const isMonospace = monospaceFields.includes(change.field);
+                      const monoClass = isMonospace ? ' app-modal__value--mono' : '';
 
                       return (
                         <>
-                          <span style={{ color: '#c70e2a', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
+                          <span className={`app-modal__value--danger${monoClass}`}>
                             {formatValue(change.old_value)}
                           </span>
-                          <span style={{ margin: '0 5px', color: '#999' }}>→</span>
-                          <span style={{ color: '#2a9d36', fontFamily: isMonospace ? 'monospace' : 'inherit' }}>
+                          <span className="app-modal__change-arrow">→</span>
+                          <span className={`app-modal__value--success${monoClass}`}>
                             {formatValue(change.new_value)}
                           </span>
                         </>
                       );
                     })()}
-                    <span style={{ color: '#999', fontSize: '11px', marginLeft: '10px' }}>
+                    <span className="app-modal__tiny ms-2">
                       {new Date(change.changed_at).toLocaleString()}
                     </span>
                   </div>
@@ -1783,12 +1759,24 @@ const columns: ColumnsType<Policy> = [
                                   <FileText size={12} />
                                   {policy.policy_number || 'N/A'}
                                 </span>
-                                <span
-                                  className="status-badge"
-                                  style={{ backgroundColor: style.bg }}
-                                >
-                                  {style.icon} {cleaned}
-                                </span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span
+                                    className="status-badge"
+                                    style={{ backgroundColor: style.bg }}
+                                  >
+                                    {style.icon} {cleaned}
+                                  </span>
+                                  <button
+                                    className="btn btn-sm btn-link p-0 text-muted"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openModal('view', policy);
+                                    }}
+                                    title="View"
+                                  >
+                                    <Eye size={16} />
+                                  </button>
+                                </div>
                               </div>
 
                               {/* Row 2: client */}
@@ -1830,40 +1818,6 @@ const columns: ColumnsType<Policy> = [
                                   KES{' '}
                                   {formatCurrency(policy.new_gross_premium)}
                                 </span>
-                              </div>
-
-                              {/* Row 4: actions */}
-                              <div
-                                className="m-card__actions"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <button
-                                  className="btn-icon btn-icon--success"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openModal('view', policy);
-                                  }}
-                                  title="View"
-                                >
-                                  <Eye size={13} />
-                                </button>
-                                <button
-                                  className="btn-icon btn-icon--muted"
-                                  disabled
-                                  title="Edit (Coming soon)"
-                                >
-                                  <Edit size={13} />
-                                </button>
-                                <button
-                                  className="btn-icon btn-icon--danger"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openModal('delete', policy);
-                                  }}
-                                  title="Delete"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
                               </div>
                             </div>
                           );
@@ -1940,12 +1894,12 @@ const columns: ColumnsType<Policy> = [
           MODAL – View / Delete
           ===================================================================== */}
       {modalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '800px' }}>
+        <div className="modal show d-block app-modal app-modal--xl" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
-                <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">{modalContent.title}</h5>
+                <button type="button" className="btn-close" onClick={closeModal} />
               </div>
               <div className="modal-body">{modalContent.body}</div>
               {modalContent.footer}
@@ -1958,16 +1912,16 @@ const columns: ColumnsType<Policy> = [
           MODAL – Upload / Import Excel
           ===================================================================== */}
       {uploadModalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '600px' }}>
+        <div className="modal show d-block app-modal app-modal--md" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">
                   <Upload size={18} className="me-2" /> Update Policies
                 </h5>
-                <button type="button" className="btn-close" onClick={resetUploadModal} style={{ filter: 'brightness(0) invert(1)' }} />
+                <button type="button" className="btn-close" onClick={resetUploadModal} />
               </div>
-              <div className="modal-body" style={{ padding: '25px' }}>
+              <div className="modal-body app-modal__body--padded">
 
                 {/* Idle – drop zone */}
                 {uploadStatus === 'idle' && (

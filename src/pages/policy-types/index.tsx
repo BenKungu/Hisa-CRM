@@ -372,34 +372,18 @@ const AdminPolicyTypes = () => {
       body: (
         <div>
           {/* Header */}
-          <div style={{ 
-            backgroundColor: '#f8f9fa', 
-            padding: '15px', 
-            borderRadius: '8px',
-            marginBottom: '20px',
-            borderLeft: `4px solid ${config.color}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            <span 
-              className="rounded-circle d-inline-flex align-items-center justify-content-center"
-              style={{
-                width: '56px',
-                height: '56px',
-                backgroundColor: config.color + '20',
-                color: config.color,
-                fontSize: '28px',
-                flexShrink: 0
-              }}
+          <div className="app-modal__hero" style={{ borderLeftColor: config.color }}>
+            <span
+              className="app-modal__avatar"
+              style={{ backgroundColor: config.color + '20', color: config.color, fontSize: '28px' }}
             >
               {config.icon}
             </span>
-            <div>
-              <h5 style={{ marginBottom: '2px', fontWeight: '600' }}>
+            <div className="app-modal__shrink">
+              <h5 className="app-modal__hero-title">
                 {selectedType.product_type || 'Uncategorized'}
               </h5>
-              <div style={{ fontSize: '13px', color: '#666' }}>
+              <div className="app-modal__hero-sub">
                 {selectedType.count} policies · KES {formatCurrency(selectedType.total_premium)} total premium
               </div>
             </div>
@@ -408,42 +392,27 @@ const AdminPolicyTypes = () => {
           {/* Stats Grid */}
           <div className="row g-2">
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '12px', 
-                backgroundColor: '#e8f5e9', 
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#2a9d36' }}>
+              <div className="app-modal__stat app-modal__stat--green">
+                <div className="app-modal__stat-value app-modal__stat-value--green">
                   {selectedType.finalised_count || 0}
                 </div>
-                <div style={{ fontSize: '11px', color: '#666' }}>Finalised</div>
+                <div className="app-modal__stat-label">Finalised</div>
               </div>
             </div>
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '12px', 
-                backgroundColor: '#cfe2ff', 
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#0d6efd' }}>
+              <div className="app-modal__stat app-modal__stat--blue">
+                <div className="app-modal__stat-value app-modal__stat-value--blue">
                   {selectedType.active_count || 0}
                 </div>
-                <div style={{ fontSize: '11px', color: '#666' }}>Active</div>
+                <div className="app-modal__stat-label">Active</div>
               </div>
             </div>
             <div className="col-4">
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '12px', 
-                backgroundColor: '#fde8ea', 
-                borderRadius: '8px'
-              }}>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#c70e2a' }}>
+              <div className="app-modal__stat app-modal__stat--red">
+                <div className="app-modal__stat-value app-modal__stat-value--red">
                   {selectedType.cancelled_count || 0}
                 </div>
-                <div style={{ fontSize: '11px', color: '#666' }}>Cancelled</div>
+                <div className="app-modal__stat-label">Cancelled</div>
               </div>
             </div>
           </div>
@@ -452,43 +421,32 @@ const AdminPolicyTypes = () => {
           {hasPolicies && (
             <>
               <hr />
-              <h6 className="mt-3" style={{ color: '#c70e2a' }}>
+              <h6 className="mt-3 app-modal__heading">
                 <FileText size={14} className="me-1" /> Recent Policies
               </h6>
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="app-modal__list">
                 {recentPolicies.map((policy: any, idx: number) => (
-                  <div key={idx} style={{ 
-                    padding: '8px 12px', 
-                    marginBottom: '5px', 
-                    backgroundColor: '#f8f9fa', 
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap'
-                  }}>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>{policy.policy_number}</span>
-                      <span className="text-muted" style={{ fontSize: '11px', marginLeft: '10px' }}>
+                  <div key={idx} className="app-modal__list-item">
+                    <div className="app-modal__shrink">
+                      <span className="fw-medium">{policy.policy_number}</span>
+                      <span className="text-muted app-modal__tiny ms-2">
                         {policy.client_name || 'N/A'}
                       </span>
                     </div>
                     <div>
                       <span className={`badge ${policy.policy_status?.toLowerCase().includes('finalised') ? 'bg-success' : 
                         policy.policy_status?.toLowerCase().includes('unfinalised') ? 'bg-warning text-dark' :
-                        policy.policy_status?.toLowerCase().includes('cancelled') ? 'bg-danger' : 'bg-secondary'}`} 
-                        style={{ fontSize: '10px' }}>
+                        policy.policy_status?.toLowerCase().includes('cancelled') ? 'bg-danger' : 'bg-secondary'}`}>
                         {policy.policy_status || 'N/A'}
                       </span>
-                      <span style={{ marginLeft: '10px', fontSize: '12px', color: '#2a9d36' }}>
+                      <span className="ms-2 app-modal__small app-modal__value--success">
                         KES {formatCurrency(policy.annualised_premium)}
                       </span>
                     </div>
                   </div>
                 ))}
                 {selectedType.policies.length > 10 && (
-                  <p className="text-muted" style={{ fontSize: '12px', marginTop: '5px' }}>
+                  <p className="text-muted app-modal__small mt-1">
                     ... and {selectedType.policies.length - 10} more policies
                   </p>
                 )}
@@ -692,12 +650,12 @@ const AdminPolicyTypes = () => {
       `}</style>
       {/* Modal */}
       {modalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '600px' }}>
+        <div className="modal show d-block app-modal app-modal--md" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
-                <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">{modalContent.title}</h5>
+                <button type="button" className="btn-close" onClick={closeModal} />
               </div>
               <div className="modal-body">
                 {modalContent.body}

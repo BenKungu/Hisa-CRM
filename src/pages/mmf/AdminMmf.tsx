@@ -459,19 +459,16 @@ const getMatchBadge = (holder: Holder | null) => {
       body: (
         <div>
           {/* Header */}
-          <div style={{
-            backgroundColor: '#f1f5f9', padding: '15px', borderRadius: '8px',
-            marginBottom: '20px', borderLeft: '4px solid #475569'
-          }}>
-            <div className="row">
+          <div className="app-modal__hero app-modal__hero--mmf">
+            <div className="row flex-grow-1">
               <div className="col-6">
-                <span style={{ color: '#999', fontSize: '12px' }}>Member No</span>
-                <h5 style={{ color: '#475569', fontWeight: 'bold', marginBottom: '0' }}>
+                <span className="app-modal__label">Member No</span>
+                <h5 className="app-modal__heading app-modal__heading--mmf fw-bold mb-0">
                   {selectedAccount.member_no}
                 </h5>
               </div>
               <div className="col-6 text-end">
-                <span style={{ color: '#999', fontSize: '12px' }}>Holders</span>
+                <span className="app-modal__label">Holders</span>
                 <div>
                   <span className="badge bg-secondary" style={{ fontSize: '14px', padding: '5px 15px' }}>
                     {selectedAccount.holder_count}
@@ -482,14 +479,14 @@ const getMatchBadge = (holder: Holder | null) => {
           </div>
           {/* Primary holder */}
             {primary && (
-              <div style={{ marginBottom: '15px' }}>
-                <span style={{ color: '#999', fontSize: '12px' }}>Primary Holder</span>
-                <div style={{ fontWeight: '600', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <div className="mb-3">
+                <span className="app-modal__label">Primary Holder</span>
+                <div className="app-modal__value app-modal__value--strong d-flex align-items-center gap-2 flex-wrap" style={{ fontSize: '15px' }}>
                   <span>{primary.title ? `${primary.title} ` : ''}{primary.name}</span>
                   {(() => {
                     const badge = getMatchBadge(primary);
                     return badge ? (
-                      <span className="badge" style={{ backgroundColor: badge.bg, color: '#fff', fontSize: '10px', fontWeight: '500' }}>
+                      <span className="badge text-white fw-medium" style={{ backgroundColor: badge.bg, fontSize: '10px' }}>
                         {badge.label}
                       </span>
                     ) : null;
@@ -500,17 +497,17 @@ const getMatchBadge = (holder: Holder | null) => {
 
           {/* Other holders */}
               {others.length > 0 && (
-                <div style={{ marginBottom: '15px' }}>
-                  <span style={{ color: '#999', fontSize: '12px' }}>
+                <div className="mb-3">
+                  <span className="app-modal__label">
                     Other Holder{others.length !== 1 ? 's' : ''}
                   </span>
                   {others.map((h, i) => {
                     const badge = getMatchBadge(h);
                     return (
-                      <div key={i} style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      <div key={i} className="app-modal__value d-flex align-items-center gap-2 flex-wrap mt-1">
                         <span>{h.title ? `${h.title} ` : ''}{h.name}</span>
                         {badge && (
-                          <span className="badge" style={{ backgroundColor: badge.bg, color: '#fff', fontSize: '10px', fontWeight: '500' }}>
+                          <span className="badge text-white fw-medium" style={{ backgroundColor: badge.bg, fontSize: '10px' }}>
                             {badge.label}
                           </span>
                         )}
@@ -521,30 +518,27 @@ const getMatchBadge = (holder: Holder | null) => {
               )}
 
           {/* Contact */}
-          <div className="row" style={{ marginTop: '15px' }}>
-            <div className="col-6">
-              <span style={{ color: '#999', fontSize: '12px' }}>Primary Phone</span>
-              <div style={{ fontWeight: '500', color: '#0d6efd' }}>
+          <div className="row mt-3">
+            <div className="col-12 col-sm-6 app-modal__field">
+              <span className="app-modal__label">Primary Phone</span>
+              <div className="app-modal__value app-modal__value--link">
                 {primary?.phone || 'N/A'}
               </div>
             </div>
-            <div className="col-6">
-              <span style={{ color: '#999', fontSize: '12px' }}>Primary Email</span>
-              <div style={{ fontWeight: '500' }}>
+            <div className="col-12 col-sm-6 app-modal__field">
+              <span className="app-modal__label">Primary Email</span>
+              <div className="app-modal__value">
                 {primary?.email || 'N/A'}
               </div>
             </div>
           </div>
 
           {/* Raw values from insurer */}
-          <div style={{
-            backgroundColor: '#f8f9fa', padding: '12px 15px',
-            borderRadius: '8px', marginTop: '15px', marginBottom: '15px'
-          }}>
-            <div style={{ fontSize: '12px', color: '#999', marginBottom: '6px' }}>
+          <div className="app-modal__section mt-1">
+            <div className="app-modal__label mb-2">
               As received from insurer
             </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>
+            <div className="app-modal__small text-muted">
               <div><strong>Raw Name:</strong> {selectedAccount.raw_full_name}</div>
               {selectedAccount.mobile_no && (
                 <div><strong>Raw Mobile:</strong> {selectedAccount.mobile_no}</div>
@@ -556,40 +550,31 @@ const getMatchBadge = (holder: Holder | null) => {
           </div>
 
           {/* Agent */}
-          <div style={{
-            backgroundColor: '#f8f9fa', padding: '12px 15px', borderRadius: '8px'
-          }}>
+          <div className="app-modal__section">
             <div className="row">
-              <div className="col-6">
-                <span style={{ color: '#999', fontSize: '12px' }}>Agent</span>
-                <div style={{ fontWeight: '500' }}>{selectedAccount.agent_name || 'N/A'}</div>
+              <div className="col-12 col-sm-6 app-modal__field">
+                <span className="app-modal__label">Agent</span>
+                <div className="app-modal__value">{selectedAccount.agent_name || 'N/A'}</div>
               </div>
-              <div className="col-6">
-                <span style={{ color: '#999', fontSize: '12px' }}>Agent Code</span>
-                <div style={{ fontWeight: '500' }}>{selectedAccount.agent_code || 'N/A'}</div>
+              <div className="col-12 col-sm-6 app-modal__field">
+                <span className="app-modal__label">Agent Code</span>
+                <div className="app-modal__value">{selectedAccount.agent_code || 'N/A'}</div>
               </div>
             </div>
           </div>
           {/* Insurance policies link — shown when the primary holder has policies */}
             {primary && primary.policy_count > 0 && (
-              <div style={{
-                backgroundColor: '#eaf7ed',
-                padding: '12px 15px',
-                borderRadius: '8px',
-                marginTop: '15px',
-                borderLeft: '4px solid #2a9d36'
-              }}>
-                <div style={{ fontSize: '12px', color: '#2a9d36', fontWeight: '600', marginBottom: '8px' }}>
+              <div className="app-modal__section app-modal__section--green app-modal__section--edge-green mb-0">
+                <div className="app-modal__value app-modal__value--strong app-modal__value--success app-modal__small mb-2">
                   📄 Insurance Policies
                 </div>
-                <div style={{ fontSize: '13px', color: '#555', marginBottom: '10px' }}>
+                <div className="app-modal__note text-secondary mb-2">
                   This client also holds <strong>{primary.policy_count}</strong> insurance
                   {primary.policy_count !== 1 ? ' policies' : ' policy'}.
                 </div>
                 <Link
                   to={`/clients?search=${encodeURIComponent(primary.phone || primary.email || primary.name)}`}
-                  className="btn btn-sm"
-                  style={{ backgroundColor: '#2a9d36', color: '#fff', border: 'none' }}
+                  className="btn btn-sm btn-app-success"
                 >
                   View Client on Clients Page
                 </Link>
@@ -848,12 +833,12 @@ const getMatchBadge = (holder: Holder | null) => {
           MODAL – View MMF Account
           ===================================================================== */}
       {modalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '700px' }}>
+        <div className="modal show d-block app-modal app-modal--lg" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#475569', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>{modalContent.title}</h5>
-                <button type="button" className="btn-close" onClick={closeModal} style={{ filter: 'brightness(0) invert(1)' }} />
+              <div className="modal-header app-modal__header app-modal__header--mmf">
+                <h5 className="modal-title">{modalContent.title}</h5>
+                <button type="button" className="btn-close" onClick={closeModal} />
               </div>
               <div className="modal-body">{modalContent.body}</div>
               {modalContent.footer}
@@ -866,16 +851,16 @@ const getMatchBadge = (holder: Holder | null) => {
           MODAL – Upload / Import Excel
           ===================================================================== */}
       {uploadModalOpen && (
-        <div className="modal show d-block" tabIndex={-1} role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '600px' }}>
+        <div className="modal show d-block app-modal app-modal--md" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#c70e2a', color: '#fff' }}>
-                <h5 className="modal-title" style={{ color: '#fff' }}>
+              <div className="modal-header app-modal__header">
+                <h5 className="modal-title">
                   <Upload size={18} className="me-2" /> Upload MMF File
                 </h5>
-                <button type="button" className="btn-close" onClick={resetUploadModal} style={{ filter: 'brightness(0) invert(1)' }} />
+                <button type="button" className="btn-close" onClick={resetUploadModal} />
               </div>
-              <div className="modal-body" style={{ padding: '25px' }}>
+              <div className="modal-body app-modal__body--padded">
 
                 {/* Idle – drop zone */}
                 {uploadStatus === 'idle' && (
